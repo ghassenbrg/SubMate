@@ -2,6 +2,7 @@ import { sendCacheMessage } from '../../cache/messages';
 import { applyDocumentLocale, t } from '../../i18n';
 import { loadSettings, saveSettings } from '../../settings/store';
 import type { FlixTranslateSettings } from '../../settings/schema';
+import { appearanceForPreset, subtitleAppearanceVariables } from '../../settings/appearance';
 import { FEATURED_LANGUAGE_CODES, isSuggestedLanguage, languageInputValue, parseLanguageInput, sortedLanguageSuggestions } from '../shared/languages';
 import { sendContent } from '../shared/messages';
 
@@ -13,6 +14,7 @@ let settings: FlixTranslateSettings;
 let stats: { translations: number; sources: number };
 let storageUsage: number | undefined;
 let debugInfo: Record<string, unknown> | undefined;
+let appearancePreview: HTMLDivElement | undefined;
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] => {
   const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node;
@@ -27,6 +29,36 @@ const row = (label: string, control: HTMLElement, help?: string) => {
 function toggle(checked: boolean, onChange: (checked: boolean) => void): HTMLInputElement {
   const input = el('input') as HTMLInputElement; input.type = 'checkbox'; input.role = 'switch'; input.checked = checked;
   input.addEventListener('change', () => onChange(input.checked)); return input;
+}
+
+function rangeControl(
+  value: number,
+  min: number,
+  max: number,
+  step: number,
+  label: string,
+  format: (value: number) => string,
+  onChange: (value: number) => void,
+): HTMLDivElement {
+  const wrapper = el('div', 'range-control');
+  const input = el('input') as HTMLInputElement;
+  const output = el('output', '', format(value));
+  input.type = 'range'; input.min = String(min); input.max = String(max); input.step = String(step); input.value = String(value);
+  input.setAttribute('aria-label', label);
+  input.addEventListener('input', () => {
+    const next = Number(input.value);
+    output.value = format(next);
+    onChange(next);
+  });
+  wrapper.append(input, output);
+  return wrapper;
+}
+
+function applyAppearancePreview(preview: HTMLElement, value: FlixTranslateSettings): void {
+  for (const [property, cssValue] of Object.entries(subtitleAppearanceVariables(value))) {
+    preview.style.setProperty(property, cssValue);
+  }
+  preview.style.setProperty('--ft-scale', String(value.translatedFontScale));
 }
 
 function languagePicker(value: string | undefined, allowAutomatic: boolean, onCommit: (language?: string) => void): HTMLDivElement {
@@ -104,13 +136,64 @@ function render(): void {
   translation.append(row(t('engine'), engine, t('engineHelp')));
   app.append(translation);
 
-  const appearance = el('section'); appearance.append(el('h2', '', t('appearance')));
+  const appearance = el('section'); appearance.classList.add('appearance-section'); appearance.append(el('h2', '', t('appearance')));
+  const preset = el('select') as HTMLSelectElement;
+  preset.append(
+    new Option(t('netflixStyle'), 'netflix'),
+    new Option(t('softBoxStyle'), 'soft-box'),
+    new Option(t('solidBoxStyle'), 'solid-box'),
+    new Option(t('outlineStyle'), 'outline'),
+    new Option(t('minimalStyle'), 'minimal'),
+    new Option(t('customStyle'), 'custom'),
+  );
+  preset.value = settings.subtitleStylePreset;
+  preset.addEventListener('change', () => {
+    if (preset.value === 'custom') return;
+    void update(appearanceForPreset(preset.value as Exclude<FlixTranslateSettings['subtitleStylePreset'], 'custom'>));
+  });
   const mode = el('select') as HTMLSelectElement; mode.append(new Option(t('originalAndTranslation'), 'bilingual'), new Option(t('translationOnly'), 'translation-only'), new Option(t('off'), 'off')); mode.value = settings.displayMode;
   mode.addEventListener('change', () => void update({ displayMode: mode.value as FlixTranslateSettings['displayMode'] }));
-  const scale = el('input') as HTMLInputElement; scale.type = 'range'; scale.min = '.7'; scale.max = '1.8'; scale.step = '.05'; scale.value = String(settings.translatedFontScale); scale.setAttribute('aria-label', t('fontSize')); scale.addEventListener('input', () => void update({ translatedFontScale: Number(scale.value) }, false));
-  const position = el('input') as HTMLInputElement; position.type = 'range'; position.min = '.04'; position.max = '.42'; position.step = '.01'; position.value = String(settings.verticalPosition); position.setAttribute('aria-label', t('verticalPosition')); position.addEventListener('input', () => void update({ verticalPosition: Number(position.value) }, false));
-  appearance.append(row(t('displayMode'), mode), row(t('fontSize'), scale), row(t('verticalPosition'), position), row(t('showPlayerStatus'), toggle(settings.showPlayerStatus, (showPlayerStatus) => void update({ showPlayerStatus }))));
-  const reset = el('button', 'secondary', t('resetAppearance')); reset.addEventListener('click', () => void update({ displayMode: 'bilingual', translatedFontScale: 1, verticalPosition: .13, showPlayerStatus: true })); appearance.append(reset);
+  const background = el('select') as HTMLSelectElement;
+  background.append(new Option(t('backgroundNone'), 'none'), new Option(t('backgroundSoft'), 'soft'), new Option(t('backgroundSolid'), 'solid'));
+  background.value = settings.subtitleBackground;
+  background.addEventListener('change', () => void update({ subtitleStylePreset: 'custom', subtitleBackground: background.value as FlixTranslateSettings['subtitleBackground'] }));
+  const outline = el('select') as HTMLSelectElement;
+  outline.append(new Option(t('outlineNone'), 'none'), new Option(t('outlineShadow'), 'shadow'), new Option(t('outlineStrong'), 'outline'));
+  outline.value = settings.subtitleOutline;
+  outline.addEventListener('change', () => void update({ subtitleStylePreset: 'custom', subtitleOutline: outline.value as FlixTranslateSettings['subtitleOutline'] }));
+  const color = el('input') as HTMLInputElement; color.type = 'color'; color.value = settings.subtitleTextColor; color.setAttribute('aria-label', t('textColor'));
+  color.addEventListener('change', () => void update({ subtitleStylePreset: 'custom', subtitleTextColor: color.value }));
+  const weight = el('select') as HTMLSelectElement;
+  for (const value of [400, 500, 600, 650, 700, 800]) weight.append(new Option(String(value), String(value)));
+  weight.value = String(settings.translatedFontWeight);
+  weight.addEventListener('change', () => void update({ subtitleStylePreset: 'custom', translatedFontWeight: Number(weight.value) }));
+  const scale = rangeControl(settings.translatedFontScale, .7, 1.8, .05, t('fontSize'), (value) => `${Math.round(value * 100)}%`, (translatedFontScale) => void update({ translatedFontScale }, false));
+  const position = rangeControl(settings.verticalPosition, .04, .42, .01, t('verticalPosition'), (value) => `${Math.round(value * 100)}%`, (verticalPosition) => void update({ verticalPosition }, false));
+  const opacity = rangeControl(settings.subtitleOpacity, .5, 1, .05, t('subtitleOpacity'), (value) => `${Math.round(value * 100)}%`, (subtitleOpacity) => void update({ subtitleStylePreset: 'custom', subtitleOpacity }, false));
+  const lineHeight = rangeControl(settings.subtitleLineHeight, 1, 1.6, .05, t('lineSpacing'), (value) => value.toFixed(2).replace(/0$/, ''), (subtitleLineHeight) => void update({ subtitleStylePreset: 'custom', subtitleLineHeight }, false));
+  const preview = el('div', 'subtitle-preview');
+  preview.setAttribute('role', 'img'); preview.setAttribute('aria-label', t('stylePreview'));
+  preview.append(el('span', 'preview-label', t('stylePreview')));
+  const sample = el('div', 'preview-subtitle');
+  sample.append(el('div', 'preview-cue preview-source', t('previewOriginal')), el('div', 'preview-cue preview-translation', t('previewTranslation')));
+  preview.append(sample); appearancePreview = preview; applyAppearancePreview(preview, settings);
+  appearance.append(
+    preview,
+    row(t('subtitleStylePreset'), preset, t('appearancePresetHelp')),
+    row(t('displayMode'), mode),
+    row(t('subtitleBackground'), background),
+    row(t('textOutline'), outline),
+    row(t('textColor'), color),
+    row(t('fontWeight'), weight),
+    row(t('fontSize'), scale),
+    row(t('subtitleOpacity'), opacity),
+    row(t('lineSpacing'), lineHeight),
+    row(t('verticalPosition'), position),
+    row(t('showPlayerStatus'), toggle(settings.showPlayerStatus, (showPlayerStatus) => void update({ showPlayerStatus }))),
+  );
+  const reset = el('button', 'secondary', t('resetAppearance')); reset.addEventListener('click', () => void update({
+    displayMode: 'bilingual', translatedFontScale: 1, verticalPosition: .13, showPlayerStatus: true, ...appearanceForPreset('soft-box'),
+  })); appearance.append(reset);
   app.append(appearance);
 
   const storage = el('section'); storage.append(el('h2', '', t('storage')), el('p', 'stat', t('cachedItems', [String(stats.translations), String(stats.sources)])));
@@ -127,7 +210,9 @@ function render(): void {
 }
 
 async function update(patch: Partial<FlixTranslateSettings>, rerender = true): Promise<void> {
-  settings = await saveSettings(patch); if (rerender) render();
+  settings = await saveSettings(patch);
+  if (rerender) render();
+  else if (appearancePreview?.isConnected) applyAppearancePreview(appearancePreview, settings);
 }
 
 void (async () => {

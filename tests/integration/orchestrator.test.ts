@@ -20,7 +20,13 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../../src/cache/messages', () => ({
   sendCacheMessage: async (message: Record<string, unknown>) => {
     switch (message.type) {
-      case 'CACHE_PUT_SOURCE': mocks.cache.set(`source:${(message.track as SubtitleTrack).sourceHash}`, message.track); return undefined;
+      case 'CACHE_PUT_SOURCE': {
+        const track = message.track as SubtitleTrack;
+        mocks.cache.set(`source:${track.sourceHash}`, track);
+        mocks.cache.set(`content:${track.contentId}`, track);
+        return undefined;
+      }
+      case 'CACHE_GET_CONTENT_SOURCE': return mocks.cache.get(`content:${message.contentId as string}`);
       case 'CACHE_GET_TRANSLATION': return mocks.cache.get(`translation:${message.cacheKey as string}`);
       case 'CACHE_PUT_TRANSLATION': mocks.cache.set(`translation:${(message.record as CachedTranslation).cacheKey}`, message.record); return undefined;
       default: return undefined;
@@ -104,6 +110,67 @@ describe('episode orchestration', () => {
     expect(second.getState().status.cacheHit).toBe(true);
     expect(mocks.translationCalls).toBe(1);
     second.destroy();
+  });
+
+  it('restores a cached unchanged episode when Netflix resumes without a fresh manifest', async () => {
+    const source: SubtitleTrack = {
+      platform: 'netflix', contentId: '100', trackId: 'T:de', sourceLanguage: 'de', kind: 'text', profile: 'dfxp-ls-sdh',
+      cues: [{ id: 'cached-cue', startMs: 1_000, endMs: 2_000, sourceText: 'Hallo' }], sourceHash: 'cached-source',
+    };
+    mocks.cache.set('content:100', source);
+    const manager = new (await import('../../src/translation/translation-manager')).TranslationManager();
+    await manager.save(source, {
+      sourceHash: source.sourceHash,
+      sourceLanguage: 'de',
+      targetLanguage: 'fr',
+      engine: { id: 'chrome-local', version: 'translator-api-v1' },
+      translations: [{ id: 'cached-cue', text: 'Bonjour' }],
+    });
+
+    const orchestrator = new EpisodeOrchestrator();
+    await orchestrator.initialize();
+    orchestrator.setPlayer(video());
+    await vi.waitFor(() => expect(orchestrator.getState()).toMatchObject({
+      contentDetected: true,
+      contentId: '100',
+      sourceLanguage: 'de',
+      sourceCueCount: 1,
+      status: { state: 'ready', cacheHit: true },
+    }));
+    expect(mocks.overlays[0]?.track?.cues[0]?.translatedText).toBe('Bonjour');
+    expect(mocks.pageSubtitle).not.toHaveBeenCalled();
+    expect(mocks.translationCalls).toBe(0);
+    orchestrator.destroy();
+  });
+
+  it('never leaves a cached old target rendered after a manifest-less target change', async () => {
+    const source: SubtitleTrack = {
+      platform: 'netflix', contentId: '100', trackId: 'T:de', sourceLanguage: 'de', kind: 'text', profile: 'dfxp-ls-sdh',
+      cues: [{ id: 'cached-cue', startMs: 1_000, endMs: 2_000, sourceText: 'Hallo' }], sourceHash: 'cached-source',
+    };
+    mocks.cache.set('content:100', source);
+    const manager = new (await import('../../src/translation/translation-manager')).TranslationManager();
+    await manager.save(source, {
+      sourceHash: source.sourceHash,
+      sourceLanguage: 'de',
+      targetLanguage: 'fr',
+      engine: { id: 'chrome-local', version: 'translator-api-v1' },
+      translations: [{ id: 'cached-cue', text: 'Bonjour' }],
+    });
+    const orchestrator = new EpisodeOrchestrator();
+    await orchestrator.initialize();
+    orchestrator.setPlayer(video());
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
+
+    mocks.settings.preferredTargetLanguage = 'ar';
+    mocks.watchCallback?.({ ...mocks.settings });
+    await vi.waitFor(() => expect(orchestrator.getState()).toMatchObject({
+      targetLanguage: 'ar',
+      status: { state: 'discovering' },
+    }));
+    expect(mocks.overlays[0]?.track).toBeUndefined();
+    expect(mocks.overlays[0]?.languages.at(-1)).not.toEqual(['de', 'ar']);
+    orchestrator.destroy();
   });
 
   it('prevents an obsolete Episode A job from rendering over Episode B', async () => {

@@ -5,6 +5,7 @@ const cache = vi.hoisted(() => ({
   cacheStats: vi.fn(async () => ({ translations: 2, sources: 1 })),
   clearCache: vi.fn(async () => undefined),
   getSource: vi.fn(),
+  getSourceForContent: vi.fn(),
   getTranslation: vi.fn(),
   putSource: vi.fn(),
   putTranslation: vi.fn(),
@@ -74,6 +75,16 @@ describe('MV3 service worker routing', () => {
     await vi.waitFor(() => expect(response).toHaveBeenCalledWith({
       ok: true,
       value: { translations: 2, sources: 1 },
+    }));
+  });
+
+  it('restores the last exact source for a Netflix content ID', async () => {
+    cache.getSourceForContent.mockResolvedValue({ contentId: '83068200', sourceHash: 'hash' });
+    const response = vi.fn();
+    expect(messageListener?.({ type: 'CACHE_GET_CONTENT_SOURCE', contentId: '83068200' }, {}, response)).toBe(true);
+    await vi.waitFor(() => expect(response).toHaveBeenCalledWith({
+      ok: true,
+      value: { contentId: '83068200', sourceHash: 'hash' },
     }));
   });
 });

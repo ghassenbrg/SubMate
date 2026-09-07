@@ -9,6 +9,31 @@ import { sourceTrack } from '../unit/validation.test';
 afterEach(() => document.getElementById('flixtranslate-root')?.remove());
 
 describe('synthetic episode translation and rendering', () => {
+  it('applies background-free, outlined, colored, and transparent subtitle styles safely', () => {
+    const video = document.createElement('video');
+    Object.defineProperty(video, 'paused', { value: true });
+    const overlay = new SubtitleOverlay(defaultSettings(), { onActivate() {}, onRetry() {}, onDisplayMode() {}, onToggleEnabled() {}, onOpenSettings() {} });
+    overlay.setPlayer(video);
+    expect(overlay.host.style.getPropertyValue('--ft-background')).toBe('rgba(0,0,0,.68)');
+    overlay.applySettings({
+      ...defaultSettings(),
+      subtitleStylePreset: 'custom',
+      subtitleBackground: 'none',
+      subtitleOutline: 'outline',
+      subtitleTextColor: '#ffdd33',
+      translatedFontWeight: 800,
+      subtitleOpacity: .75,
+      subtitleLineHeight: 1.5,
+    });
+    expect(overlay.host.style.getPropertyValue('--ft-background')).toBe('transparent');
+    expect(overlay.host.style.getPropertyValue('--ft-text-shadow')).toContain('-1px -1px 0 #000');
+    expect(overlay.host.style.getPropertyValue('--ft-color')).toBe('#ffdd33');
+    expect(overlay.host.style.getPropertyValue('--ft-weight')).toBe('800');
+    expect(overlay.host.style.getPropertyValue('--ft-opacity')).toBe('0.75');
+    expect(overlay.host.style.getPropertyValue('--ft-line-height')).toBe('1.5');
+    overlay.destroy();
+  });
+
   it('translates a whole synthetic episode with IDs and renders safely across seek', async () => {
     const destroy = vi.fn();
     Object.defineProperty(globalThis, 'Translator', { configurable: true, value: {
@@ -91,6 +116,40 @@ describe('synthetic episode translation and rendering', () => {
       visible: true,
     });
     expect(overlay.host.dataset.synchronization).toBe('native-text');
+    const internals = overlay as unknown as { sourceLine: HTMLDivElement; translationLine: HTMLDivElement };
+    expect(internals.sourceLine.style.display).toBe('none');
+    expect(internals.translationLine.style.display).not.toBe('none');
+    overlay.destroy();
+    netflixContainer.remove();
+    video.remove();
+  });
+
+  it('shows its own source line only when Netflix is not already drawing one', () => {
+    const overlay = new SubtitleOverlay({ ...defaultSettings(), onboardingComplete: true }, { onActivate() {}, onRetry() {}, onDisplayMode() {}, onToggleEnabled() {}, onOpenSettings() {} });
+    const video = document.createElement('video');
+    Object.defineProperty(video, 'currentTime', { value: 1.5, writable: true });
+    Object.defineProperty(video, 'paused', { value: true });
+    const netflixContainer = document.createElement('div');
+    netflixContainer.className = 'player-timedtext';
+    const netflixLine = document.createElement('div');
+    netflixLine.className = 'player-timedtext-text-container';
+    netflixLine.textContent = 'こんにちは';
+    netflixContainer.append(netflixLine);
+    document.body.append(video, netflixContainer);
+    overlay.setPlayer(video);
+    overlay.setTrack({
+      ...sourceTrack(),
+      sourceLanguage: 'ja',
+      cues: [{ id: 'greeting', startMs: 1_000, endMs: 2_000, sourceText: 'こんにちは', translatedText: 'Hello' }],
+    });
+    const internals = overlay as unknown as { sourceLine: HTMLDivElement };
+    expect(internals.sourceLine.style.display).toBe('none');
+
+    netflixContainer.style.display = 'none';
+    (overlay as unknown as { lastNativeSampleAt: number }).lastNativeSampleAt = Number.NEGATIVE_INFINITY;
+    video.dispatchEvent(new Event('seeked'));
+    expect(internals.sourceLine.style.display).not.toBe('none');
+
     overlay.destroy();
     netflixContainer.remove();
     video.remove();

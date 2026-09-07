@@ -68,7 +68,14 @@ import { ManifestCaptureState } from './manifest-capture-state';
   addEventListener('message', (event) => {
     if (event.source !== window || event.origin !== location.origin) return;
     const data = event.data as Record<string, unknown> | null;
-    if (!data || data.namespace !== BRIDGE_NAMESPACE || data.type !== 'subtitle-request') return;
+    if (!data || data.namespace !== BRIDGE_NAMESPACE) return;
+    if (data.type === 'manifest-replay-request') {
+      const contentId = /^\/watch\/(\d+)/.exec(location.pathname)?.[1];
+      const replay = contentId ? captureState.replay(contentId) : undefined;
+      if (replay) post({ namespace: BRIDGE_NAMESPACE, type: 'manifest', snapshot: replay });
+      return;
+    }
+    if (data.type !== 'subtitle-request') return;
     const requestId = typeof data.requestId === 'string' && /^[a-f0-9-]{20,80}$/i.test(data.requestId) ? data.requestId : undefined;
     const contentId = typeof data.contentId === 'string' ? data.contentId : undefined;
     const trackId = typeof data.trackId === 'string' ? data.trackId : undefined;

@@ -35,9 +35,13 @@ The first live rendering attempt also exposed a real defect: the overlay's
 show path cleared the inline `display` value, causing the stylesheet's
 `display:none` default to keep winning. The renderer now explicitly sets
 `display:block`; a synthetic regression test verifies translated text and the
-diagnostic visibility flag. Chrome still has the earlier unpacked bundle loaded,
-so that final fix requires clicking **Reload** for FlixTranslate on
-`chrome://extensions` before its live visual result can be claimed.
+diagnostic visibility flag. After rebuilding and reloading the unpacked
+extension, the fix was verified visually on content `83068200`: a French
+translation rendered above Netflix's Japanese cue. The renderer now suppresses
+its own source line while Netflix visibly renders that same source, so the live
+result contains one translated line plus one native source line instead of a
+duplicated three-line stack. Smaller responsive type and a compact quick panel
+were also verified in the player.
 
 Autoplay subsequently moved the same live tab to content `83068201`. The old
 overlay was cleared and no duplicate root remained, but the loaded bundle was
@@ -47,15 +51,27 @@ correctly rejected it then, but the page agent did not replay it after route
 navigation. The page agent now retains only the eight most recent private
 manifest records and republishes the matching URL-redacted snapshot after the
 new content ID becomes current. This transition is covered by unit regressions
-but awaits the same unpacked-extension reload for live confirmation.
+but awaits a fresh live autoplay run for confirmation.
+
+Reloading the unpacked extension during an already-running Netflix session also
+showed that Netflix may resume from its warm player state without parsing a new
+usable manifest. The MAIN-world `JSON.parse` hook was confirmed active and the
+current licensed-manifest request was present, but no new snapshot was emitted.
+The bridge now requests a retained manifest once its listener is attached, and
+the content orchestrator can securely restore an exact content-ID source from
+extension IndexedDB before resolving the selected target through the
+source-hash/target/engine cache key. It never translates or renders by title ID
+alone. A live reload of `83068200` recovered a 521-line manual translation, and
+a newly opened content `82904953` freshly rendered Japanese → Arabic with
+Netflix native subtitles off.
 
 The following remain external checks rather than claims:
 
-- the fixed overlay after the unpacked-extension reload;
 - exact text profiles and CDN behavior across representative titles/regions;
-- active source-track changes and live confirmation of the fixed next-episode replay;
-- fullscreen, resize, playback-rate, and current native-subtitle collision tests;
-- cache reuse after a reload and the complete manual import workflow.
+- active source-track changes and live confirmation of next-episode autoplay;
+- fullscreen, resize, and playback-rate checks in the final loaded bundle;
+- first-time model downloads and additional browser-supported language pairs;
+- destructive cache clearing, invalid manual imports, and image-only titles.
 
 ## Chrome Translator execution context
 

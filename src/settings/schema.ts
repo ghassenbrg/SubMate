@@ -7,6 +7,13 @@ export interface FlixTranslateSettings {
   displayMode: 'bilingual' | 'translation-only' | 'off';
   translatedFontScale: number;
   verticalPosition: number;
+  subtitleStylePreset: 'netflix' | 'soft-box' | 'solid-box' | 'outline' | 'minimal' | 'custom';
+  subtitleBackground: 'none' | 'soft' | 'solid';
+  subtitleOutline: 'none' | 'shadow' | 'outline';
+  subtitleTextColor: string;
+  translatedFontWeight: number;
+  subtitleOpacity: number;
+  subtitleLineHeight: number;
   showPlayerStatus: boolean;
   onboardingComplete: boolean;
   debugMode: boolean;
@@ -40,6 +47,24 @@ export const validateSettings = (value: unknown): FlixTranslateSettings => {
     : 'bilingual';
   const scale = Number(v.translatedFontScale);
   const position = Number(v.verticalPosition);
+  const stylePresets = ['netflix', 'soft-box', 'solid-box', 'outline', 'minimal', 'custom'] as const;
+  const backgrounds = ['none', 'soft', 'solid'] as const;
+  const outlines = ['none', 'shadow', 'outline'] as const;
+  const preset = stylePresets.includes(v.subtitleStylePreset as (typeof stylePresets)[number])
+    ? (v.subtitleStylePreset as FlixTranslateSettings['subtitleStylePreset'])
+    : 'soft-box';
+  const background = backgrounds.includes(v.subtitleBackground as (typeof backgrounds)[number])
+    ? (v.subtitleBackground as FlixTranslateSettings['subtitleBackground'])
+    : 'soft';
+  const outline = outlines.includes(v.subtitleOutline as (typeof outlines)[number])
+    ? (v.subtitleOutline as FlixTranslateSettings['subtitleOutline'])
+    : 'shadow';
+  const textColor = typeof v.subtitleTextColor === 'string' && /^#[0-9a-f]{6}$/i.test(v.subtitleTextColor)
+    ? v.subtitleTextColor.toLowerCase()
+    : '#ffffff';
+  const weight = Number(v.translatedFontWeight);
+  const opacity = Number(v.subtitleOpacity);
+  const lineHeight = Number(v.subtitleLineHeight);
   return {
     enabled: v.enabled !== false,
     autoTranslate: v.autoTranslate !== false,
@@ -49,6 +74,13 @@ export const validateSettings = (value: unknown): FlixTranslateSettings => {
     displayMode,
     translatedFontScale: Number.isFinite(scale) ? Math.min(1.8, Math.max(0.7, scale)) : 1,
     verticalPosition: Number.isFinite(position) ? Math.min(0.42, Math.max(0.04, position)) : 0.13,
+    subtitleStylePreset: preset,
+    subtitleBackground: background,
+    subtitleOutline: outline,
+    subtitleTextColor: textColor,
+    translatedFontWeight: Number.isFinite(weight) ? Math.round(Math.min(800, Math.max(400, weight)) / 50) * 50 : 650,
+    subtitleOpacity: Number.isFinite(opacity) ? Math.min(1, Math.max(0.5, opacity)) : 1,
+    subtitleLineHeight: Number.isFinite(lineHeight) ? Math.min(1.6, Math.max(1, lineHeight)) : 1.22,
     showPlayerStatus: v.showPlayerStatus !== false,
     onboardingComplete: v.onboardingComplete === true,
     debugMode: v.debugMode === true,

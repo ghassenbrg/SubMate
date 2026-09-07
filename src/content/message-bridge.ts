@@ -65,5 +65,10 @@ export function startNetflixBridge(handlers: NetflixBridgeHandlers): () => void 
     }
   };
   window.addEventListener('message', listener);
+  // The MAIN-world agent starts at document_start, while this isolated bridge
+  // waits for settings and UI initialization. Netflix can parse its manifest
+  // during that gap, so explicitly request the retained current-title snapshot
+  // once our listener is ready.
+  window.postMessage({ namespace: BRIDGE_NAMESPACE, type: 'manifest-replay-request' }, location.origin);
   return () => window.removeEventListener('message', listener);
 }

@@ -5,6 +5,7 @@ export type CacheRequest =
   | { type: 'CACHE_PUT_TRANSLATION'; record: CachedTranslation }
   | { type: 'CACHE_PUT_SOURCE'; track: SubtitleTrack }
   | { type: 'CACHE_GET_SOURCE'; sourceHash: string }
+  | { type: 'CACHE_GET_CONTENT_SOURCE'; contentId: string }
   | { type: 'CACHE_CLEAR' }
   | { type: 'CACHE_STATS' };
 

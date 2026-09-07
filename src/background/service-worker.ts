@@ -1,4 +1,4 @@
-import { cacheStats, clearCache, getSource, getTranslation, putSource, putTranslation } from '../cache/db';
+import { cacheStats, clearCache, getSource, getSourceForContent, getTranslation, putSource, putTranslation } from '../cache/db';
 import type { CacheRequest } from '../cache/messages';
 import { defaultSettings } from '../settings/defaults';
 import { SETTINGS_KEY } from '../settings/schema';
@@ -22,6 +22,7 @@ chrome.runtime.onMessage.addListener((raw: unknown, _sender, sendResponse) => {
       case 'CACHE_PUT_TRANSLATION': return putTranslation(request.record);
       case 'CACHE_PUT_SOURCE': return putSource(request.track);
       case 'CACHE_GET_SOURCE': return getSource(request.sourceHash);
+      case 'CACHE_GET_CONTENT_SOURCE': return getSourceForContent(request.contentId);
       case 'CACHE_CLEAR': return clearCache();
       case 'CACHE_STATS': return cacheStats();
     }

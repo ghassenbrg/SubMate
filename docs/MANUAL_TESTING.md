@@ -11,12 +11,13 @@ reference-repository inspection or synthetic fixture as live Netflix proof.
   subtitle download and parsing; 521 normalized cues; Japanese → American
   English on-device preparation to Ready; one active time-indexed cue; Netflix
   playback continued normally.
-- Failed in the loaded bundle: translated text was not visible even though the
-  active cue and Ready state were present. Root cause was the overlay show path
-  inheriting its stylesheet's `display:none` rule.
-- Fixed in the current build: the subtitle block now sets `display:block`
-  explicitly and exposes source/translation length and visibility diagnostics;
-  synthetic rendering regression passes.
+- Initially failed in the loaded bundle: translated text was not visible even
+  though the active cue and Ready state were present. Root cause was the overlay
+  show path inheriting its stylesheet's `display:none` rule.
+- Passed after rebuild/reload: content `83068200` visibly rendered French above
+  Netflix's Japanese cue. Only one Japanese source line remained; FlixTranslate
+  suppressed its duplicate source while the native cue was visible. Responsive
+  subtitle sizing and the compact quick panel were also visible.
 - The unattended session then autoplayed to content `83068201`. The previous
   episode was cleared and only one FlixTranslate root remained, but the loaded
   bundle stayed in Discovering because Netflix had preloaded Episode B's
@@ -24,14 +25,22 @@ reference-repository inspection or synthetic fixture as live Netflix proof.
   page-realm preload window and replays the matching safe manifest immediately
   after `/watch/<id>` navigation; four regression cases cover replay, URL
   redaction, hydration changes, and bounded retention.
-- Pending before another live claim: open `chrome://extensions`, click
-  **Reload** on FlixTranslate, reload this Netflix episode, and confirm the new
-  `data-subtitle-visible`, source-length, and translation-length diagnostics plus
-  the visible translated line. Also confirm Episode `83068201` leaves
-  Discovering and prepares its source after the page is refreshed.
+- Passed reload/cache recovery: when Netflix resumed without producing a fresh
+  usable manifest, the rebuilt extension recovered the exact 521-line cached
+  source and selected manual target using the source-hash/target/engine cache
+  identity; popup and quick panel returned to Ready without retranslating.
+- Passed a second content/title check: content `82904953` freshly rendered a
+  Japanese → Arabic mixed-script translation. With Netflix subtitles set to
+  Off, bilingual mode correctly rendered both its Japanese source and Arabic
+  target. This was observed in the authenticated player, not inferred from a
+  fixture.
+- Passed popup inspection: the popup opened at its intended width with complete
+  language names/codes, unclipped episode state, manual engine, version, and
+  GitHub footer.
 
-All unchecked scenarios below remain required release evidence even though the
-core live extraction/translation path has now been exercised once.
+All unchecked scenarios below remain required release-matrix evidence even
+though the core live extraction, reload/cache, and rendering paths have now
+been exercised on two content IDs.
 
 ## Setup
 

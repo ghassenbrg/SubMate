@@ -1,4 +1,5 @@
 import type { FlixTranslateSettings } from '../settings/schema';
+import { subtitleAppearanceVariables } from '../settings/appearance';
 import { isRtlLocale, t, uiLocale } from '../i18n';
 import type { SubtitleTrack, TranslationStatus } from '../subtitles/models';
 import { CueIndex } from './cue-index';
@@ -62,6 +63,13 @@ export class SubtitleOverlay {
     this.indicator.classList.remove('quiet');
     if (this.status.state === 'ready') this.scheduleQuietIndicator();
   };
+  private readonly onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && this.panel.classList.contains('open')) {
+      this.setPanelOpen(false);
+      this.indicator.focus();
+      if (this.status.state === 'ready') this.scheduleQuietIndicator();
+    }
+  };
 
   constructor(settings: FlixTranslateSettings, private readonly actions: OverlayActions) {
     document.getElementById('flixtranslate-root')?.remove();
@@ -74,25 +82,25 @@ export class SubtitleOverlay {
     this.shadow.innerHTML = `
       <style>
         :host{all:initial;position:fixed;inset:0;z-index:2147483000;pointer-events:none;font-family:Inter,Arial,sans-serif;color:#fff}
-        .subtitle{position:absolute;left:6%;right:6%;bottom:var(--ft-bottom,13%);display:none;text-align:center;pointer-events:none;filter:drop-shadow(0 2px 2px #000);line-height:1.22}
-        .cue{display:table;margin:.12em auto;padding:.08em .32em;border-radius:.18em;background:rgba(0,0,0,.62);max-width:min(92%,72rem);white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext}
-        .source{font-size:calc(clamp(20px,3vw,44px)*var(--ft-scale,1)*.82);font-weight:500;color:#eee}
-        .translation{font-size:calc(clamp(22px,3.25vw,50px)*var(--ft-scale,1));font-weight:650}
+        .subtitle{position:absolute;left:6%;right:6%;bottom:var(--ft-bottom,13%);display:none;text-align:center;pointer-events:none;line-height:var(--ft-line-height,1.22);opacity:var(--ft-opacity,1)}
+        .cue{display:table;margin:.12em auto;padding:var(--ft-cue-padding,.1em .36em);border-radius:var(--ft-radius,.18em);background:var(--ft-background,rgba(0,0,0,.68));color:var(--ft-color,#fff);text-shadow:var(--ft-text-shadow,0 2px 3px #000);max-width:min(86%,62rem);white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext}
+        .source{font-size:calc(clamp(18px,2.1vw,32px)*var(--ft-scale,1));font-weight:500;opacity:.88}
+        .translation{font-size:calc(clamp(20px,2.4vw,38px)*var(--ft-scale,1));font-weight:var(--ft-weight,650)}
         .indicator{position:absolute;inset-inline-end:24px;bottom:24px;pointer-events:auto;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(18,18,21,.82);color:#fff;font:700 12px/1 Arial,sans-serif;padding:8px 10px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35);opacity:1;transition:opacity .18s ease,transform .18s ease}
         .indicator.quiet{opacity:0;pointer-events:none;transform:translateY(4px)}
         .indicator:focus-visible,.panel button:focus-visible{outline:3px solid #fff;outline-offset:2px}
         .indicator[data-state="ready"]{border-color:#4fd18b}.indicator[data-state="failed"]{border-color:#ff6b73}
-        .panel{position:absolute;inset-inline-end:24px;bottom:64px;width:280px;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(255,255,255,.18);border-radius:16px;background:rgba(18,18,21,.96);backdrop-filter:blur(18px);color:#fff;padding:16px;box-shadow:0 18px 48px rgba(0,0,0,.58);font:14px/1.4 Arial,sans-serif}
+        .panel{position:absolute;inset-inline-end:24px;bottom:64px;width:min(260px,calc(100vw - 28px));max-height:min(72vh,540px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(18,18,21,.96);backdrop-filter:blur(18px);color:#fff;padding:14px;box-shadow:0 18px 48px rgba(0,0,0,.58);font:13px/1.4 Arial,sans-serif}
         .panel.open{display:block}.title{font-weight:750;font-size:15px}.pair{color:#ddd;margin:5px 0 10px}.status{margin:8px 0}.progress{width:100%;accent-color:#d64b55;height:6px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
         .panel button{border:1px solid #555;border-radius:7px;background:#29292e;color:#fff;padding:7px 9px;cursor:pointer;font:inherit}.panel button:hover{background:#37373d}.panel button.primary{background:#c63f49;border-color:#c63f49}
         .modes{display:grid;gap:5px;margin-top:9px}.modes button{text-align:left}.footer{border-top:1px solid #3a3a3f;margin-top:11px;padding-top:10px;display:flex;justify-content:space-between}
-        @media (max-width:700px){.indicator{inset-inline-end:14px;bottom:14px}.panel{inset-inline-end:14px;bottom:52px}.cue{max-width:96%}}
+        @media (max-width:700px){.indicator{inset-inline-end:14px;bottom:14px}.panel{inset-inline-end:14px;bottom:52px}.cue{max-width:94%}.translation{font-size:calc(clamp(18px,5vw,30px)*var(--ft-scale,1))}.source{font-size:calc(clamp(16px,4.3vw,25px)*var(--ft-scale,1))}}
         @media (prefers-reduced-motion:no-preference){.panel{animation:ft-in .12s ease-out}@keyframes ft-in{from{opacity:0;transform:translateY(4px)}}}
         @media (prefers-reduced-motion:reduce){.indicator{transition:none}}
       </style>
       <div class="subtitle" aria-live="off"><div class="cue source" dir="auto"></div><div class="cue translation" dir="auto"></div></div>
-      <button class="indicator" type="button" aria-label="${t('openQuickControls')}">FT</button>
-      <section class="panel" aria-label="${t('quickControls')}">
+      <button class="indicator" type="button" aria-label="${t('openQuickControls')}" aria-controls="flixtranslate-quick-controls" aria-expanded="false">FT</button>
+      <section class="panel" id="flixtranslate-quick-controls" aria-label="${t('quickControls')}">
         <div class="title">FlixTranslate</div><div class="pair" dir="auto"></div>
         <div class="status" role="status" aria-live="polite"></div><progress class="progress" max="1"></progress>
         <div class="actions"></div>
@@ -112,7 +120,7 @@ export class SubtitleOverlay {
     this.progress = this.shadow.querySelector('.progress') as HTMLProgressElement;
     this.actionRow = this.shadow.querySelector('.actions') as HTMLDivElement;
     this.indicator.addEventListener('click', () => {
-      this.panel.classList.toggle('open');
+      this.setPanelOpen(!this.panel.classList.contains('open'));
       if (this.panel.classList.contains('open')) this.clearQuietTimer();
       else if (this.status.state === 'ready') this.scheduleQuietIndicator();
     });
@@ -123,6 +131,7 @@ export class SubtitleOverlay {
     this.shadow.querySelector<HTMLButtonElement>('[data-settings]')?.addEventListener('click', () => this.actions.onOpenSettings());
     document.addEventListener('fullscreenchange', this.onFullscreen);
     document.addEventListener('pointermove', this.onPointerActivity, { passive: true });
+    document.addEventListener('keydown', this.onKeyDown);
     this.mount();
     this.applySettings(settings);
   }
@@ -159,6 +168,9 @@ export class SubtitleOverlay {
     this.settings = settings;
     this.host.style.setProperty('--ft-scale', String(settings.translatedFontScale));
     this.host.style.setProperty('--ft-bottom', `${Math.round(settings.verticalPosition * 100)}%`);
+    for (const [property, value] of Object.entries(subtitleAppearanceVariables(settings))) {
+      this.host.style.setProperty(property, value);
+    }
     this.host.style.display = settings.enabled ? '' : 'none';
     const toggle = this.shadow.querySelector<HTMLButtonElement>('[data-toggle]');
     if (toggle) toggle.textContent = settings.enabled ? t('turnOff') : t('turnOn');
@@ -179,9 +191,9 @@ export class SubtitleOverlay {
     this.actionRow.replaceChildren();
     if (status.state === 'needs_user_activation') this.addAction(t('startTranslation'), 'primary', this.actions.onActivate);
     if (status.state === 'failed') this.addAction(t('retry'), 'primary', this.actions.onRetry);
-    if (['needs_user_activation', 'failed', 'unsupported_image_track', 'no_text_track'].includes(status.state)) this.panel.classList.add('open');
+    if (['needs_user_activation', 'failed', 'unsupported_image_track', 'no_text_track'].includes(status.state)) this.setPanelOpen(true);
     if (status.state === 'ready') {
-      this.panel.classList.remove('open');
+      this.setPanelOpen(false);
       this.scheduleQuietIndicator();
     } else {
       this.clearQuietTimer();
@@ -194,6 +206,7 @@ export class SubtitleOverlay {
     this.clearQuietTimer();
     document.removeEventListener('fullscreenchange', this.onFullscreen);
     document.removeEventListener('pointermove', this.onPointerActivity);
+    document.removeEventListener('keydown', this.onKeyDown);
     this.setPlayer(null);
     this.host.remove();
   }
@@ -214,6 +227,11 @@ export class SubtitleOverlay {
     button.textContent = label;
     button.addEventListener('click', callback);
     this.actionRow.append(button);
+  }
+
+  private setPanelOpen(open: boolean): void {
+    this.panel.classList.toggle('open', open);
+    this.indicator.setAttribute('aria-expanded', String(open));
   }
 
   private updateIndicatorVisibility(): void {
@@ -310,7 +328,10 @@ export class SubtitleOverlay {
     this.host.dataset.translationLength = String(translation.length);
     this.sourceLine.textContent = source;
     this.translationLine.textContent = translation;
-    this.sourceLine.style.display = this.settings.displayMode === 'bilingual' && source ? '' : 'none';
+    // When Netflix is already drawing the original cue, bilingual means
+    // native Netflix source + our translation. Repeating the same source in
+    // our overlay produces the distracting three-line stack seen in-player.
+    this.sourceLine.style.display = this.settings.displayMode === 'bilingual' && source && !nativeVisible ? '' : 'none';
     this.translationLine.style.display = translation ? '' : 'none';
     // `.subtitle` is hidden by default in the shadow stylesheet. An empty
     // inline value falls back to that rule, so showing it must be explicit.

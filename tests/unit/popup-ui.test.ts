@@ -11,6 +11,13 @@ const settings = (): FlixTranslateSettings => ({
   displayMode: 'bilingual',
   translatedFontScale: 1,
   verticalPosition: .13,
+  subtitleStylePreset: 'soft-box',
+  subtitleBackground: 'soft',
+  subtitleOutline: 'shadow',
+  subtitleTextColor: '#ffffff',
+  translatedFontWeight: 650,
+  subtitleOpacity: 1,
+  subtitleLineHeight: 1.22,
   showPlayerStatus: true,
   onboardingComplete: true,
   debugMode: false,
@@ -37,7 +44,7 @@ let storedSettings: FlixTranslateSettings;
 
 async function renderPopup(state: FlixTranslateViewState | undefined, options: { netflixTab?: boolean; onboarding?: boolean } = {}) {
   storedSettings = { ...settings(), onboardingComplete: options.onboarding ?? true };
-  sendMessage = vi.fn(async (message: { type: string }) => ({
+  sendMessage = vi.fn(async (_tabId: number, message: { type: string }) => ({
     ok: true,
     value: message.type === 'CONTENT_GET_STATE' ? state : undefined,
   }));
@@ -115,7 +122,7 @@ describe('popup acceptance states', () => {
     const button = [...document.querySelectorAll('button')].find((candidate) => candidate.textContent === 'Start translation');
     expect(button).toBeDefined();
     button?.click();
-    await vi.waitFor(() => expect(sendMessage).toHaveBeenCalledWith({ type: 'CONTENT_ACTIVATE' }));
+    await vi.waitFor(() => expect(sendMessage).toHaveBeenCalledWith(1, { type: 'CONTENT_ACTIVATE' }));
   });
 
   it('presents failure with playback-safe copy and a working retry', async () => {
@@ -123,6 +130,6 @@ describe('popup acceptance states', () => {
     expect(document.querySelector('.episode')?.textContent).toContain('Netflix playback can continue normally');
     const button = [...document.querySelectorAll('button')].find((candidate) => candidate.textContent === 'Retry');
     button?.click();
-    await vi.waitFor(() => expect(sendMessage).toHaveBeenCalledWith({ type: 'CONTENT_RETRY' }));
+    await vi.waitFor(() => expect(sendMessage).toHaveBeenCalledWith(1, { type: 'CONTENT_RETRY' }));
   });
 });

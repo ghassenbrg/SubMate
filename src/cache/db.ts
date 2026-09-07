@@ -53,6 +53,14 @@ export async function getSource(sourceHash: string): Promise<SubtitleTrack | und
   return requestResult(db.transaction(SOURCE_STORE).objectStore(SOURCE_STORE).get(sourceHash));
 }
 
+export async function getSourceForContent(contentId: string): Promise<SubtitleTrack | undefined> {
+  const db = await openDatabase();
+  const index = await requestResult<{ contentId: string; sourceHash: string } | undefined>(
+    db.transaction(CONTENT_STORE).objectStore(CONTENT_STORE).get(contentId),
+  );
+  return index?.sourceHash ? getSource(index.sourceHash) : undefined;
+}
+
 export async function putTranslation(record: CachedTranslation): Promise<void> {
   const db = await openDatabase();
   const transaction = db.transaction(TRANSLATION_STORE, 'readwrite');

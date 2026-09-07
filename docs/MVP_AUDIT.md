@@ -40,7 +40,7 @@ Audit date: 2026-09-08
 
 ## Automated acceptance evidence
 
-`npm test` covers 102 tests across parser precision/multiline/entities/overlap/empty cues; hash
+`npm test` covers 113 tests across parser precision/multiline/entities/overlap/empty cues; hash
 invalidation; cache isolation; exact/missing/duplicate/unknown cue validation;
 chunk order/limits; IndexedDB hit/miss/clear; JSON/SRT/VTT imports; malicious
 strings; manifest current/legacy shapes and URL attacks; cue boundaries/gaps/
@@ -53,18 +53,31 @@ The ready player indicator is also verified to fade after success and return on
 pointer activity, while actionable states remain reachable.
 Player replacement/removal, settings persistence/canonicalization, and MV3
 worker installation/cache-message routing have dedicated regression coverage.
+Popup acceptance tests exercise first-run language names, non-Netflix and
+no-player states, determinate episode progress, activation, failure, and retry.
+Late bridge attachment, retained-manifest requests, exact content-to-source
+recovery, cached reloads, and target changes without a fresh manifest have
+dedicated regressions; a cached old target is cleared rather than rendered.
 
 `npm run check`, `npm run build`, `npm audit`, and the packaged manifest/security
 scan are required before release.
 
 ## External acceptance gate
 
-All repository-verifiable criteria are implemented. An authenticated Chrome 152
-run on content `83068200` verified current manifest capture, a regular Japanese
-text source, 521 parsed cues, full Japanese → American English preparation,
-and time-index activity. It also found the hidden-overlay defect now covered by
-a regression test. The overall MVP is not yet truthfully marked fully ready:
-Chrome must reload the rebuilt unpacked extension so the visual fix can be
-retested, after which the remaining authenticated checks in `MANUAL_TESTING.md`
-(fullscreen, transitions, cache, additional pairs, and manual workflow) still
-need their recorded pass/fail results.
+All repository-verifiable criteria are implemented. Authenticated Chrome 152
+verified current manifest capture, a regular Japanese text source, 521 parsed
+cues, full episode preparation, cache recovery after an extension/page reload,
+and visible synchronized rendering on content `83068200`. The final renderer
+showed one French translation above one Netflix Japanese cue with no duplicated
+source line. A second live content ID, `82904953`, freshly rendered a mixed RTL
+Japanese → Arabic translation while Netflix native subtitles were off, proving
+that bilingual fallback renders both source and target without a language-pair
+special case. Popup width, full language names, Ready state, quick controls,
+version, and GitHub footer were also inspected in the rebuilt extension.
+
+The core MVP success scenario is now demonstrated. Full release-matrix signoff
+is still not equivalent to “every external condition verified”: the remaining
+authenticated checks in `MANUAL_TESTING.md` include fullscreen/playback-rate,
+source-track switching, next-episode autoplay, destructive cache clearing,
+model-download failures, invalid imports, image-only titles, and additional
+regions/profiles.

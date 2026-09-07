@@ -60,10 +60,11 @@ export class EpisodeOrchestrator {
     this.overlay.setPlayer(video);
     this.emit();
     if (video && this.snapshot && this.settings.enabled && !this.source) void this.prepare(this.snapshot);
+    else if (video && !this.snapshot && this.settings.enabled && !this.source) void this.restoreCachedRoute();
   }
 
   handleNavigation(contentId?: string): void {
-    if (this.snapshot && contentId === this.snapshot.contentId) return;
+    if (contentId && contentId === (this.snapshot?.contentId ?? this.source?.contentId)) return;
     this.cancel();
     this.snapshot = undefined;
     this.source = undefined;
@@ -244,6 +245,46 @@ export class EpisodeOrchestrator {
     }
   }
 
+  private async restoreCachedRoute(): Promise<void> {
+    const contentId = /^\/watch\/(\d+)/.exec(location.pathname)?.[1];
+    if (!contentId || !this.video || this.snapshot || this.source) return;
+    const generation = this.generation;
+    this.setStatus({ state: 'checking_cache' });
+    try {
+      const source = await sendCacheMessage<SubtitleTrack | undefined>({ type: 'CACHE_GET_CONTENT_SOURCE', contentId });
+      if (generation !== this.generation || this.snapshot || this.source || location.pathname !== `/watch/${contentId}`) return;
+      if (!source || source.contentId !== contentId) {
+        this.setStatus({ state: 'discovering' });
+        return;
+      }
+      const target = this.settings.preferredTargetLanguage;
+      const cached = this.settings.translationEngine === 'manual'
+        ? await this.manager.findCached(source, target, 'manual', '1')
+        : await this.manager.findForSelectedEngine(source, target, this.provider);
+      if (generation !== this.generation || this.snapshot || this.source || location.pathname !== `/watch/${contentId}`) return;
+      if (!cached) {
+        this.setStatus({ state: 'discovering' });
+        return;
+      }
+      this.source = source;
+      this.rendered = mergeTranslation(source, cached);
+      this.overlay.setLanguages(source.sourceLanguage, target);
+      this.overlay.setTrack(this.rendered);
+      this.setStatus({
+        state: 'ready',
+        cacheHit: true,
+        imported: cached.engine.id === 'manual',
+        progress: 1,
+        completedCues: source.cues.length,
+        totalCues: source.cues.length,
+      });
+    } catch (error) {
+      if (generation !== this.generation || this.snapshot || this.source) return;
+      if (this.settings.debugMode) console.warn('[FlixTranslate] Cached route restore failed', error);
+      this.setStatus({ state: 'discovering' });
+    }
+  }
+
   private async translatePreparedSource(source: SubtitleTrack, target: string, generation: number): Promise<void> {
     const signal = this.controller?.signal ?? new AbortController().signal;
     const cached = await this.manager.translate(source, target, this.provider, (progress) => {
@@ -279,8 +320,19 @@ export class EpisodeOrchestrator {
       old.preferredSourceLanguage !== settings.preferredSourceLanguage ||
       old.translationEngine !== settings.translationEngine ||
       (!old.autoTranslate && settings.autoTranslate);
-    if (pipelineChanged && this.snapshot) await this.prepare(this.snapshot);
-    else this.emit();
+    if (pipelineChanged && this.snapshot) {
+      await this.prepare(this.snapshot);
+    } else if (pipelineChanged && this.source) {
+      // A late-start reload can be running entirely from content-ID cache. A
+      // target/engine change must never leave that old translation visible.
+      this.cancel();
+      this.source = undefined;
+      this.rendered = undefined;
+      this.overlay.setTrack(undefined);
+      await this.restoreCachedRoute();
+    } else {
+      this.emit();
+    }
   }
 
   private cancel(): void {
@@ -312,6 +364,7 @@ export class EpisodeOrchestrator {
   }
 
   private viewState(): FlixTranslateViewState {
+    const contentId = this.snapshot?.contentId ?? this.source?.contentId;
     const sourceLanguage = this.source?.sourceLanguage ?? chooseSourceTrack(
       this.snapshot ?? { protocolVersion: 1, contentId: '', capturedAt: 0, tracks: [] },
       this.settings.preferredTargetLanguage,
@@ -319,9 +372,9 @@ export class EpisodeOrchestrator {
     ).source?.language;
     return {
       enabled: this.settings.enabled,
-      contentDetected: Boolean(this.snapshot),
+      contentDetected: Boolean(this.snapshot || this.source),
       hasPlayer: Boolean(this.video),
-      ...(this.snapshot?.contentId ? { contentId: this.snapshot.contentId } : {}),
+      ...(contentId ? { contentId } : {}),
       ...(sourceLanguage ? { sourceLanguage, sourceLanguageLabel: languageName(sourceLanguage) } : {}),
       targetLanguage: this.settings.preferredTargetLanguage,
       targetLanguageLabel: languageName(this.settings.preferredTargetLanguage),

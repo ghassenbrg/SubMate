@@ -42,6 +42,10 @@ describe('settings store', () => {
       preferredTargetLanguage: 'fr-FR',
       translationEngine: 'chrome-local',
       displayMode: 'bilingual',
+      subtitleStylePreset: 'soft-box',
+      subtitleBackground: 'soft',
+      subtitleOutline: 'shadow',
+      subtitleTextColor: '#ffffff',
     });
     expect(storage.values[SETTINGS_KEY]).toEqual(settings);
   });
@@ -62,6 +66,29 @@ describe('settings store', () => {
     const settings = await saveSettings({ preferredTargetLanguage: 'ar_eg', translatedFontScale: 99 });
     expect(settings.preferredTargetLanguage).toBe('ar-EG');
     expect(settings.translatedFontScale).toBe(1.8);
+  });
+
+  it('validates custom subtitle appearance without allowing unsafe CSS values', async () => {
+    installStorageMock({
+      preferredTargetLanguage: 'fr',
+      subtitleStylePreset: 'custom',
+      subtitleBackground: 'none',
+      subtitleOutline: 'outline',
+      subtitleTextColor: 'url(javascript:alert(1))',
+      translatedFontWeight: 999,
+      subtitleOpacity: 0,
+      subtitleLineHeight: 9,
+    });
+    const settings = await loadSettings();
+    expect(settings).toMatchObject({
+      subtitleStylePreset: 'custom',
+      subtitleBackground: 'none',
+      subtitleOutline: 'outline',
+      subtitleTextColor: '#ffffff',
+      translatedFontWeight: 800,
+      subtitleOpacity: 0.5,
+      subtitleLineHeight: 1.6,
+    });
   });
 
   it('emits valid external changes and ignores malformed or unrelated writes', () => {

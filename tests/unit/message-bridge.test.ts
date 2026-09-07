@@ -1,8 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
-import { requestPageSubtitle } from '../../src/content/message-bridge';
+import { requestPageSubtitle, startNetflixBridge } from '../../src/content/message-bridge';
 import { BRIDGE_NAMESPACE } from '../../src/netflix/netflix-types';
 
 describe('page subtitle data bridge', () => {
+  it('requests a retained manifest after the isolated bridge listener is ready', () => {
+    const postMessage = vi.spyOn(window, 'postMessage');
+    const stop = startNetflixBridge({ onManifest() {}, onNavigation() {} });
+    expect(postMessage).toHaveBeenCalledWith(
+      { namespace: BRIDGE_NAMESPACE, type: 'manifest-replay-request' },
+      location.origin,
+    );
+    stop();
+    postMessage.mockRestore();
+  });
+
   it('requests a captured identity without accepting or transmitting a URL', async () => {
     const observed: Record<string, unknown>[] = [];
     const listener = (event: MessageEvent) => {
