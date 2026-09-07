@@ -1,0 +1,148 @@
+const ENGLISH_MESSAGES = {
+  extensionName: 'FlixTranslate',
+  extensionDescription: 'Translate missing Netflix subtitles locally and display them in sync.',
+  tagline: "Translate what Netflix doesn't.",
+  onboardingDescription: "Translate subtitles Netflix doesn't provide.",
+  netflixDetected: 'Netflix episode detected',
+  enableFlixTranslate: 'Enable FlixTranslate',
+  translateTo: 'Translate to',
+  targetLanguage: 'Target language',
+  selectedLanguage: 'Selected language: $1',
+  chooseLanguage: 'Choose a language',
+  customLanguage: 'Other language or regional variant…',
+  customLanguagePlaceholder: 'Enter a language code, e.g. es-MX',
+  automaticLanguage: 'Automatic — match the active subtitle',
+  invalidLanguage: 'Choose a language by name, or enter a valid language code.',
+  subtitleDisplay: 'Subtitle display',
+  originalAndTranslation: 'Original + Translation',
+  translationOnly: 'Translation only',
+  off: 'Off',
+  privacySummary: 'On-device translation is private and free. No account or FlixTranslate server is required.',
+  getStarted: 'Get started',
+  translation: 'Translation',
+  onDevicePrivateFree: 'On-device · Private · Free',
+  onDevice: 'On-device',
+  manualTranslation: 'Manual translation',
+  display: 'Display',
+  currentEpisode: 'Current episode',
+  sourceSubtitleToTarget: 'Source subtitle → $1',
+  subtitleLines: '$1 subtitle lines',
+  progressLines: '$1 / $2 lines',
+  startTranslation: 'Start translation',
+  retry: 'Retry',
+  exportFormat: 'Export format',
+  flixTranslateJson: 'FlixTranslate JSON',
+  exportSubtitles: 'Export subtitles',
+  importTranslation: 'Import translation',
+  sourceExported: 'Source subtitles exported.',
+  noActiveSubtitle: 'No active Netflix subtitle',
+  fileTooLarge: 'The selected file is larger than 10 MB.',
+  importMatched: '$1 $2 / $3 lines.',
+  advancedSettings: 'Advanced settings →',
+  starOnGitHub: 'Give us a ★ on ',
+  starAria: 'Give FlixTranslate a star on GitHub',
+  notNetflix: 'Open a Netflix video to translate available subtitles.',
+  noPlayer: 'Netflix detected. Start a movie or episode to use translated subtitles.',
+  importReady: 'Translation matched and is ready to use.',
+  importFailed: 'The translation could not be imported.',
+  statusWaiting: 'Waiting for an episode.',
+  statusDisabled: 'FlixTranslate is off.',
+  statusDiscovering: 'Finding available subtitles…',
+  statusDownloadingSource: 'Downloading source subtitles…',
+  statusParsingSource: 'Reading source subtitles…',
+  statusCheckingCache: 'Checking saved translations…',
+  statusTargetAvailable: 'Netflix already provides your selected target language.',
+  statusNeedsActivation: 'Chrome needs a user action before starting the local translator.',
+  statusDownloadingModel: 'Downloading language data…',
+  statusTranslating: 'Preparing translated subtitles…',
+  statusValidating: 'Checking the completed translation…',
+  statusReady: 'Translated subtitles ready',
+  statusSavedReady: 'Saved translation ready',
+  statusImportedReady: 'Imported translation ready',
+  statusImageUnsupported: 'This subtitle track is image-based. Automatic translation is not supported yet.',
+  statusNoTextTrack: 'No suitable text subtitle was found for this episode.',
+  statusFailed: "Translated subtitles couldn't be prepared. Netflix playback can continue normally.",
+  settingsTitle: 'FlixTranslate Settings',
+  settingsSubtitle: 'Private, synchronized subtitle translation for Netflix',
+  general: 'General',
+  autoTranslateEpisodes: 'Auto-translate episodes',
+  targetLanguageHelp: 'Choose by full name. The standard code appears in parentheses; custom BCP-47 tags are also accepted.',
+  preferredSourceLanguage: 'Preferred source language',
+  sourceLanguageHelp: 'Optional. Leave automatic to match the active or audio subtitle.',
+  engine: 'Engine',
+  engineHelp: 'On-device subtitle text stays in Chrome. Manual mode uses export/import.',
+  appearance: 'Appearance',
+  displayMode: 'Display mode',
+  fontSize: 'Font size',
+  verticalPosition: 'Vertical position',
+  showPlayerStatus: 'Show player status',
+  resetAppearance: 'Reset appearance',
+  storage: 'Storage',
+  cachedItems: '$1 cached translations · $2 source subtitles',
+  extensionStorageUsed: 'Extension storage used: $1',
+  clearCache: 'Clear translation cache',
+  clearCacheConfirm: 'Clear $1 cached translations? Your settings will not change.',
+  about: 'About',
+  version: 'Version $1',
+  independentNotice: 'FlixTranslate is independent and is not affiliated with or endorsed by Netflix.',
+  noTelemetryNotice: 'No telemetry or FlixTranslate backend. On-device translation uses Chrome browser-managed language data.',
+  developerDiagnostics: 'Developer diagnostics',
+  diagnosticsHint: 'Open a Netflix episode to view diagnostics.',
+  overlayWaiting: 'Waiting for a Netflix video',
+  overlayFinding: 'Finding subtitles…',
+  overlayReading: 'Reading source subtitles…',
+  overlayChecking: 'Checking saved translations…',
+  overlayNativeAvailable: 'Netflix already has your target language',
+  overlayReadyToTranslate: 'Ready to translate',
+  overlayPreparing: 'Preparing translated subtitles…',
+  overlayImageUnsupported: 'Image-based subtitles are not supported yet',
+  overlayNoText: 'No suitable text subtitle found',
+  overlayFailed: "Translated subtitles couldn't be prepared",
+  openQuickControls: 'Open FlixTranslate controls',
+  quickControls: 'FlixTranslate quick controls',
+  subtitleDisplayMode: 'Subtitle display mode',
+  turnOff: 'Turn off',
+  turnOn: 'Turn on',
+  openSettings: 'Open settings',
+  translationProgress: 'Translation progress',
+  errorDownload: 'The source subtitle could not be downloaded. Netflix playback can continue normally.',
+  errorParse: 'The source subtitle format could not be read.',
+  errorTranslatorUnavailable: 'On-device translation is unavailable in this browser.',
+  errorPairUnsupported: 'On-device translation does not support this language pair.',
+  errorLanguageData: 'Chrome could not prepare the language data.',
+  errorWrongTrack: 'This translation was created for a different subtitle track.',
+  errorAmbiguousImport: 'This subtitle file could not be matched safely to the current episode.',
+  errorInvalidImport: 'This file could not be read as a FlixTranslate translation.',
+} as const;
+
+export type MessageKey = keyof typeof ENGLISH_MESSAGES;
+
+export function t(key: MessageKey, substitutions: string | string[] = []): string {
+  const values = typeof substitutions === 'string' ? [substitutions] : substitutions;
+  try {
+    const localized = chrome.i18n?.getMessage?.(key, values);
+    if (localized) return localized;
+  } catch {
+    // Unit tests and non-extension documents use the English fallback.
+  }
+  return values.reduce(
+    (message, value, index) => message.replaceAll(`$${index + 1}`, value),
+    ENGLISH_MESSAGES[key] as string,
+  );
+}
+
+export function uiLocale(): string {
+  try { return chrome.i18n?.getUILanguage?.() || navigator.language || 'en'; }
+  catch { return 'en'; }
+}
+
+export function isRtlLocale(locale = uiLocale()): boolean {
+  return ['ar', 'fa', 'he', 'ur'].includes(locale.toLowerCase().split('-')[0] ?? '');
+}
+
+export function applyDocumentLocale(): void {
+  const locale = uiLocale();
+  document.documentElement.lang = locale;
+  document.documentElement.dir = isRtlLocale(locale) ? 'rtl' : 'ltr';
+  document.title = t(document.body.dataset.page === 'options' ? 'settingsTitle' : 'extensionName');
+}

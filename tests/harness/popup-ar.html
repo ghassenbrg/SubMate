@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <base href="/dist/">
+  <title>FlixTranslate Arabic popup harness</title>
+  <link rel="stylesheet" href="/dist/ui/popup.css">
+</head>
+<body>
+  <main id="app"></main>
+  <script type="module">
+    const catalog = await fetch('/public/_locales/ar/messages.json').then((response) => response.json());
+    const mockSettings = {
+      enabled: true,
+      autoTranslate: true,
+      preferredTargetLanguage: 'fr',
+      translationEngine: 'chrome-local',
+      displayMode: 'bilingual',
+      translatedFontScale: 1,
+      verticalPosition: .13,
+      showPlayerStatus: true,
+      onboardingComplete: true,
+      debugMode: false
+    };
+
+    globalThis.chrome = {
+      i18n: {
+        getUILanguage: () => 'ar',
+        getMessage: (key, substitutions) => {
+          const value = catalog[key]?.message ?? '';
+          const values = Array.isArray(substitutions) ? substitutions : [substitutions];
+          return values.reduce(
+            (message, substitution, index) => message.replaceAll(`$${index + 1}`, substitution ?? ''),
+            value
+          );
+        }
+      },
+      storage: {
+        local: {
+          get: async () => ({ flixtranslateSettings: mockSettings }),
+          set: async (value) => Object.assign(mockSettings, value.flixtranslateSettings)
+        },
+        onChanged: { addListener() {}, removeListener() {} }
+      },
+      tabs: {
+        query: async () => [{ id: 1, url: 'https://www.netflix.com/watch/123' }],
+        sendMessage: async () => ({
+          ok: true,
+          value: {
+            enabled: true,
+            contentDetected: true,
+            hasPlayer: true,
+            contentId: '123',
+            sourceLanguage: 'ja',
+            sourceLanguageLabel: '日本語',
+            targetLanguage: 'fr',
+            targetLanguageLabel: 'français',
+            engine: 'chrome-local',
+            displayMode: 'bilingual',
+            status: { state: 'ready', cacheHit: true },
+            sourceCueCount: 521
+          }
+        })
+      },
+      runtime: {
+        openOptionsPage: async () => {},
+        getManifest: () => ({ version: '0.1.0' })
+      }
+    };
+
+    await import('/dist/ui/popup.js');
+  </script>
+</body>
+</html>

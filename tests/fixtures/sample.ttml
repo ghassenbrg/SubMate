@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" ttp:tickRate="10000000" xmlns:ttp="http://www.w3.org/ns/ttml#parameter">
+  <body><div>
+    <p xml:id="first" begin="124100000" end="148205000">Hello &amp; <span>goodbye</span><br/>again</p>
+    <p begin="14.500s" end="16.250s">Overlapping cue</p>
+    <p begin="00:00:17.005" dur="1.5s">   </p>
+  </div></body>
+</tt>

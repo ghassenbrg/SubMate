@@ -1,0 +1,8 @@
+.tmp/
+node_modules/
+dist/
+coverage/
+*.log
+*.pem
+*.crx
+.DS_Store
