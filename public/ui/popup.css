@@ -85,7 +85,9 @@ h1 { font-size: 19px; line-height: 1.12; margin: 0 0 3px; letter-spacing: -0.02e
   appearance: none;
   flex: 0 0 auto;
   width: 42px;
+  min-height: 24px;
   height: 24px;
+  margin: 0;
   padding: 0;
   border: 0;
   border-radius: 999px;

@@ -29,6 +29,10 @@ Audit date: 2026-09-08
   control; target, engine, display, appearance, storage, error, progress, cache,
   and developer-diagnostic surfaces; complete English, French, Japanese, and
   Arabic UI catalogs with RTL layout and localized language names.
+- A live-preview subtitle appearance editor with Netflix-like, soft-background,
+  solid-black, outline, and minimal presets; safe custom background, outline,
+  color, weight, opacity, line-spacing, size, and position controls; and an
+  accessible in-player mode selector with an explicit checked state.
 - A full-name language picker with Japanese, Arabic, and French featured first,
   localized names plus explicit BCP-47 codes, and validated custom BCP-47 input;
   the picker is not a translation-capability allowlist.
@@ -40,7 +44,7 @@ Audit date: 2026-09-08
 
 ## Automated acceptance evidence
 
-`npm test` covers 113 tests across parser precision/multiline/entities/overlap/empty cues; hash
+`npm test` covers 118 tests across parser precision/multiline/entities/overlap/empty cues; hash
 invalidation; cache isolation; exact/missing/duplicate/unknown cue validation;
 chunk order/limits; IndexedDB hit/miss/clear; JSON/SRT/VTT imports; malicious
 strings; manifest current/legacy shapes and URL attacks; cue boundaries/gaps/
@@ -55,6 +59,9 @@ Player replacement/removal, settings persistence/canonicalization, and MV3
 worker installation/cache-message routing have dedicated regression coverage.
 Popup acceptance tests exercise first-run language names, non-Netflix and
 no-player states, determinate episode progress, activation, failure, and retry.
+Options acceptance tests exercise appearance presets, custom transitions, and
+live preview variables; renderer tests cover safe style variables and selected
+quick-control state.
 Late bridge attachment, retained-manifest requests, exact content-to-source
 recovery, cached reloads, and target changes without a fresh manifest have
 dedicated regressions; a cached old target is cleared rather than rendered.

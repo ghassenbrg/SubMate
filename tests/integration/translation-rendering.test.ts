@@ -207,6 +207,23 @@ describe('synthetic episode translation and rendering', () => {
     vi.useRealTimers();
   });
 
+  it('marks the active quick-control display mode and updates selection immediately', () => {
+    const onDisplayMode = vi.fn();
+    const overlay = new SubtitleOverlay(defaultSettings(), { onActivate() {}, onRetry() {}, onDisplayMode, onToggleEnabled() {}, onOpenSettings() {} });
+    const shadow = (overlay as unknown as { shadow: ShadowRoot }).shadow;
+    const bilingual = shadow.querySelector<HTMLButtonElement>('[data-mode="bilingual"]')!;
+    const translationOnly = shadow.querySelector<HTMLButtonElement>('[data-mode="translation-only"]')!;
+    expect(bilingual.getAttribute('aria-pressed')).toBe('true');
+    expect(translationOnly.getAttribute('aria-pressed')).toBe('false');
+    translationOnly.click();
+    expect(onDisplayMode).toHaveBeenCalledWith('translation-only');
+    expect(bilingual.getAttribute('aria-pressed')).toBe('false');
+    expect(translationOnly.getAttribute('aria-pressed')).toBe('true');
+    overlay.applySettings({ ...defaultSettings(), displayMode: 'off' });
+    expect(shadow.querySelector('[data-mode="off"]')?.getAttribute('aria-pressed')).toBe('true');
+    overlay.destroy();
+  });
+
   it('renders Arabic, CJK, and mixed-script bilingual cues with automatic direction', () => {
     const overlay = new SubtitleOverlay({ ...defaultSettings(), onboardingComplete: true }, { onActivate() {}, onRetry() {}, onDisplayMode() {}, onToggleEnabled() {}, onOpenSettings() {} });
     const video = document.createElement('video');

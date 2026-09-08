@@ -89,6 +89,12 @@ Use region/account-appropriate titles; do not rely on one fixed catalog item.
 - Confirm no stale cue survives a seek and only one FlixTranslate root exists.
 - Let the next episode autoplay while translation is in progress; Episode A
   must never render over Episode B.
+- Open Advanced settings and try Netflix-like, soft-background, solid-black,
+  outline, and minimal subtitle presets. Confirm the preview and active player
+  update, the black background can be removed/restored, and Custom is selected
+  after changing background, outline, color, weight, opacity, or line spacing.
+- Confirm the in-player display-mode control clearly checks exactly one active
+  mode and that its compact FT trigger does not obscure Netflix controls.
 
 ## Cache and manual workflow
 

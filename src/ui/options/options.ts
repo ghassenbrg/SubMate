@@ -138,6 +138,7 @@ function render(): void {
 
   const appearance = el('section'); appearance.classList.add('appearance-section'); appearance.append(el('h2', '', t('appearance')));
   const preset = el('select') as HTMLSelectElement;
+  preset.dataset.stylePreset = '';
   preset.append(
     new Option(t('netflixStyle'), 'netflix'),
     new Option(t('softBoxStyle'), 'soft-box'),
@@ -212,7 +213,11 @@ function render(): void {
 async function update(patch: Partial<FlixTranslateSettings>, rerender = true): Promise<void> {
   settings = await saveSettings(patch);
   if (rerender) render();
-  else if (appearancePreview?.isConnected) applyAppearancePreview(appearancePreview, settings);
+  else {
+    const preset = app.querySelector<HTMLSelectElement>('select[data-style-preset]');
+    if (preset) preset.value = settings.subtitleStylePreset;
+    if (appearancePreview?.isConnected) applyAppearancePreview(appearancePreview, settings);
+  }
 }
 
 void (async () => {

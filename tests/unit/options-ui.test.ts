@@ -56,7 +56,7 @@ describe('subtitle appearance settings', () => {
       'Netflix-like', 'Soft background', 'Solid black background', 'Outline', 'Minimal', 'Custom',
     ]);
     for (const label of ['Subtitle background', 'Text outline', 'Text color', 'Text weight', 'Font size', 'Opacity', 'Line spacing', 'Vertical position']) {
-      expect(rowControl(label)).toBeTruthy();
+      expect([...document.querySelectorAll('.row strong')].filter((node) => node.textContent === label)).toHaveLength(1);
     }
     expect(document.querySelector('.subtitle-preview')?.textContent).toContain('Translated subtitle');
   });
@@ -70,11 +70,18 @@ describe('subtitle appearance settings', () => {
     expect(storedSettings.subtitleBackground).toBe('none');
     expect(document.querySelector<HTMLElement>('.subtitle-preview')?.style.getPropertyValue('--ft-background')).toBe('transparent');
 
+    const opacity = rowControl('Opacity').querySelector('input')!;
+    opacity.value = '.8';
+    opacity.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.waitFor(() => expect(storedSettings.subtitleStylePreset).toBe('custom'));
+    expect(rowControl('Subtitle style').querySelector<HTMLSelectElement>('select')?.value).toBe('custom');
+    expect(document.querySelector<HTMLElement>('.subtitle-preview')?.style.getPropertyValue('--ft-opacity')).toBe('0.8');
+
     const background = rowControl('Subtitle background').querySelector('select')!;
     background.value = 'solid';
     background.dispatchEvent(new Event('change', { bubbles: true }));
-    await vi.waitFor(() => expect(storedSettings.subtitleStylePreset).toBe('custom'));
-    expect(storedSettings.subtitleBackground).toBe('solid');
+    await vi.waitFor(() => expect(storedSettings.subtitleBackground).toBe('solid'));
+    expect(storedSettings.subtitleStylePreset).toBe('custom');
     expect(document.querySelector<HTMLElement>('.subtitle-preview')?.style.getPropertyValue('--ft-background')).toBe('rgba(0,0,0,.94)');
   });
 });

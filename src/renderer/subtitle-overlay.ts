@@ -37,6 +37,7 @@ export class SubtitleOverlay {
   private readonly sourceLine: HTMLDivElement;
   private readonly translationLine: HTMLDivElement;
   private readonly indicator: HTMLButtonElement;
+  private readonly indicatorState: HTMLSpanElement;
   private readonly panel: HTMLDivElement;
   private readonly statusText: HTMLDivElement;
   private readonly progress: HTMLProgressElement;
@@ -86,35 +87,42 @@ export class SubtitleOverlay {
         .cue{display:table;margin:.12em auto;padding:var(--ft-cue-padding,.1em .36em);border-radius:var(--ft-radius,.18em);background:var(--ft-background,rgba(0,0,0,.68));color:var(--ft-color,#fff);text-shadow:var(--ft-text-shadow,0 2px 3px #000);max-width:min(86%,62rem);white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext}
         .source{font-size:calc(clamp(18px,2.1vw,32px)*var(--ft-scale,1));font-weight:500;opacity:.88}
         .translation{font-size:calc(clamp(20px,2.4vw,38px)*var(--ft-scale,1));font-weight:var(--ft-weight,650)}
-        .indicator{position:absolute;inset-inline-end:24px;bottom:24px;pointer-events:auto;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(18,18,21,.82);color:#fff;font:700 12px/1 Arial,sans-serif;padding:8px 10px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35);opacity:1;transition:opacity .18s ease,transform .18s ease}
+        .indicator{position:absolute;inset-inline-end:22px;bottom:20px;display:grid;place-items:center;width:42px;height:42px;padding:0;pointer-events:auto;border:0;border-radius:8px;background:rgba(18,18,21,.42);color:#fff;font:750 13px/1 Arial,sans-serif;cursor:pointer;box-shadow:none;opacity:1;transition:opacity .18s ease,transform .18s ease,background .16s ease}
+        .indicator:hover,.indicator[aria-expanded="true"]{background:rgba(255,255,255,.16);transform:scale(1.08)}
+        .indicator-state{position:absolute;inset-inline-end:2px;top:2px;display:grid;place-items:center;min-width:13px;height:13px;padding:0 1px;border-radius:999px;background:#34c980;color:#07150e;font:900 9px/1 Arial,sans-serif;box-shadow:0 0 0 2px rgba(10,10,13,.88)}
+        .indicator-state:empty{display:none}.indicator[data-state="failed"] .indicator-state{background:#ff5b66;color:#fff}
         .indicator.quiet{opacity:0;pointer-events:none;transform:translateY(4px)}
         .indicator:focus-visible,.panel button:focus-visible{outline:3px solid #fff;outline-offset:2px}
-        .indicator[data-state="ready"]{border-color:#4fd18b}.indicator[data-state="failed"]{border-color:#ff6b73}
-        .panel{position:absolute;inset-inline-end:24px;bottom:64px;width:min(260px,calc(100vw - 28px));max-height:min(72vh,540px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(18,18,21,.96);backdrop-filter:blur(18px);color:#fff;padding:14px;box-shadow:0 18px 48px rgba(0,0,0,.58);font:13px/1.4 Arial,sans-serif}
-        .panel.open{display:block}.title{font-weight:750;font-size:15px}.pair{color:#ddd;margin:5px 0 10px}.status{margin:8px 0}.progress{width:100%;accent-color:#d64b55;height:6px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
-        .panel button{border:1px solid #555;border-radius:7px;background:#29292e;color:#fff;padding:7px 9px;cursor:pointer;font:inherit}.panel button:hover{background:#37373d}.panel button.primary{background:#c63f49;border-color:#c63f49}
-        .modes{display:grid;gap:5px;margin-top:9px}.modes button{text-align:left}.footer{border-top:1px solid #3a3a3f;margin-top:11px;padding-top:10px;display:flex;justify-content:space-between}
-        @media (max-width:700px){.indicator{inset-inline-end:14px;bottom:14px}.panel{inset-inline-end:14px;bottom:52px}.cue{max-width:94%}.translation{font-size:calc(clamp(18px,5vw,30px)*var(--ft-scale,1))}.source{font-size:calc(clamp(16px,4.3vw,25px)*var(--ft-scale,1))}}
+        .panel{position:absolute;inset-inline-end:22px;bottom:70px;width:min(300px,calc(100vw - 28px));max-height:min(74vh,570px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:linear-gradient(155deg,rgba(39,20,43,.98),rgba(14,14,19,.98) 45%);backdrop-filter:blur(20px);color:#f8f8fa;padding:0;box-shadow:0 22px 58px rgba(0,0,0,.62);font:13px/1.4 Inter,Arial,sans-serif}
+        .panel::before{content:"";position:absolute;inset:0 18px auto;height:2px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,#b33ee1,#f04468)}
+        .panel.open{display:block}.panel-head{display:grid;grid-template-columns:36px minmax(0,1fr);gap:11px;align-items:center;padding:16px 16px 13px}.panel-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,#8c35d9,#f04468);box-shadow:0 7px 18px rgba(191,48,154,.28);font-weight:850;font-size:12px}.title{font-weight:780;font-size:16px;letter-spacing:-.015em}.pair{color:#c8c5ce;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.panel-body{padding:0 16px 15px}.status-card{border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(255,255,255,.055);padding:10px 11px}.status{display:flex;align-items:center;gap:8px;font-weight:650}.status::before{content:"";width:7px;height:7px;flex:0 0 auto;border-radius:999px;background:#9b9ba6}.panel[data-state="ready"] .status::before{background:#46d58d;box-shadow:0 0 0 3px rgba(70,213,141,.12)}.panel[data-state="failed"] .status::before{background:#ff6570}.progress{width:100%;accent-color:#ed4770;height:6px;margin-top:8px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+        .section-label{margin:14px 2px 7px;color:#9d99a6;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.panel button{border:1px solid rgba(255,255,255,.15);border-radius:9px;background:rgba(255,255,255,.07);color:#fff;padding:8px 10px;cursor:pointer;font:inherit;font-weight:650;transition:border-color .15s ease,background .15s ease,transform .15s ease}.panel button:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25)}.panel button.primary{background:linear-gradient(135deg,#aa3ddd,#ef4068);border-color:transparent}
+        .modes{display:grid;gap:6px}.modes button{position:relative;text-align:left;padding:10px 36px 10px 11px}.modes button[aria-pressed="true"]{border-color:rgba(235,79,159,.75);background:linear-gradient(105deg,rgba(169,57,218,.28),rgba(240,68,104,.19));box-shadow:inset 3px 0 0 #e44d88}.modes button[aria-pressed="true"]::after{content:"✓";position:absolute;inset-inline-end:12px;color:#64dfa0;font-weight:900}.footer{border-top:1px solid rgba(255,255,255,.1);margin-top:13px;padding-top:11px;display:flex;justify-content:space-between;gap:8px}.footer button:last-child{margin-inline-start:auto}
+        :host([dir="rtl"]) .modes button{text-align:right;padding:10px 11px 10px 36px}:host([dir="rtl"]) .modes button[aria-pressed="true"]{box-shadow:inset -3px 0 0 #e44d88}
+        @media (max-width:700px){.indicator{inset-inline-end:12px;bottom:12px}.panel{inset-inline-end:12px;bottom:60px}.cue{max-width:94%}.translation{font-size:calc(clamp(18px,5vw,30px)*var(--ft-scale,1))}.source{font-size:calc(clamp(16px,4.3vw,25px)*var(--ft-scale,1))}}
         @media (prefers-reduced-motion:no-preference){.panel{animation:ft-in .12s ease-out}@keyframes ft-in{from{opacity:0;transform:translateY(4px)}}}
         @media (prefers-reduced-motion:reduce){.indicator{transition:none}}
       </style>
       <div class="subtitle" aria-live="off"><div class="cue source" dir="auto"></div><div class="cue translation" dir="auto"></div></div>
-      <button class="indicator" type="button" aria-label="${t('openQuickControls')}" aria-controls="flixtranslate-quick-controls" aria-expanded="false">FT</button>
+      <button class="indicator" type="button" aria-label="${t('openQuickControls')}" aria-controls="flixtranslate-quick-controls" aria-expanded="false"><span>FT</span><span class="indicator-state" aria-hidden="true"></span></button>
       <section class="panel" id="flixtranslate-quick-controls" aria-label="${t('quickControls')}">
-        <div class="title">FlixTranslate</div><div class="pair" dir="auto"></div>
-        <div class="status" role="status" aria-live="polite"></div><progress class="progress" max="1"></progress>
-        <div class="actions"></div>
-        <div class="modes" aria-label="${t('subtitleDisplayMode')}">
-          <button type="button" data-mode="bilingual">${t('originalAndTranslation')}</button>
-          <button type="button" data-mode="translation-only">${t('translationOnly')}</button>
-          <button type="button" data-mode="off">${t('off')}</button>
+        <div class="panel-head"><div class="panel-mark" aria-hidden="true">FT</div><div><div class="title">FlixTranslate</div><div class="pair" dir="auto"></div></div></div>
+        <div class="panel-body">
+          <div class="status-card"><div class="status" role="status" aria-live="polite"></div><progress class="progress" max="1"></progress><div class="actions"></div></div>
+          <div class="section-label">${t('display')}</div>
+          <div class="modes" aria-label="${t('subtitleDisplayMode')}">
+            <button type="button" data-mode="bilingual" aria-pressed="false">${t('originalAndTranslation')}</button>
+            <button type="button" data-mode="translation-only" aria-pressed="false">${t('translationOnly')}</button>
+            <button type="button" data-mode="off" aria-pressed="false">${t('off')}</button>
+          </div>
+          <div class="footer"><button type="button" data-toggle>${t('turnOff')}</button><button type="button" data-settings>${t('openSettings')}</button></div>
         </div>
-        <div class="footer"><button type="button" data-toggle>${t('turnOff')}</button><button type="button" data-settings>${t('openSettings')}</button></div>
       </section>`;
     this.subtitle = this.shadow.querySelector('.subtitle') as HTMLDivElement;
     this.sourceLine = this.shadow.querySelector('.source') as HTMLDivElement;
     this.translationLine = this.shadow.querySelector('.translation') as HTMLDivElement;
     this.indicator = this.shadow.querySelector('.indicator') as HTMLButtonElement;
+    this.indicatorState = this.shadow.querySelector('.indicator-state') as HTMLSpanElement;
     this.panel = this.shadow.querySelector('.panel') as HTMLDivElement;
     this.statusText = this.shadow.querySelector('.status') as HTMLDivElement;
     this.progress = this.shadow.querySelector('.progress') as HTMLProgressElement;
@@ -125,7 +133,11 @@ export class SubtitleOverlay {
       else if (this.status.state === 'ready') this.scheduleQuietIndicator();
     });
     this.shadow.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
-      button.addEventListener('click', () => this.actions.onDisplayMode(button.dataset.mode as FlixTranslateSettings['displayMode']));
+      button.addEventListener('click', () => {
+        const mode = button.dataset.mode as FlixTranslateSettings['displayMode'];
+        this.updateModeSelection(mode);
+        this.actions.onDisplayMode(mode);
+      });
     });
     this.shadow.querySelector<HTMLButtonElement>('[data-toggle]')?.addEventListener('click', () => this.actions.onToggleEnabled());
     this.shadow.querySelector<HTMLButtonElement>('[data-settings]')?.addEventListener('click', () => this.actions.onOpenSettings());
@@ -171,6 +183,7 @@ export class SubtitleOverlay {
     for (const [property, value] of Object.entries(subtitleAppearanceVariables(settings))) {
       this.host.style.setProperty(property, value);
     }
+    this.updateModeSelection(settings.displayMode);
     this.host.style.display = settings.enabled ? '' : 'none';
     const toggle = this.shadow.querySelector<HTMLButtonElement>('[data-toggle]');
     if (toggle) toggle.textContent = settings.enabled ? t('turnOff') : t('turnOn');
@@ -183,7 +196,8 @@ export class SubtitleOverlay {
     this.host.dataset.status = status.state;
     this.statusText.textContent = status.message ?? STATUS_LABELS[status.state];
     this.indicator.dataset.state = status.state;
-    this.indicator.textContent = status.state === 'ready' ? 'FT ✓' : status.state === 'failed' ? 'FT !' : 'FT';
+    this.panel.dataset.state = status.state;
+    this.indicatorState.textContent = status.state === 'ready' ? '✓' : status.state === 'failed' ? '!' : '';
     this.updateIndicatorVisibility();
     const hasProgress = status.progress !== undefined && ['translating', 'downloading_model'].includes(status.state);
     this.progress.hidden = !hasProgress;
@@ -232,6 +246,12 @@ export class SubtitleOverlay {
   private setPanelOpen(open: boolean): void {
     this.panel.classList.toggle('open', open);
     this.indicator.setAttribute('aria-expanded', String(open));
+  }
+
+  private updateModeSelection(mode: FlixTranslateSettings['displayMode']): void {
+    this.shadow.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
+    });
   }
 
   private updateIndicatorVisibility(): void {
