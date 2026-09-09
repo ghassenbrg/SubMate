@@ -1,0 +1,132 @@
+name: Release extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag to release (for example, v0.1.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-package:
+    name: Verify and package Chrome extension
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Verify tag matches manifest and package versions
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: npm run release:verify -- "$RELEASE_TAG"
+
+      - name: Type-check and test
+        run: |
+          npm run check
+          npm run test
+
+      - name: Build, validate, and package Chrome extension
+        run: npm run pack:chrome
+
+      - name: Verify ZIP integrity and layout
+        run: |
+          unzip -t dist/packages/*.zip
+          unzip -l dist/packages/*.zip | grep -qE '[[:space:]]manifest.json$'
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flixtranslate-chrome
+          path: dist/packages/*.zip
+          if-no-files-found: error
+          retention-days: 30
+
+  github-release:
+    name: Publish GitHub Release
+    needs: verify-and-package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flixtranslate-chrome
+          path: release
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release/*.zip --clobber
+          else
+            gh release create "$RELEASE_TAG" release/*.zip --generate-notes --title "FlixTranslate $RELEASE_TAG"
+          fi
+
+  chrome-web-store:
+    name: Upload to Chrome Web Store
+    needs: github-release
+    if: vars.CHROME_WEB_STORE_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    environment: chrome-web-store
+    steps:
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flixtranslate-chrome
+          path: release
+
+      - name: Upload and submit the package with the Chrome Web Store API v2
+        env:
+          CHROME_WEB_STORE_CLIENT_ID: ${{ secrets.CHROME_WEB_STORE_CLIENT_ID }}
+          CHROME_WEB_STORE_CLIENT_SECRET: ${{ secrets.CHROME_WEB_STORE_CLIENT_SECRET }}
+          CHROME_WEB_STORE_REFRESH_TOKEN: ${{ secrets.CHROME_WEB_STORE_REFRESH_TOKEN }}
+          CHROME_WEB_STORE_PUBLISHER_ID: ${{ vars.CHROME_WEB_STORE_PUBLISHER_ID }}
+          CHROME_WEB_STORE_EXTENSION_ID: ${{ vars.CHROME_WEB_STORE_EXTENSION_ID }}
+        run: |
+          test -n "$CHROME_WEB_STORE_CLIENT_ID"
+          test -n "$CHROME_WEB_STORE_CLIENT_SECRET"
+          test -n "$CHROME_WEB_STORE_REFRESH_TOKEN"
+          test -n "$CHROME_WEB_STORE_PUBLISHER_ID"
+          test -n "$CHROME_WEB_STORE_EXTENSION_ID"
+          ACCESS_TOKEN="$(curl --fail-with-body --silent --show-error \
+            --data-urlencode "client_id=$CHROME_WEB_STORE_CLIENT_ID" \
+            --data-urlencode "client_secret=$CHROME_WEB_STORE_CLIENT_SECRET" \
+            --data-urlencode "refresh_token=$CHROME_WEB_STORE_REFRESH_TOKEN" \
+            --data-urlencode 'grant_type=refresh_token' \
+            https://oauth2.googleapis.com/token | node -e "let body=''; process.stdin.on('data', c => body += c).on('end', () => console.log(JSON.parse(body).access_token ?? ''))")"
+          test -n "$ACCESS_TOKEN"
+          PACKAGE="$(find release -name '*.zip' -print -quit)"
+          test -n "$PACKAGE"
+          API_BASE="https://chromewebstore.googleapis.com"
+          ITEM_PATH="v2/publishers/$CHROME_WEB_STORE_PUBLISHER_ID/items/$CHROME_WEB_STORE_EXTENSION_ID"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --upload-file "$PACKAGE" \
+            "$API_BASE/upload/$ITEM_PATH:upload"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            "$API_BASE/$ITEM_PATH:publish"

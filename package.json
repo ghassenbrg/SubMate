@@ -1,19 +1,45 @@
 {
   "name": "flixtranslate",
   "version": "0.1.0",
+  "description": "Private, synchronized on-device subtitle translation for Netflix in Chrome.",
   "private": true,
+  "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ghassenbrg/FlixTranslate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ghassenbrg/FlixTranslate/issues"
+  },
+  "homepage": "https://github.com/ghassenbrg/FlixTranslate#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "chrome-extension",
+    "netflix",
+    "subtitles",
+    "translation",
+    "manifest-v3"
+  ],
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "npm run build:chrome",
+    "build:chrome": "node scripts/build.mjs chrome",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "validate:chrome": "node scripts/validate-chrome-build.mjs",
+    "validate": "npm run check && npm run test && npm run build:chrome && npm run validate:chrome",
+    "pack:chrome": "npm run build:chrome && npm run validate:chrome && node scripts/package-chrome.mjs",
+    "release:verify": "node scripts/verify-release-tag.mjs"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.6",
     "@types/node": "^24.10.1",
     "@vitest/coverage-v8": "^4.0.15",
+    "archiver": "^7.0.1",
     "esbuild": "^0.28.2",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.4.0",

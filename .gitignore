@@ -5,4 +5,10 @@ coverage/
 *.log
 *.pem
 *.crx
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.nyc_output/
 .DS_Store

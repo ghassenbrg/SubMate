@@ -44,10 +44,10 @@ been exercised on two content IDs.
 
 ## Setup
 
-1. Run `npm install && npm run build`.
+1. Run `npm ci && npm run build:chrome`.
 2. Open Chrome 138 or newer on desktop and visit `chrome://extensions`.
 3. Enable Developer mode, choose **Load unpacked**, and select this repository's
-   `dist/` folder.
+   `dist/chrome/` folder.
 4. Sign into Netflix normally. Do not share credentials with the extension.
 5. Open FlixTranslate, choose any target BCP-47 language supported by Chrome,
    and complete onboarding.
