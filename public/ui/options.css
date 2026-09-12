@@ -117,6 +117,53 @@ h2::before {
 .row .range-control input[type="range"] { width: 100%; }
 .language-picker input, .language-picker select { width: 100% !important; }
 
+/* ---------- Disclosure and notes ----------------------------------------- */
+
+.tune {
+  border-top: 1px solid var(--border);
+  padding-top: 4px;
+}
+
+.tune > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.tune > summary::-webkit-details-marker { display: none; }
+
+.tune > summary::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.16s ease;
+}
+
+[dir="rtl"] .tune > summary::before { transform: rotate(-135deg); }
+.tune[open] > summary::before { transform: rotate(45deg); }
+.tune > summary:hover { color: var(--text); }
+.tune[open] > summary { color: var(--text); }
+
+.section-note {
+  margin: 14px 0 0;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(19, 116, 249, 0.06);
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
 /* ---------- Appearance preview ------------------------------------------- */
 
 .subtitle-preview {

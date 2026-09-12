@@ -115,17 +115,19 @@ function languagePicker(value: string | undefined, allowAutomatic: boolean, onCo
 function render(): void {
   app.replaceChildren();
   const header = el('header');
-  const icon = el('img', 'brand-icon') as HTMLImageElement; icon.src = 'icons/icon-48.png'; icon.alt = ''; icon.width = 48; icon.height = 48;
+  const icon = el('img', 'brand-icon') as HTMLImageElement; icon.src = 'icons/icon.svg'; icon.alt = ''; icon.width = 48; icon.height = 48;
   header.append(icon, el('div'));
   header.lastElementChild?.append(el('h1', '', t('settingsTitle')), el('p', '', t('settingsSubtitle')));
   header.append(el('span', 'version-pill', `v${chrome.runtime.getManifest().version}`));
   app.append(header);
 
   const general = el('section'); general.append(el('h2', '', t('general')));
-  general.append(
-    row(t('enableSubMate'), toggle(settings.enabled, (enabled) => void update({ enabled }))),
-    row(t('autoTranslateEpisodes'), toggle(settings.autoTranslate, (autoTranslate) => void update({ autoTranslate }))),
-  );
+  general.append(row(t('enableSubMate'), toggle(settings.enabled, (enabled) => void update({ enabled }))));
+  // Manual mode returns before auto-translation is ever considered, so the
+  // toggle would sit there doing nothing.
+  if (settings.translationEngine !== 'manual') {
+    general.append(row(t('autoTranslateEpisodes'), toggle(settings.autoTranslate, (autoTranslate) => void update({ autoTranslate }))));
+  }
   const target = languagePicker(settings.preferredTargetLanguage, false, (language) => { if (language) void update({ preferredTargetLanguage: language }); });
   target.firstElementChild?.setAttribute('aria-label', t('targetLanguage'));
   general.append(row(t('targetLanguage'), target, t('targetLanguageHelp')));
@@ -187,20 +189,37 @@ function render(): void {
   const sample = el('div', 'preview-subtitle');
   sample.append(el('div', 'preview-cue preview-source', t('previewOriginal')), el('div', 'preview-cue preview-translation', t('previewTranslation')));
   preview.append(sample); appearancePreview = preview; applyAppearancePreview(preview, settings);
-  appearance.append(
-    preview,
-    row(t('subtitleStylePreset'), preset, t('appearancePresetHelp')),
-    row(t('displayMode'), mode),
-    row(t('subtitleBackground'), background),
-    row(t('textOutline'), outline),
-    row(t('textColor'), color),
-    row(t('fontWeight'), weight),
-    row(t('fontSize'), scale),
-    row(t('subtitleOpacity'), opacity),
-    row(t('lineSpacing'), lineHeight),
-    row(t('verticalPosition'), position),
-    row(t('showPlayerStatus'), toggle(settings.showPlayerStatus, (showPlayerStatus) => void update({ showPlayerStatus }))),
-  );
+  // With the display off nothing is drawn, so every style control below would
+  // be adjusting something invisible. The mode itself stays, as the way back.
+  const subtitlesVisible = settings.displayMode !== 'off';
+  if (subtitlesVisible) appearance.append(preview);
+  appearance.append(row(t('displayMode'), mode));
+  if (subtitlesVisible) {
+    appearance.append(
+      row(t('subtitleStylePreset'), preset, t('appearancePresetHelp')),
+      row(t('fontSize'), scale),
+      row(t('verticalPosition'), position),
+    );
+    // The preset already sets all six of these; they open automatically once a
+    // preset has been departed from.
+    const tune = el('details', 'tune');
+    tune.open = settings.subtitleStylePreset === 'custom';
+    tune.append(
+      el('summary', '', t('fineTuneStyle')),
+      row(t('subtitleBackground'), background),
+      row(t('textOutline'), outline),
+      row(t('textColor'), color),
+      row(t('fontWeight'), weight),
+      row(t('subtitleOpacity'), opacity),
+      row(t('lineSpacing'), lineHeight),
+    );
+    appearance.append(tune);
+  } else {
+    appearance.append(el('p', 'section-note', t('appearanceOffNote')));
+  }
+  // The in-player control is how the user turns subtitles back on, so it stays
+  // available even when the display is off.
+  appearance.append(row(t('showPlayerStatus'), toggle(settings.showPlayerStatus, (showPlayerStatus) => void update({ showPlayerStatus }))));
   const reset = el('button', 'secondary', t('resetAppearance')); reset.addEventListener('click', () => void update({
     displayMode: 'bilingual', translatedFontScale: 1, verticalPosition: .13, showPlayerStatus: true, ...appearanceForPreset('soft-box'),
   })); appearance.append(reset);

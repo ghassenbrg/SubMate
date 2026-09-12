@@ -23,6 +23,7 @@ const requiredFiles = [
   'ui/options.css',
   '_locales/en/messages.json',
   'icons/icon-128.png',
+  'icons/icon.svg',
 ];
 
 const missing = [];

@@ -135,6 +135,3 @@ Report suspected vulnerabilities privately as described in [SECURITY.md](SECURIT
 
 SubMate is released under the [MIT License](LICENSE).
 
-## Technical inspiration
-
-Netflix subtitle extraction and secondary-subtitle behaviour were researched with reference to [gmertes/NflxMultiSubs](https://github.com/gmertes/NflxMultiSubs), an MIT-licensed project by Dan Chen and Gert Mertes. SubMate is a new, independent implementation; no source code from that project is bundled.

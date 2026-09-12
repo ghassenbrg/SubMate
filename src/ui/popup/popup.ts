@@ -32,7 +32,8 @@ function field(label: string, control: HTMLElement): HTMLElement {
 
 function brandIcon(className = 'brand-icon'): HTMLImageElement {
   const icon = element('img', className) as HTMLImageElement;
-  icon.src = 'icons/icon-48.png';
+  // Vector, so the 84px onboarding mark stays crisp on any display density.
+  icon.src = 'icons/icon.svg';
   icon.alt = '';
   icon.width = 40;
   icon.height = 40;
@@ -254,7 +255,9 @@ function render(): void {
     }
   });
   tools.append(format, exportButton, importButton, input);
-  shell.append(tools);
+  // Both act on the active episode's track, which only exists while SubMate is
+  // running; with it off they would be two permanently greyed-out buttons.
+  if (settings.enabled) shell.append(tools);
   if (feedback) { const alert = element('p', feedbackError ? 'feedback error' : 'feedback success', feedback); alert.role = feedbackError ? 'alert' : 'status'; shell.append(alert); }
   const advanced = element('button', 'link', t('advancedSettings'));
   advanced.prepend(icon('sliders'));

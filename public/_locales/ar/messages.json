@@ -299,6 +299,12 @@
   "showPlayerStatus": {
     "message": "إظهار الحالة في المشغّل"
   },
+  "fineTuneStyle": {
+    "message": "ضبط دقيق للنمط"
+  },
+  "appearanceOffNote": {
+    "message": "الترجمات متوقفة. اختر وضع عرض أعلاه لضبط مظهرها."
+  },
   "resetAppearance": {
     "message": "إعادة ضبط المظهر"
   },

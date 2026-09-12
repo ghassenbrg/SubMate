@@ -299,6 +299,12 @@
   "showPlayerStatus": {
     "message": "Show player status"
   },
+  "fineTuneStyle": {
+    "message": "Fine-tune style"
+  },
+  "appearanceOffNote": {
+    "message": "Subtitles are turned off. Choose a display mode above to adjust how they look."
+  },
   "resetAppearance": {
     "message": "Reset appearance"
   },

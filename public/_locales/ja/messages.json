@@ -299,6 +299,12 @@
   "showPlayerStatus": {
     "message": "プレイヤーに状態を表示"
   },
+  "fineTuneStyle": {
+    "message": "スタイルの詳細調整"
+  },
+  "appearanceOffNote": {
+    "message": "字幕はオフです。表示モードを選ぶと外観を調整できます。"
+  },
   "resetAppearance": {
     "message": "表示設定をリセット"
   },

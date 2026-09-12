@@ -99,6 +99,8 @@ const ENGLISH_MESSAGES = {
   fontSize: 'Font size',
   verticalPosition: 'Vertical position',
   showPlayerStatus: 'Show player status',
+  fineTuneStyle: 'Fine-tune style',
+  appearanceOffNote: 'Subtitles are turned off. Choose a display mode above to adjust how they look.',
   resetAppearance: 'Reset appearance',
   storage: 'Storage',
   cachedItems: '$1 cached translations · $2 source subtitles',

@@ -299,6 +299,12 @@
   "showPlayerStatus": {
     "message": "Afficher l’état dans le lecteur"
   },
+  "fineTuneStyle": {
+    "message": "Réglages détaillés du style"
+  },
+  "appearanceOffNote": {
+    "message": "Les sous-titres sont désactivés. Choisissez un mode d'affichage ci-dessus pour ajuster leur apparence."
+  },
   "resetAppearance": {
     "message": "Réinitialiser l’apparence"
   },
