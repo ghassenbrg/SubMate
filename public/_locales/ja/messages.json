@@ -442,5 +442,44 @@
   },
   "importUntranslated": {
     "message": "$1 行は翻訳がないため空白のままになります。"
+  },
+  "cloudTranslation": {
+    "message": "クラウド API"
+  },
+  "cloudSection": {
+    "message": "クラウド翻訳"
+  },
+  "cloudVendorLabel": {
+    "message": "プロバイダー"
+  },
+  "cloudApiKey": {
+    "message": "API キー"
+  },
+  "cloudApiKeyHelp": {
+    "message": "このデバイスにのみ保存され、同期されません。空欄で保存すると削除されます。"
+  },
+  "cloudApiKeyPlaceholder": {
+    "message": "API キーを貼り付け"
+  },
+  "cloudApiKeySaved": {
+    "message": "このデバイスにキーが保存されています。"
+  },
+  "cloudApiKeyMissing": {
+    "message": "キーは保存されていません。"
+  },
+  "cloudApiKeyClear": {
+    "message": "キーを削除"
+  },
+  "cloudModel": {
+    "message": "モデル"
+  },
+  "cloudModelHelp": {
+    "message": "空欄の場合はプロバイダーの既定モデルを使用します。"
+  },
+  "cloudPrivacyWarning": {
+    "message": "クラウド翻訳では字幕テキストが選択したプロバイダーに送信されます。データはこのデバイスから送信され、プロバイダーの利用規約と料金が適用されます。オンデバイス翻訳はローカルのままです。"
+  },
+  "statusCloudNotConfigured": {
+    "message": "クラウド翻訳を使用するには、設定で API キーを追加してください。"
   }
 }

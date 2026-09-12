@@ -250,6 +250,46 @@ section > button { margin-top: 12px; }
   font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* ---------- Cloud engine panel ------------------------------------------- */
+
+.cloud-section {
+  margin-top: 16px;
+  padding: 4px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: rgba(19, 116, 249, 0.06);
+}
+
+.cloud-section h3 {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 14px 0 10px;
+}
+
+.cloud-warning {
+  margin: 0 0 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(252, 216, 8, 0.32);
+  background: rgba(252, 216, 8, 0.08);
+  color: #f3dd9a;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.cloud-key-state {
+  display: block;
+  margin: -2px 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cloud-section input[type="password"], .cloud-section input[type="text"] { min-width: 220px; }
+.cloud-section > button { margin-top: 0; }
+
 /* ---------- Responsive --------------------------------------------------- */
 
 @media (max-width: 650px) {

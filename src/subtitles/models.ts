@@ -81,7 +81,7 @@ export interface SubMateViewState {
   sourceLanguageLabel?: string;
   targetLanguage: string;
   targetLanguageLabel: string;
-  engine: 'chrome-local' | 'manual';
+  engine: 'chrome-local' | 'manual' | 'cloud-api';
   displayMode: 'bilingual' | 'translation-only' | 'off';
   status: TranslationStatus;
   sourceCueCount?: number;

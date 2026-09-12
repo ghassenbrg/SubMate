@@ -168,6 +168,7 @@ function render(): void {
   const engine = element('select', 'selectlike') as HTMLSelectElement;
   engine.append(
     new Option(t('onDevicePrivateFree'), 'chrome-local'),
+    new Option(t('cloudTranslation'), 'cloud-api'),
     new Option(t('manualTranslation'), 'manual'),
   );
   engine.value = settings.translationEngine;

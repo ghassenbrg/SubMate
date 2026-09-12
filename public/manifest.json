@@ -20,7 +20,8 @@
     "https://*.tver.jp/*",
     "https://*.primevideo.com/*",
     "https://www.amazon.co.jp/gp/video/*",
-    "https://www.amazon.com/gp/video/*"
+    "https://www.amazon.com/gp/video/*",
+    "https://generativelanguage.googleapis.com/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js",

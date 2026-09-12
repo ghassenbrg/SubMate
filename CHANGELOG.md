@@ -7,6 +7,7 @@ All notable changes to SubMate are documented here. This project follows [Semant
 ### Added
 
 - **TVer support.** Japanese captions are assembled from the segmented HLS WebVTT the authorized player already exposes, merged and de-duplicated across segments into one episode track.
+- **Cloud translation engine.** An opt-in, bring-your-own-key engine (Google Gemini) that translates in batches with surrounding context, for higher quality than per-line on-device translation. The key is stored in its own `storage.local` entry that the content script never receives, and results are reconciled by cue id so a dropped line cannot shift later subtitles.
 - **Amazon Prime Video support**, built on the same adapter contract with no changes to the shared core.
 - **Platform-adapter architecture.** Translation, caching, synchronization, rendering, language selection, settings, and error handling are now platform-independent; each service is a `PlatformAdapter`. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - Advertisement detection, so translated subtitles are hidden during ad breaks and resynchronize against content time afterwards.

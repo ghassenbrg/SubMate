@@ -5,6 +5,8 @@ import type { SubMateSettings } from '../../settings/schema';
 import { appearanceForPreset, subtitleAppearanceVariables } from '../../settings/appearance';
 import { FEATURED_LANGUAGE_CODES, isSuggestedLanguage, languageInputValue, parseLanguageInput, sortedLanguageSuggestions } from '../shared/languages';
 import { sendContent } from '../shared/messages';
+import { hasCloudApiKey, saveCloudApiKey } from '../../translation/cloud/credentials';
+import { CLOUD_VENDORS } from '../../translation/cloud/gemini';
 
 const appNode = document.querySelector<HTMLElement>('#app');
 if (!appNode) throw new Error('Options root missing');
@@ -140,11 +142,13 @@ function render(): void {
   const engine = el('select') as HTMLSelectElement;
   engine.append(
     new Option(t('onDevice'), 'chrome-local'),
+    new Option(t('cloudTranslation'), 'cloud-api'),
     new Option(t('manualTranslation'), 'manual'),
   );
   engine.value = settings.translationEngine;
   engine.addEventListener('change', () => void update({ translationEngine: engine.value as SubMateSettings['translationEngine'] }));
   translation.append(row(t('engine'), engine, t('engineHelp')));
+  if (settings.translationEngine === 'cloud-api') translation.append(cloudSection());
   app.append(translation);
 
   const appearance = el('section'); appearance.classList.add('appearance-section'); appearance.append(el('h2', '', t('appearance')));
@@ -272,6 +276,67 @@ addEventListener('pagehide', () => {
   if (diagnosticsTimer !== undefined) window.clearInterval(diagnosticsTimer);
   diagnosticsTimer = undefined;
 }, { once: true });
+
+/**
+ * Cloud engine configuration.
+ *
+ * The stored key is never rendered back into the DOM — only whether one exists.
+ * That keeps the secret out of the page, out of screenshots and out of any
+ * accessibility tree a screen reader or automation might walk.
+ */
+function cloudSection(): HTMLElement {
+  const section = el('div', 'cloud-section');
+  section.append(el('h3', '', t('cloudSection')));
+
+  const warning = el('p', 'cloud-warning', t('cloudPrivacyWarning'));
+  warning.setAttribute('role', 'note');
+  section.append(warning);
+
+  const vendor = el('select') as HTMLSelectElement;
+  for (const value of Object.values(CLOUD_VENDORS)) vendor.append(new Option(value.label, value.id));
+  vendor.value = settings.cloudVendor;
+  vendor.addEventListener('change', () => void update({ cloudVendor: vendor.value }));
+  section.append(row(t('cloudVendorLabel'), vendor));
+
+  const keyState = el('small', 'cloud-key-state', t('cloudApiKeyMissing'));
+  void hasCloudApiKey().then((present) => {
+    keyState.textContent = present ? t('cloudApiKeySaved') : t('cloudApiKeyMissing');
+  });
+
+  const key = el('input') as HTMLInputElement;
+  key.type = 'password';
+  key.autocomplete = 'off';
+  key.spellcheck = false;
+  key.placeholder = t('cloudApiKeyPlaceholder');
+  key.setAttribute('aria-label', t('cloudApiKey'));
+  key.addEventListener('change', () => {
+    const value = key.value;
+    // Clear the field immediately so the secret does not linger in the DOM.
+    key.value = '';
+    void saveCloudApiKey(value).then(async () => {
+      keyState.textContent = (await hasCloudApiKey()) ? t('cloudApiKeySaved') : t('cloudApiKeyMissing');
+    });
+  });
+  section.append(row(t('cloudApiKey'), key, t('cloudApiKeyHelp')), keyState);
+
+  const clear = el('button', 'secondary', t('cloudApiKeyClear'));
+  clear.type = 'button';
+  clear.addEventListener('click', () => {
+    void saveCloudApiKey('').then(() => { keyState.textContent = t('cloudApiKeyMissing'); });
+  });
+  section.append(clear);
+
+  const model = el('input') as HTMLInputElement;
+  model.type = 'text';
+  model.spellcheck = false;
+  model.value = settings.cloudModel;
+  model.placeholder = CLOUD_VENDORS.gemini.defaultModel;
+  model.setAttribute('aria-label', t('cloudModel'));
+  model.addEventListener('change', () => void update({ cloudModel: model.value.trim() }));
+  section.append(row(t('cloudModel'), model, t('cloudModelHelp')));
+
+  return section;
+}
 
 async function update(patch: Partial<SubMateSettings>, rerender = true): Promise<void> {
   const wasDebug = settings.debugMode;

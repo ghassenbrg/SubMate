@@ -8,6 +8,8 @@ const settings = (): SubMateSettings => ({
   autoTranslate: true,
   preferredTargetLanguage: 'fr',
   translationEngine: 'chrome-local',
+  cloudVendor: 'gemini',
+  cloudModel: '',
   displayMode: 'bilingual',
   translatedFontScale: 1,
   verticalPosition: .13,

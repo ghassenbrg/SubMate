@@ -13,6 +13,8 @@ export const defaultSettings = (): SubMateSettings => {
     autoTranslate: true,
     preferredTargetLanguage: locale,
     translationEngine: 'chrome-local',
+    cloudVendor: 'gemini',
+    cloudModel: '',
     displayMode: 'bilingual',
     translatedFontScale: 1,
     verticalPosition: 0.13,
