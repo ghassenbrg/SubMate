@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CachedTranslation, FlixTranslateViewState, SubtitleTrack, TranslationRequest, TranslationResult } from '../../src/subtitles/models';
+import type {
+  CachedTranslation,
+  FlixTranslateViewState,
+  SubtitleTrack,
+  TranslationRequest,
+  TranslationResult,
+} from '../../src/subtitles/models';
 
 const mocks = vi.hoisted(() => ({
   settings: {
@@ -8,13 +14,17 @@ const mocks = vi.hoisted(() => ({
     onboardingComplete: true, debugMode: false,
   },
   cache: new Map<string, unknown>(),
-  pageSubtitle: vi.fn(),
   translationCalls: 0,
   holdNextTranslation: false,
   releaseTranslation: undefined as (() => void) | undefined,
   providerStartsActivated: true,
   watchCallback: undefined as ((settings: unknown) => void) | undefined,
-  overlays: [] as Array<{ track: SubtitleTrack | undefined; statuses: unknown[]; languages: Array<[string | undefined, string | undefined]>; settingsApplied: unknown[] }>,
+  overlays: [] as Array<{
+    track: SubtitleTrack | undefined;
+    statuses: unknown[];
+    languages: Array<[string | undefined, string | undefined]>;
+    settingsApplied: unknown[];
+  }>,
 }));
 
 vi.mock('../../src/cache/messages', () => ({
@@ -23,28 +33,34 @@ vi.mock('../../src/cache/messages', () => ({
       case 'CACHE_PUT_SOURCE': {
         const track = message.track as SubtitleTrack;
         mocks.cache.set(`source:${track.sourceHash}`, track);
-        mocks.cache.set(`content:${track.contentId}`, track);
+        mocks.cache.set(`content:${track.platform}:${track.contentId}`, track);
         return undefined;
       }
       case 'CACHE_GET_CONTENT_SOURCE': return mocks.cache.get(`content:${message.contentId as string}`);
       case 'CACHE_GET_TRANSLATION': return mocks.cache.get(`translation:${message.cacheKey as string}`);
-      case 'CACHE_PUT_TRANSLATION': mocks.cache.set(`translation:${(message.record as CachedTranslation).cacheKey}`, message.record); return undefined;
+      case 'CACHE_PUT_TRANSLATION':
+        mocks.cache.set(`translation:${(message.record as CachedTranslation).cacheKey}`, message.record);
+        return undefined;
       default: return undefined;
     }
   },
 }));
 
-vi.mock('../../src/content/message-bridge', () => ({ requestPageSubtitle: (...args: unknown[]) => mocks.pageSubtitle(...args) }));
 vi.mock('../../src/settings/store', () => ({
   loadSettings: async () => ({ ...mocks.settings }),
   saveSettings: async (patch: Record<string, unknown>) => Object.assign(mocks.settings, patch),
-  watchSettings: (callback: (settings: unknown) => void) => { mocks.watchCallback = callback; return () => { mocks.watchCallback = undefined; }; },
+  watchSettings: (callback: (settings: unknown) => void) => {
+    mocks.watchCallback = callback;
+    return () => { mocks.watchCallback = undefined; };
+  },
 }));
+
 vi.mock('../../src/renderer/subtitle-overlay', () => ({
   SubtitleOverlay: class {
-    state: { track: SubtitleTrack | undefined; statuses: unknown[]; languages: Array<[string | undefined, string | undefined]>; settingsApplied: unknown[] } = { track: undefined, statuses: [], languages: [], settingsApplied: [] };
+    state = { track: undefined as SubtitleTrack | undefined, statuses: [] as unknown[], languages: [] as Array<[string | undefined, string | undefined]>, settingsApplied: [] as unknown[] };
     constructor() { mocks.overlays.push(this.state); }
     setPlayer() {}
+    setPlaybackContext() {}
     setTrack(track?: SubtitleTrack) { this.state.track = track; }
     setLanguages(source?: string, target?: string) { this.state.languages.push([source, target]); }
     setStatus(status: unknown) { this.state.statuses.push(status); }
@@ -52,6 +68,7 @@ vi.mock('../../src/renderer/subtitle-overlay', () => ({
     destroy() {}
   },
 }));
+
 vi.mock('../../src/translation/providers/chrome-translator', () => ({
   ChromeTranslatorProvider: class {
     id = 'chrome-local'; version = 'translator-api-v1'; activated = mocks.providerStartsActivated;
@@ -66,125 +83,154 @@ vi.mock('../../src/translation/providers/chrome-translator', () => ({
         if (signal?.aborted) throw signal.reason ?? new DOMException('Aborted', 'AbortError');
       }
       onProgress?.({ phase: 'translating', progress: 1, completedCues: input.cues.length, totalCues: input.cues.length });
-      return { sourceHash: input.sourceHash, sourceLanguage: input.sourceLanguage, targetLanguage: input.targetLanguage, engine: { id: this.id, version: this.version }, translations: input.cues.map((cue) => ({ id: cue.id, text: `${input.targetLanguage}→ ${cue.text}` })) };
+      return {
+        sourceHash: input.sourceHash, sourceLanguage: input.sourceLanguage, targetLanguage: input.targetLanguage,
+        engine: { id: this.id, version: this.version },
+        translations: input.cues.map((cue) => ({ id: cue.id, text: `${input.targetLanguage}→ ${cue.text}` })),
+      };
     }
     destroy() {}
   },
 }));
 
 import { EpisodeOrchestrator } from '../../src/content/episode-orchestrator';
-import type { NetflixManifestSnapshot } from '../../src/netflix/netflix-types';
+import type { AdapterHost, ExtractedSource, PlatformAdapter, SourceSelection } from '../../src/platforms/types';
+import type { SubtitleCue } from '../../src/subtitles/models';
 
-const ttml = (text: string) => `<tt xmlns="http://www.w3.org/ns/ttml"><body><div><p begin="10000000" end="20000000">${text}</p></div></body></tt>`;
-const snapshot = (contentId: string, language: string): NetflixManifestSnapshot => ({
-  protocolVersion: 1, contentId, capturedAt: Date.now(), audioLanguage: language,
-  tracks: [{ trackId: `T:${language}`, language, label: language, isForcedNarrative: false, isNoneTrack: false, hydrated: true, downloads: [{ profile: 'dfxp-ls-sdh', kind: 'text', urls: [] }] }],
-});
+const cue = (text: string): SubtitleCue => ({ id: 'c000001', startMs: 1_000, endMs: 2_000, sourceText: text });
 
-const video = () => {
-  const value = document.createElement('video');
-  Object.defineProperty(value, 'paused', { value: true });
-  return value;
-};
+/**
+ * A controllable stand-in for any streaming platform. Driving the orchestrator
+ * through this proves the pipeline contains no platform-specific behaviour.
+ */
+class FakeAdapter implements PlatformAdapter {
+  readonly id = 'netflix' as const;
+  readonly capabilities = {
+    supportsOriginalSubtitles: true, supportsFullEpisodeExtraction: true, supportsDualSubtitles: true,
+    supportsEpisodeDetection: true, supportsAdDetection: true,
+  };
+  host: AdapterHost | undefined;
+  contentId: string | undefined = '100';
+  selection: SourceSelection = { kind: 'ready', trackId: 'T:de', language: 'de', profile: 'dfxp' };
+  video: HTMLVideoElement | undefined;
+  adPlaying = false;
+  stopped = false;
+  extractCalls: string[] = [];
+  extractImpl: (contentId: string) => Promise<ExtractedSource> = async (contentId) => ({
+    cues: [cue(contentId === '200' ? '안녕' : 'Hallo')],
+    language: this.selection.kind === 'ready' ? this.selection.language : 'de',
+    trackId: 'T:de',
+  });
+
+  matches() { return true; }
+  start(host: AdapterHost) { this.host = host; }
+  stop() { this.stopped = true; }
+  getContentId() { return this.contentId; }
+  selectSource() { return this.selection; }
+  async extractSource(_selection: never, signal: AbortSignal): Promise<ExtractedSource> {
+    const id = this.contentId ?? '';
+    this.extractCalls.push(id);
+    const result = await this.extractImpl(id);
+    if (signal.aborted) throw signal.reason ?? new DOMException('Aborted', 'AbortError');
+    return result;
+  }
+  getVideo() { return this.video; }
+  isAdPlaying() { return this.adPlaying; }
+
+  /** Simulates a player appearing. */
+  attachVideo() {
+    const video = document.createElement('video');
+    Object.defineProperty(video, 'paused', { value: true });
+    this.video = video;
+    this.host?.onVideoChanged(video);
+  }
+  navigateTo(contentId: string, selection?: SourceSelection) {
+    this.contentId = contentId;
+    if (selection) this.selection = selection;
+    this.host?.onContentChanged(contentId);
+  }
+}
+
+async function startOrchestrator(adapter: FakeAdapter, attach = true) {
+  const orchestrator = new EpisodeOrchestrator(adapter);
+  await orchestrator.initialize();
+  if (attach) adapter.attachVideo();
+  return orchestrator;
+}
 
 beforeEach(() => {
-  mocks.cache.clear(); mocks.pageSubtitle.mockReset(); mocks.translationCalls = 0; mocks.overlays.length = 0;
-  mocks.holdNextTranslation = false; mocks.releaseTranslation = undefined;
-  mocks.providerStartsActivated = true; mocks.watchCallback = undefined;
-  mocks.settings.enabled = true; mocks.settings.autoTranslate = true; mocks.settings.preferredTargetLanguage = 'fr'; mocks.settings.translationEngine = 'chrome-local';
-  history.replaceState({}, '', '/watch/100');
+  mocks.cache.clear();
+  mocks.translationCalls = 0;
+  mocks.overlays.length = 0;
+  mocks.holdNextTranslation = false;
+  mocks.releaseTranslation = undefined;
+  mocks.providerStartsActivated = true;
+  mocks.watchCallback = undefined;
+  mocks.settings.enabled = true;
+  mocks.settings.autoTranslate = true;
+  mocks.settings.preferredTargetLanguage = 'fr';
+  mocks.settings.translationEngine = 'chrome-local';
 });
 
 describe('episode orchestration', () => {
-  it('extracts, hashes, translates, validates, renders, and then uses an exact cache hit', async () => {
-    mocks.pageSubtitle.mockResolvedValue({ text: ttml('Hallo'), contentType: 'application/ttml+xml' });
-    const first = new EpisodeOrchestrator(); await first.initialize(); first.setPlayer(video()); first.handleManifest(snapshot('100', 'de'));
+  it('extracts, hashes, translates, validates, renders, then serves an exact cache hit', async () => {
+    const first = await startOrchestrator(new FakeAdapter());
     await vi.waitFor(() => expect(first.getState().status.state).toBe('ready'));
     expect(first.getState()).toMatchObject({ sourceLanguage: 'de', targetLanguage: 'fr', sourceCueCount: 1 });
     expect(mocks.overlays[0]?.track?.cues[0]?.translatedText).toBe('fr→ Hallo');
     expect(mocks.translationCalls).toBe(1);
     first.destroy();
 
-    const second = new EpisodeOrchestrator(); await second.initialize(); second.setPlayer(video()); second.handleManifest(snapshot('100', 'de'));
+    const second = await startOrchestrator(new FakeAdapter());
     await vi.waitFor(() => expect(second.getState().status.state).toBe('ready'));
     expect(second.getState().status.cacheHit).toBe(true);
+    // A reload must not call the translation engine again.
     expect(mocks.translationCalls).toBe(1);
     second.destroy();
   });
 
-  it('restores a cached unchanged episode when Netflix resumes without a fresh manifest', async () => {
+  it('restores a cached episode when playback resumes without fresh discovery', async () => {
     const source: SubtitleTrack = {
-      platform: 'netflix', contentId: '100', trackId: 'T:de', sourceLanguage: 'de', kind: 'text', profile: 'dfxp-ls-sdh',
+      platform: 'netflix', contentId: '100', trackId: 'T:de', sourceLanguage: 'de', kind: 'text',
       cues: [{ id: 'cached-cue', startMs: 1_000, endMs: 2_000, sourceText: 'Hallo' }], sourceHash: 'cached-source',
     };
-    mocks.cache.set('content:100', source);
+    mocks.cache.set('content:netflix:100', source);
     const manager = new (await import('../../src/translation/translation-manager')).TranslationManager();
     await manager.save(source, {
-      sourceHash: source.sourceHash,
-      sourceLanguage: 'de',
-      targetLanguage: 'fr',
+      sourceHash: source.sourceHash, sourceLanguage: 'de', targetLanguage: 'fr',
       engine: { id: 'chrome-local', version: 'translator-api-v1' },
       translations: [{ id: 'cached-cue', text: 'Bonjour' }],
     });
 
-    const orchestrator = new EpisodeOrchestrator();
-    await orchestrator.initialize();
-    orchestrator.setPlayer(video());
+    const adapter = new FakeAdapter();
+    adapter.selection = { kind: 'pending' };
+    const orchestrator = await startOrchestrator(adapter);
     await vi.waitFor(() => expect(orchestrator.getState()).toMatchObject({
-      contentDetected: true,
-      contentId: '100',
-      sourceLanguage: 'de',
-      sourceCueCount: 1,
+      contentDetected: true, contentId: '100', sourceLanguage: 'de', sourceCueCount: 1,
       status: { state: 'ready', cacheHit: true },
     }));
     expect(mocks.overlays[0]?.track?.cues[0]?.translatedText).toBe('Bonjour');
-    expect(mocks.pageSubtitle).not.toHaveBeenCalled();
+    expect(adapter.extractCalls).toEqual([]);
     expect(mocks.translationCalls).toBe(0);
     orchestrator.destroy();
   });
 
-  it('never leaves a cached old target rendered after a manifest-less target change', async () => {
-    const source: SubtitleTrack = {
-      platform: 'netflix', contentId: '100', trackId: 'T:de', sourceLanguage: 'de', kind: 'text', profile: 'dfxp-ls-sdh',
-      cues: [{ id: 'cached-cue', startMs: 1_000, endMs: 2_000, sourceText: 'Hallo' }], sourceHash: 'cached-source',
-    };
-    mocks.cache.set('content:100', source);
-    const manager = new (await import('../../src/translation/translation-manager')).TranslationManager();
-    await manager.save(source, {
-      sourceHash: source.sourceHash,
-      sourceLanguage: 'de',
-      targetLanguage: 'fr',
-      engine: { id: 'chrome-local', version: 'translator-api-v1' },
-      translations: [{ id: 'cached-cue', text: 'Bonjour' }],
-    });
-    const orchestrator = new EpisodeOrchestrator();
-    await orchestrator.initialize();
-    orchestrator.setPlayer(video());
-    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
-
-    mocks.settings.preferredTargetLanguage = 'ar';
-    mocks.watchCallback?.({ ...mocks.settings });
-    await vi.waitFor(() => expect(orchestrator.getState()).toMatchObject({
-      targetLanguage: 'ar',
-      status: { state: 'discovering' },
-    }));
-    expect(mocks.overlays[0]?.track).toBeUndefined();
-    expect(mocks.overlays[0]?.languages.at(-1)).not.toEqual(['de', 'ar']);
-    orchestrator.destroy();
-  });
-
-  it('prevents an obsolete Episode A job from rendering over Episode B', async () => {
-    let resolveA!: (value: { text: string; contentType: string }) => void;
-    mocks.pageSubtitle.mockImplementation((contentId: string) => contentId === '100'
+  it('prevents an obsolete episode job from rendering over the new episode', async () => {
+    const adapter = new FakeAdapter();
+    let resolveA!: (value: ExtractedSource) => void;
+    adapter.extractImpl = (contentId) => contentId === '100'
       ? new Promise((resolve) => { resolveA = resolve; })
-      : Promise.resolve({ text: ttml('안녕'), contentType: 'application/ttml+xml' }));
+      : Promise.resolve({ cues: [cue('안녕')], language: 'ko', trackId: 'T:ko' });
+
     const states: FlixTranslateViewState[] = [];
-    const orchestrator = new EpisodeOrchestrator(); await orchestrator.initialize(); orchestrator.onState((state) => states.push(state)); orchestrator.setPlayer(video());
-    orchestrator.handleManifest(snapshot('100', 'de'));
-    await vi.waitFor(() => expect(mocks.pageSubtitle).toHaveBeenCalledWith('100', 'T:de', 'dfxp-ls-sdh', expect.any(AbortSignal)));
-    history.replaceState({}, '', '/watch/200'); orchestrator.handleNavigation('200'); orchestrator.handleManifest(snapshot('200', 'ko'));
+    const orchestrator = await startOrchestrator(adapter);
+    orchestrator.onState((state) => states.push(state));
+    await vi.waitFor(() => expect(adapter.extractCalls).toEqual(['100']));
+
+    adapter.navigateTo('200', { kind: 'ready', trackId: 'T:ko', language: 'ko' });
     await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
-    resolveA({ text: ttml('STALE'), contentType: 'application/ttml+xml' });
+
+    resolveA({ cues: [cue('STALE')], language: 'de', trackId: 'T:de' });
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(orchestrator.getState()).toMatchObject({ contentId: '200', sourceLanguage: 'ko', status: { state: 'ready' } });
     expect(mocks.overlays[0]?.track?.contentId).toBe('200');
@@ -193,18 +239,54 @@ describe('episode orchestration', () => {
     orchestrator.destroy();
   });
 
-  it('does not regenerate when Netflix already provides the target language', async () => {
-    const orchestrator = new EpisodeOrchestrator(); await orchestrator.initialize(); orchestrator.setPlayer(video()); orchestrator.handleManifest(snapshot('100', 'fr'));
-    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('target_available'));
-    expect(mocks.pageSubtitle).not.toHaveBeenCalled();
-    expect(mocks.translationCalls).toBe(0);
+  it('maps each non-translatable selection to its own explicit state', async () => {
+    for (const [selection, expected] of [
+      [{ kind: 'target-available' }, 'target_available'],
+      [{ kind: 'image-only' }, 'unsupported_image_track'],
+      [{ kind: 'none' }, 'no_text_track'],
+    ] as const) {
+      const adapter = new FakeAdapter();
+      adapter.selection = selection;
+      const orchestrator = await startOrchestrator(adapter);
+      await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe(expected));
+      expect(adapter.extractCalls).toEqual([]);
+      expect(mocks.translationCalls).toBe(0);
+      orchestrator.destroy();
+    }
+  });
+
+  it('treats a missing caption track as an ordinary outcome, not a failure', async () => {
+    const adapter = new FakeAdapter();
+    adapter.extractImpl = async () => {
+      const { FlixTranslateError } = await import('../../src/shared-errors');
+      throw new FlixTranslateError('NO_TEXT_SUBTITLE_TRACK', 'This episode has no captions');
+    };
+    const orchestrator = await startOrchestrator(adapter);
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('no_text_track'));
+    expect(orchestrator.getState().status.state).not.toBe('failed');
     orchestrator.destroy();
   });
 
-  it('requires the minimum activation once, then completes translation', async () => {
+  it('surfaces a genuine extraction failure as a retryable error', async () => {
+    const adapter = new FakeAdapter();
+    adapter.extractImpl = async () => {
+      const { FlixTranslateError } = await import('../../src/shared-errors');
+      throw new FlixTranslateError('SUBTITLE_SEGMENT_FAILED', 'network down');
+    };
+    const orchestrator = await startOrchestrator(adapter);
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('failed'));
+    expect(orchestrator.getState().status.errorCode).toBe('SUBTITLE_SEGMENT_FAILED');
+
+    // Retry after the transient failure clears must succeed.
+    adapter.extractImpl = async () => ({ cues: [cue('Hallo')], language: 'de', trackId: 'T:de' });
+    await orchestrator.retry();
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
+    orchestrator.destroy();
+  });
+
+  it('requires activation once, then completes translation', async () => {
     mocks.providerStartsActivated = false;
-    mocks.pageSubtitle.mockResolvedValue({ text: ttml('Hallo'), contentType: 'application/ttml+xml' });
-    const orchestrator = new EpisodeOrchestrator(); await orchestrator.initialize(); orchestrator.setPlayer(video()); orchestrator.handleManifest(snapshot('100', 'de'));
+    const orchestrator = await startOrchestrator(new FakeAdapter());
     await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('needs_user_activation'));
     expect(mocks.translationCalls).toBe(0);
     await orchestrator.activate();
@@ -214,8 +296,7 @@ describe('episode orchestration', () => {
   });
 
   it('applies live settings and clears rendering when disabled', async () => {
-    mocks.pageSubtitle.mockResolvedValue({ text: ttml('Hallo'), contentType: 'application/ttml+xml' });
-    const orchestrator = new EpisodeOrchestrator(); await orchestrator.initialize(); orchestrator.setPlayer(video()); orchestrator.handleManifest(snapshot('100', 'de'));
+    const orchestrator = await startOrchestrator(new FakeAdapter());
     await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
     mocks.watchCallback?.({ ...mocks.settings, displayMode: 'translation-only' });
     await vi.waitFor(() => expect(mocks.overlays[0]?.settingsApplied).toHaveLength(1));
@@ -227,19 +308,12 @@ describe('episode orchestration', () => {
 
   it('never renders an obsolete target after the user changes languages', async () => {
     mocks.holdNextTranslation = true;
-    mocks.pageSubtitle.mockResolvedValue({ text: ttml('Hallo'), contentType: 'application/ttml+xml' });
-    const orchestrator = new EpisodeOrchestrator();
-    await orchestrator.initialize();
-    orchestrator.setPlayer(video());
-    orchestrator.handleManifest(snapshot('100', 'de'));
+    const orchestrator = await startOrchestrator(new FakeAdapter());
     await vi.waitFor(() => expect(mocks.translationCalls).toBe(1));
 
     mocks.settings.preferredTargetLanguage = 'ar';
     mocks.watchCallback?.({ ...mocks.settings });
-    await vi.waitFor(() => expect(orchestrator.getState()).toMatchObject({
-      targetLanguage: 'ar',
-      status: { state: 'ready' },
-    }));
+    await vi.waitFor(() => expect(orchestrator.getState()).toMatchObject({ targetLanguage: 'ar', status: { state: 'ready' } }));
     expect(mocks.translationCalls).toBe(2);
     expect(mocks.overlays[0]?.track?.cues[0]?.translatedText).toBe('ar→ Hallo');
 
@@ -247,6 +321,75 @@ describe('episode orchestration', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(orchestrator.getState().targetLanguage).toBe('ar');
     expect(mocks.overlays[0]?.track?.cues[0]?.translatedText).toBe('ar→ Hallo');
+    orchestrator.destroy();
+  });
+
+  it('keys the cache by platform so two services cannot collide', async () => {
+    const adapter = new FakeAdapter();
+    const orchestrator = await startOrchestrator(adapter);
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
+    expect(mocks.cache.has('content:netflix:100')).toBe(true);
+    orchestrator.destroy();
+  });
+
+  it('stops the adapter when the orchestrator is destroyed', async () => {
+    const adapter = new FakeAdapter();
+    const orchestrator = await startOrchestrator(adapter);
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
+    orchestrator.destroy();
+    expect(adapter.stopped).toBe(true);
+  });
+
+  it('re-runs the pipeline when a later manifest promotes a different track', async () => {
+    const adapter = new FakeAdapter();
+    const orchestrator = await startOrchestrator(adapter);
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
+    expect(adapter.extractCalls).toEqual(['100']);
+
+    // Netflix can hydrate a better dialogue track for the same title.
+    adapter.selection = { kind: 'ready', trackId: 'T:de-full', language: 'de', profile: 'dfxp' };
+    adapter.host?.onSourceAvailabilityChanged();
+    await vi.waitFor(() => expect(adapter.extractCalls).toEqual(['100', '100']));
+    orchestrator.destroy();
+  });
+
+  it('does not restart translation when the chosen track is unchanged', async () => {
+    const adapter = new FakeAdapter();
+    const orchestrator = await startOrchestrator(adapter);
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
+    const callsBefore = adapter.extractCalls.length;
+    const translationsBefore = mocks.translationCalls;
+
+    adapter.host?.onSourceAvailabilityChanged();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(adapter.extractCalls).toHaveLength(callsBefore);
+    expect(mocks.translationCalls).toBe(translationsBefore);
+    orchestrator.destroy();
+  });
+
+  it('keeps the loaded track when the player element is replaced', async () => {
+    const adapter = new FakeAdapter();
+    const orchestrator = await startOrchestrator(adapter);
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
+    const rendered = mocks.overlays[0]?.track;
+
+    // An ad break or error recovery can swap the media element.
+    adapter.attachVideo();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(adapter.extractCalls).toEqual(['100']);
+    expect(mocks.overlays[0]?.track).toBe(rendered);
+    expect(orchestrator.getState().status.state).toBe('ready');
+    orchestrator.destroy();
+  });
+
+  it('reports ad state through the view model', async () => {
+    const adapter = new FakeAdapter();
+    const orchestrator = await startOrchestrator(adapter);
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
+    expect(orchestrator.getState().adPlaying).toBe(false);
+    adapter.adPlaying = true;
+    adapter.host?.onAdStateChanged(true);
+    expect(orchestrator.getState().adPlaying).toBe(true);
     orchestrator.destroy();
   });
 });

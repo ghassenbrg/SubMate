@@ -40,8 +40,8 @@ export class CueIndex {
   }
 
   /**
-   * Netflix occasionally renders a text cue on a player clock that differs from
-   * the downloadable TTML clock. Match the visible source line as a recovery
+   * A platform can render a text cue on a player clock that differs from the
+   * downloadable subtitle clock. Match the visible source line as a recovery
    * path, preferring the occurrence nearest to the current playback position.
    */
   findBySourceText(text: string, timeMs: number): SubtitleCue[] {

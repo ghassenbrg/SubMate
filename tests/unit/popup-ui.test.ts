@@ -90,7 +90,7 @@ describe('popup acceptance states', () => {
   it('offers a concise first-run setup with full language names', async () => {
     await renderPopup(undefined, { onboarding: false, netflixTab: false });
     const text = document.querySelector('#app')?.textContent ?? '';
-    expect(text).toContain("Translate subtitles Netflix doesn't provide.");
+    expect(text).toContain("Translate subtitles your streaming service doesn't provide.");
     expect(text).toContain('Japanese (ja)');
     expect(text).toContain('Arabic (ar)');
     expect(text).toContain('French (fr)');
@@ -99,13 +99,13 @@ describe('popup acceptance states', () => {
 
   it('shows a useful non-Netflix state without a broken episode card', async () => {
     await renderPopup(undefined, { netflixTab: false });
-    expect(document.querySelector('.episode')?.textContent).toContain('Open a Netflix video');
+    expect(document.querySelector('.episode')?.textContent).toContain('Open a supported video');
     expect(document.querySelector('.episode h2')).toBeNull();
   });
 
   it('distinguishes Netflix with no active player', async () => {
     await renderPopup(activeState({ hasPlayer: false, status: { state: 'idle' } }));
-    expect(document.querySelector('.episode')?.textContent).toContain('Start a movie or episode');
+    expect(document.querySelector('.episode')?.textContent).toContain('Start a video to use translated subtitles');
   });
 
   it('renders determinate full-episode progress and cue counts', async () => {
@@ -127,7 +127,7 @@ describe('popup acceptance states', () => {
 
   it('presents failure with playback-safe copy and a working retry', async () => {
     await renderPopup(activeState({ status: { state: 'failed' } }));
-    expect(document.querySelector('.episode')?.textContent).toContain('Netflix playback can continue normally');
+    expect(document.querySelector('.episode')?.textContent).toContain('Playback can continue normally');
     const button = [...document.querySelectorAll('button')].find((candidate) => candidate.textContent === 'Retry');
     button?.click();
     await vi.waitFor(() => expect(sendMessage).toHaveBeenCalledWith(1, { type: 'CONTENT_RETRY' }));

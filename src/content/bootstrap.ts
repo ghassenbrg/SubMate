@@ -1,15 +1,15 @@
 import { EpisodeOrchestrator } from './episode-orchestrator';
-import { startNetflixBridge } from './message-bridge';
-import { observeNetflixPlayer } from './player-observer';
+import { selectAdapter } from '../platforms';
 
 void (async () => {
-  const orchestrator = new EpisodeOrchestrator();
+  const adapter = selectAdapter(new URL(location.href));
+  // The content script is declared per host, so a missing adapter means the
+  // registry and the manifest have drifted apart. Fail quietly rather than
+  // interfering with the page.
+  if (!adapter) return;
+
+  const orchestrator = new EpisodeOrchestrator(adapter);
   await orchestrator.initialize();
-  const stopBridge = startNetflixBridge({
-    onManifest: (snapshot) => orchestrator.handleManifest(snapshot),
-    onNavigation: (contentId) => orchestrator.handleNavigation(contentId),
-  });
-  const stopPlayer = observeNetflixPlayer((video) => orchestrator.setPlayer(video));
 
   chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
     const request = message as Record<string, unknown> | null;
@@ -36,9 +36,5 @@ void (async () => {
     return true;
   });
 
-  addEventListener('pagehide', () => {
-    stopBridge();
-    stopPlayer();
-    orchestrator.destroy();
-  }, { once: true });
+  addEventListener('pagehide', () => orchestrator.destroy(), { once: true });
 })();

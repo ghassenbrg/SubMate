@@ -1,5 +1,5 @@
 import { FlixTranslateError } from '../shared-errors';
-import type { SubtitleTrack, TranslationResult } from '../subtitles/models';
+import type { PlatformId, SubtitleTrack, TranslationResult } from '../subtitles/models';
 import { normalizeText } from '../subtitles/normalize';
 import { formatSrtTime, formatVttTime } from '../subtitles/time';
 import { parseSrt, parseVtt } from '../subtitles/vtt-parser';
@@ -8,7 +8,7 @@ import { canonicalLanguage } from '../settings/schema';
 export interface FlixTranslateSourcePackage {
   schemaVersion: 1;
   kind: 'flixtranslate-source';
-  platform: 'netflix';
+  platform: PlatformId;
   contentId: string;
   sourceLanguage: string;
   sourceHash: string;
@@ -24,7 +24,7 @@ export function sourcePackage(track: SubtitleTrack): FlixTranslateSourcePackage 
   return {
     schemaVersion: 1,
     kind: 'flixtranslate-source',
-    platform: 'netflix',
+    platform: track.platform,
     contentId: track.contentId,
     sourceLanguage: track.sourceLanguage,
     sourceHash: track.sourceHash,
@@ -128,5 +128,5 @@ export function importTranslation(
 
 export function exportFileName(track: SubtitleTrack, target: string | undefined, extension: string): string {
   const clean = (value: string) => value.replaceAll(/[^\p{L}\p{N}._-]+/gu, '-').slice(0, 80);
-  return `flixtranslate-netflix-${clean(track.contentId)}-${clean(track.sourceLanguage)}-${target ? clean(target) : 'source'}.${extension}`;
+  return `flixtranslate-${clean(track.platform)}-${clean(track.contentId)}-${clean(track.sourceLanguage)}-${target ? clean(target) : 'source'}.${extension}`;
 }

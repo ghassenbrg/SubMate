@@ -5,6 +5,7 @@ import type { TranslationRequest } from '../../src/subtitles/models';
 import { ChromeTranslatorProvider } from '../../src/translation/providers/chrome-translator';
 import { mergeTranslation } from '../../src/subtitles/validation';
 import { sourceTrack } from '../unit/validation.test';
+import { visibleNetflixSubtitleText } from '../../src/platforms/netflix/native-captions';
 
 afterEach(() => document.getElementById('flixtranslate-root')?.remove());
 
@@ -97,6 +98,9 @@ describe('synthetic episode translation and rendering', () => {
     netflixLine.textContent = 'あ～ 考えすぎて\n袋小路に入っちゃったんじゃない？';
     netflixContainer.append(netflixLine);
     document.body.append(video, netflixContainer);
+    // The renderer no longer scrapes Netflix itself; the adapter supplies the
+    // native-caption reader through the injected playback context.
+    overlay.setPlaybackContext({ isAdPlaying: () => false, getNativeSubtitleText: visibleNetflixSubtitleText });
     overlay.setPlayer(video);
     overlay.setTrack({
       ...sourceTrack(),
@@ -136,6 +140,9 @@ describe('synthetic episode translation and rendering', () => {
     netflixLine.textContent = 'こんにちは';
     netflixContainer.append(netflixLine);
     document.body.append(video, netflixContainer);
+    // The renderer no longer scrapes Netflix itself; the adapter supplies the
+    // native-caption reader through the injected playback context.
+    overlay.setPlaybackContext({ isAdPlaying: () => false, getNativeSubtitleText: visibleNetflixSubtitleText });
     overlay.setPlayer(video);
     overlay.setTrack({
       ...sourceTrack(),
@@ -167,6 +174,9 @@ describe('synthetic episode translation and rendering', () => {
     netflixLine.textContent = '今表示されている台詞';
     netflixContainer.append(netflixLine);
     document.body.append(video, netflixContainer);
+    // The renderer no longer scrapes Netflix itself; the adapter supplies the
+    // native-caption reader through the injected playback context.
+    overlay.setPlaybackContext({ isAdPlaying: () => false, getNativeSubtitleText: visibleNetflixSubtitleText });
     overlay.setPlayer(video);
     overlay.setTrack({
       ...sourceTrack(),
@@ -205,6 +215,48 @@ describe('synthetic episode translation and rendering', () => {
     overlay.destroy();
     video.remove();
     vi.useRealTimers();
+  });
+
+  it('keeps the ready indicator visible while the pointer rests on it', () => {
+    vi.useFakeTimers();
+    const overlay = new SubtitleOverlay({ ...defaultSettings(), onboardingComplete: true }, { onActivate() {}, onRetry() {}, onDisplayMode() {}, onToggleEnabled() {}, onOpenSettings() {} });
+    const video = document.createElement('video');
+    Object.defineProperty(video, 'paused', { value: true });
+    document.body.append(video);
+    overlay.setPlayer(video);
+    overlay.setStatus({ state: 'ready' });
+    const indicator = (overlay as unknown as { indicator: HTMLButtonElement }).indicator;
+
+    // A stationary pointer emits no further pointermove events, so the control
+    // must not fade out from under the cursor the user is aiming with.
+    indicator.dispatchEvent(new Event('pointerenter'));
+    vi.advanceTimersByTime(5_000);
+    expect(indicator.classList.contains('quiet')).toBe(false);
+
+    // Leaving restarts the fade so the control still gets out of the way.
+    indicator.dispatchEvent(new Event('pointerleave'));
+    vi.advanceTimersByTime(2_500);
+    expect(indicator.classList.contains('quiet')).toBe(true);
+    overlay.destroy();
+    video.remove();
+    vi.useRealTimers();
+  });
+
+  it('keeps the indicator readable against a light page background', () => {
+    const overlay = new SubtitleOverlay({ ...defaultSettings(), onboardingComplete: true }, { onActivate() {}, onRetry() {}, onDisplayMode() {}, onToggleEnabled() {}, onOpenSettings() {} });
+    const styles = (overlay as unknown as { shadow: ShadowRoot }).shadow.querySelector('style')?.textContent ?? '';
+    const base = /\.indicator\{[^}]*\}/.exec(styles)?.[0] ?? '';
+    const hover = /\.indicator:hover,[^{]*\{[^}]*\}/.exec(styles)?.[0] ?? '';
+
+    // TVer renders a light page and our host spans the viewport, so a mostly
+    // transparent chip washed out to invisible. Both states must carry their
+    // own opaque ground plus an edge rather than borrowing the page's.
+    expect(base).toMatch(/background:rgba\(\d+,\d+,\d+,\.9\d?\)/);
+    expect(base).toContain('border:1px solid');
+    expect(base).not.toContain('box-shadow:none');
+    expect(hover).not.toContain('rgba(255,255,255,.16)');
+    expect(hover).toMatch(/background:rgba\(\d+,\d+,\d+,\.9\d?\)/);
+    overlay.destroy();
   });
 
   it('marks the active quick-control display mode and updates selection immediately', () => {
@@ -268,6 +320,9 @@ describe('synthetic episode translation and rendering', () => {
     staleLine.textContent = '古い台詞';
     netflixContainer.append(staleLine);
     document.body.append(video, netflixContainer);
+    // The renderer no longer scrapes Netflix itself; the adapter supplies the
+    // native-caption reader through the injected playback context.
+    overlay.setPlaybackContext({ isAdPlaying: () => false, getNativeSubtitleText: visibleNetflixSubtitleText });
     overlay.setPlayer(video);
     overlay.setTrack({
       ...sourceTrack(),

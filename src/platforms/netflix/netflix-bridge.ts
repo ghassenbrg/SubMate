@@ -1,6 +1,6 @@
-import { isManifestSnapshot } from '../netflix/manifest-parser';
-import { BRIDGE_NAMESPACE, type NetflixManifestSnapshot } from '../netflix/netflix-types';
-import { FlixTranslateError } from '../shared-errors';
+import { isManifestSnapshot } from '../../netflix/manifest-parser';
+import { BRIDGE_NAMESPACE, type NetflixManifestSnapshot } from '../../netflix/netflix-types';
+import { FlixTranslateError } from '../../shared-errors';
 
 export interface NetflixBridgeHandlers {
   onManifest(snapshot: NetflixManifestSnapshot): void;

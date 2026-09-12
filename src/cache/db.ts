@@ -40,11 +40,21 @@ const transactionDone = (transaction: IDBTransaction): Promise<void> => new Prom
   transaction.onabort = () => reject(transaction.error);
 });
 
+/**
+ * Content-index key. Two platforms can legitimately use the same content id,
+ * so the platform is part of the key rather than of the stored track.
+ */
+export const contentKey = (platform: string, contentId: string): string => `${platform}:${contentId}`;
+
 export async function putSource(track: SubtitleTrack): Promise<void> {
   const db = await openDatabase();
   const transaction = db.transaction([SOURCE_STORE, CONTENT_STORE], 'readwrite');
   transaction.objectStore(SOURCE_STORE).put(track);
-  transaction.objectStore(CONTENT_STORE).put({ contentId: track.contentId, sourceHash: track.sourceHash, updatedAt: Date.now() });
+  transaction.objectStore(CONTENT_STORE).put({
+    contentId: contentKey(track.platform, track.contentId),
+    sourceHash: track.sourceHash,
+    updatedAt: Date.now(),
+  });
   await transactionDone(transaction);
 }
 
@@ -53,10 +63,10 @@ export async function getSource(sourceHash: string): Promise<SubtitleTrack | und
   return requestResult(db.transaction(SOURCE_STORE).objectStore(SOURCE_STORE).get(sourceHash));
 }
 
-export async function getSourceForContent(contentId: string): Promise<SubtitleTrack | undefined> {
+export async function getSourceForContent(key: string): Promise<SubtitleTrack | undefined> {
   const db = await openDatabase();
   const index = await requestResult<{ contentId: string; sourceHash: string } | undefined>(
-    db.transaction(CONTENT_STORE).objectStore(CONTENT_STORE).get(contentId),
+    db.transaction(CONTENT_STORE).objectStore(CONTENT_STORE).get(key),
   );
   return index?.sourceHash ? getSource(index.sourceHash) : undefined;
 }

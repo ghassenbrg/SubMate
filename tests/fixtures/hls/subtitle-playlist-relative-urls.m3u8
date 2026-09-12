@@ -1,0 +1,10 @@
+#EXTM3U
+#EXT-X-TARGETDURATION:6
+#EXT-X-MEDIA-SEQUENCE:0
+#EXTINF:6.000,
+seg-000.vtt
+#EXTINF:6.000,
+../shared/seg-001.vtt
+#EXTINF:6.000,
+/absolute/seg-002.vtt
+#EXT-X-ENDLIST

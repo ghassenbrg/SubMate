@@ -5,6 +5,7 @@ import type { FlixTranslateSettings } from '../../settings/schema';
 import type { FlixTranslateViewState } from '../../subtitles/models';
 import { FEATURED_LANGUAGE_CODES, isSuggestedLanguage, languageInputValue, languageName, parseLanguageInput, sortedLanguageSuggestions } from '../shared/languages';
 import { getContentState, sendContent } from '../shared/messages';
+import { platformLabel } from '../../platforms';
 import { statusLabel, strings } from '../shared/strings';
 
 const appNode = document.querySelector<HTMLElement>('#app');
@@ -115,7 +116,10 @@ function render(): void {
   const titles = element('div');
   titles.append(element('h1', '', strings.product), element('p', 'tagline', strings.tagline));
   header.append(titles);
-  if (state?.contentDetected) header.append(element('span', 'detected', `● ${t('netflixDetected')}`));
+  if (state?.contentDetected) {
+    const label = state.platform ? platformLabel(state.platform) : 'Netflix';
+    header.append(element('span', 'detected', `● ${t('platformDetected', label)}`));
+  }
   shell.append(header);
 
   const toggleLabel = element('label', 'toggle-row');
@@ -202,8 +206,13 @@ function render(): void {
     const file = input.files?.[0]; if (!file) return;
     try {
       if (file.size > 10_000_000) throw new Error(t('fileTooLarge'));
-      const result = await sendContent<{ matched: number; total: number; targetLanguage: string }>({ type: 'CONTENT_IMPORT', content: await file.text(), fileName: file.name });
-      feedback = result ? t('importMatched', [strings.importReady, String(result.matched), String(result.total)]) : strings.importFailed;
+      const result = await sendContent<{ matched: number; total: number; untranslated: number; targetLanguage: string }>({ type: 'CONTENT_IMPORT', content: await file.text(), fileName: file.name });
+      feedback = result
+        ? [
+            t('importMatched', [strings.importReady, String(result.matched), String(result.total)]),
+            result.untranslated ? t('importUntranslated', String(result.untranslated)) : '',
+          ].filter(Boolean).join(' ')
+        : strings.importFailed;
       feedbackError = !result; settings = await loadSettings(); state = await getContentState(); render();
     } catch (error) {
       const code = (error as { code?: string })?.code;

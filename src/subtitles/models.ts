@@ -1,3 +1,6 @@
+/** Identifier of a supported streaming platform. */
+export type PlatformId = 'netflix' | 'tver';
+
 export interface SubtitleCue {
   id: string;
   startMs: number;
@@ -7,7 +10,7 @@ export interface SubtitleCue {
 }
 
 export interface SubtitleTrack {
-  platform: 'netflix';
+  platform: PlatformId;
   contentId: string;
   trackId: string;
   sourceLanguage: string;
@@ -69,6 +72,8 @@ export interface TranslationStatus {
 
 export interface FlixTranslateViewState {
   enabled: boolean;
+  platform?: PlatformId;
+  adPlaying?: boolean;
   contentDetected: boolean;
   hasPlayer: boolean;
   contentId?: string;

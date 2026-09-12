@@ -1,5 +1,10 @@
 export type FlixTranslateErrorCode =
   | 'NETFLIX_MANIFEST_NOT_FOUND'
+  | 'NO_PLAYER'
+  | 'NO_MANIFEST'
+  | 'SUBTITLE_MANIFEST_FAILED'
+  | 'SUBTITLE_SEGMENT_FAILED'
+  | 'UNSUPPORTED_PLAYER_STATE'
   | 'NO_SUBTITLE_TRACKS'
   | 'NO_TEXT_SUBTITLE_TRACK'
   | 'SUBTITLE_DOWNLOAD_FAILED'
@@ -33,7 +38,13 @@ export const friendlyError = (code?: string): string => {
     case 'NO_TEXT_SUBTITLE_TRACK':
       return t('statusNoTextTrack');
     case 'SUBTITLE_DOWNLOAD_FAILED':
+    case 'SUBTITLE_MANIFEST_FAILED':
+    case 'SUBTITLE_SEGMENT_FAILED':
       return t('errorDownload');
+    case 'NO_PLAYER':
+    case 'NO_MANIFEST':
+    case 'UNSUPPORTED_PLAYER_STATE':
+      return t('errorPlayerState');
     case 'SUBTITLE_PARSE_FAILED':
       return t('errorParse');
     case 'TRANSLATOR_UNAVAILABLE':
@@ -48,6 +59,10 @@ export const friendlyError = (code?: string): string => {
       return t('errorAmbiguousImport');
     case 'IMPORT_INVALID_SCHEMA':
       return t('errorInvalidImport');
+    case 'TRANSLATION_INCOMPLETE':
+      return t('errorIncompleteTranslation');
+    case 'TRANSLATION_ID_MISMATCH':
+      return t('errorTranslationMismatch');
     default:
       return t('statusFailed');
   }

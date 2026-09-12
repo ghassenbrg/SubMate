@@ -10,9 +10,15 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "default_locale": "en",
-  "host_permissions": ["https://www.netflix.com/*"],
+  "host_permissions": [
+    "https://www.netflix.com/*",
+    "https://tver.jp/*",
+    "https://*.tver.jp/*"
+  ],
   "background": {
     "service_worker": "background/service-worker.js",
     "type": "module"
@@ -30,14 +36,44 @@
   "options_page": "options.html",
   "content_scripts": [
     {
-      "matches": ["https://www.netflix.com/*"],
-      "js": ["page/netflix-manifest-agent.js"],
+      "matches": [
+        "https://www.netflix.com/*"
+      ],
+      "js": [
+        "page/netflix-manifest-agent.js"
+      ],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": ["https://www.netflix.com/*"],
-      "js": ["content/bootstrap.js"],
+      "matches": [
+        "https://www.netflix.com/*"
+      ],
+      "js": [
+        "content/bootstrap.js"
+      ],
+      "run_at": "document_start",
+      "world": "ISOLATED"
+    },
+    {
+      "matches": [
+        "https://tver.jp/*",
+        "https://*.tver.jp/*"
+      ],
+      "js": [
+        "page/tver-media-agent.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://tver.jp/*",
+        "https://*.tver.jp/*"
+      ],
+      "js": [
+        "content/bootstrap.js"
+      ],
       "run_at": "document_start",
       "world": "ISOLATED"
     }

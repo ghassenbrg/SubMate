@@ -1,139 +1,440 @@
 {
-  "extensionName": { "message": "FlixTranslate" },
-  "extensionDescription": { "message": "Translate missing Netflix subtitles locally and display them in sync." },
-  "tagline": { "message": "Translate what Netflix doesn't." },
-  "onboardingDescription": { "message": "Translate subtitles Netflix doesn't provide." },
-  "netflixDetected": { "message": "Netflix episode detected" },
-  "enableFlixTranslate": { "message": "Enable FlixTranslate" },
-  "translateTo": { "message": "Translate to" },
-  "targetLanguage": { "message": "Target language" },
-  "selectedLanguage": { "message": "Selected language: $1" },
-  "chooseLanguage": { "message": "Choose a language" },
-  "customLanguage": { "message": "Other language or regional variant…" },
-  "customLanguagePlaceholder": { "message": "Enter a language code, e.g. es-MX" },
-  "automaticLanguage": { "message": "Automatic — match the active subtitle" },
-  "invalidLanguage": { "message": "Choose a language by name, or enter a valid language code." },
-  "subtitleDisplay": { "message": "Subtitle display" },
-  "originalAndTranslation": { "message": "Original + Translation" },
-  "translationOnly": { "message": "Translation only" },
-  "off": { "message": "Off" },
-  "privacySummary": { "message": "On-device translation is private and free. No account or FlixTranslate server is required." },
-  "getStarted": { "message": "Get started" },
-  "translation": { "message": "Translation" },
-  "onDevicePrivateFree": { "message": "On-device · Private · Free" },
-  "onDevice": { "message": "On-device" },
-  "manualTranslation": { "message": "Manual translation" },
-  "display": { "message": "Display" },
-  "currentEpisode": { "message": "Current episode" },
-  "sourceSubtitleToTarget": { "message": "Source subtitle → $1" },
-  "subtitleLines": { "message": "$1 subtitle lines" },
-  "progressLines": { "message": "$1 / $2 lines" },
-  "startTranslation": { "message": "Start translation" },
-  "retry": { "message": "Retry" },
-  "exportFormat": { "message": "Export format" },
-  "flixTranslateJson": { "message": "FlixTranslate JSON" },
-  "exportSubtitles": { "message": "Export subtitles" },
-  "importTranslation": { "message": "Import translation" },
-  "sourceExported": { "message": "Source subtitles exported." },
-  "noActiveSubtitle": { "message": "No active Netflix subtitle" },
-  "fileTooLarge": { "message": "The selected file is larger than 10 MB." },
-  "importMatched": { "message": "$1 $2 / $3 lines." },
-  "advancedSettings": { "message": "Advanced settings →" },
-  "starOnGitHub": { "message": "Give us a ★ on " },
-  "starAria": { "message": "Give FlixTranslate a star on GitHub" },
-  "notNetflix": { "message": "Open a Netflix video to translate available subtitles." },
-  "noPlayer": { "message": "Netflix detected. Start a movie or episode to use translated subtitles." },
-  "importReady": { "message": "Translation matched and is ready to use." },
-  "importFailed": { "message": "The translation could not be imported." },
-  "statusWaiting": { "message": "Waiting for an episode." },
-  "statusDisabled": { "message": "FlixTranslate is off." },
-  "statusDiscovering": { "message": "Finding available subtitles…" },
-  "statusDownloadingSource": { "message": "Downloading source subtitles…" },
-  "statusParsingSource": { "message": "Reading source subtitles…" },
-  "statusCheckingCache": { "message": "Checking saved translations…" },
-  "statusTargetAvailable": { "message": "Netflix already provides your selected target language." },
-  "statusNeedsActivation": { "message": "Chrome needs a user action before starting the local translator." },
-  "statusDownloadingModel": { "message": "Downloading language data…" },
-  "statusTranslating": { "message": "Preparing translated subtitles…" },
-  "statusValidating": { "message": "Checking the completed translation…" },
-  "statusReady": { "message": "Translated subtitles ready" },
-  "statusSavedReady": { "message": "Saved translation ready" },
-  "statusImportedReady": { "message": "Imported translation ready" },
-  "statusImageUnsupported": { "message": "This subtitle track is image-based. Automatic translation is not supported yet." },
-  "statusNoTextTrack": { "message": "No suitable text subtitle was found for this episode." },
-  "statusFailed": { "message": "Translated subtitles couldn't be prepared. Netflix playback can continue normally." },
-  "settingsTitle": { "message": "FlixTranslate Settings" },
-  "settingsSubtitle": { "message": "Private, synchronized subtitle translation for Netflix" },
-  "general": { "message": "General" },
-  "autoTranslateEpisodes": { "message": "Auto-translate episodes" },
-  "targetLanguageHelp": { "message": "Choose by full name. The standard code appears in parentheses; custom BCP-47 tags are also accepted." },
-  "preferredSourceLanguage": { "message": "Preferred source language" },
-  "sourceLanguageHelp": { "message": "Optional. Leave automatic to match the active or audio subtitle." },
-  "engine": { "message": "Engine" },
-  "engineHelp": { "message": "On-device subtitle text stays in Chrome. Manual mode uses export/import." },
-  "appearance": { "message": "Appearance" },
-  "subtitleStylePreset": { "message": "Subtitle style" },
-  "appearancePresetHelp": { "message": "Start with a preset, then adjust any detail. Changes appear on Netflix immediately." },
-  "netflixStyle": { "message": "Netflix-like" },
-  "softBoxStyle": { "message": "Soft background" },
-  "solidBoxStyle": { "message": "Solid black background" },
-  "outlineStyle": { "message": "Outline" },
-  "minimalStyle": { "message": "Minimal" },
-  "customStyle": { "message": "Custom" },
-  "subtitleBackground": { "message": "Subtitle background" },
-  "backgroundNone": { "message": "None" },
-  "backgroundSoft": { "message": "Translucent black" },
-  "backgroundSolid": { "message": "Solid black" },
-  "textOutline": { "message": "Text outline" },
-  "outlineNone": { "message": "None" },
-  "outlineShadow": { "message": "Soft shadow" },
-  "outlineStrong": { "message": "Strong outline" },
-  "textColor": { "message": "Text color" },
-  "fontWeight": { "message": "Text weight" },
-  "subtitleOpacity": { "message": "Opacity" },
-  "lineSpacing": { "message": "Line spacing" },
-  "stylePreview": { "message": "Preview" },
-  "previewOriginal": { "message": "Original subtitle" },
-  "previewTranslation": { "message": "Translated subtitle" },
-  "displayMode": { "message": "Display mode" },
-  "fontSize": { "message": "Font size" },
-  "verticalPosition": { "message": "Vertical position" },
-  "showPlayerStatus": { "message": "Show player status" },
-  "resetAppearance": { "message": "Reset appearance" },
-  "storage": { "message": "Storage" },
-  "cachedItems": { "message": "$1 cached translations · $2 source subtitles" },
-  "extensionStorageUsed": { "message": "Extension storage used: $1" },
-  "clearCache": { "message": "Clear translation cache" },
-  "clearCacheConfirm": { "message": "Clear $1 cached translations? Your settings will not change." },
-  "about": { "message": "About" },
-  "version": { "message": "Version $1" },
-  "independentNotice": { "message": "FlixTranslate is independent and is not affiliated with or endorsed by Netflix." },
-  "noTelemetryNotice": { "message": "No telemetry or FlixTranslate backend. On-device translation uses Chrome browser-managed language data." },
-  "developerDiagnostics": { "message": "Developer diagnostics" },
-  "diagnosticsHint": { "message": "Open a Netflix episode to view diagnostics." },
-  "overlayWaiting": { "message": "Waiting for a Netflix video" },
-  "overlayFinding": { "message": "Finding subtitles…" },
-  "overlayReading": { "message": "Reading source subtitles…" },
-  "overlayChecking": { "message": "Checking saved translations…" },
-  "overlayNativeAvailable": { "message": "Netflix already has your target language" },
-  "overlayReadyToTranslate": { "message": "Ready to translate" },
-  "overlayPreparing": { "message": "Preparing translated subtitles…" },
-  "overlayImageUnsupported": { "message": "Image-based subtitles are not supported yet" },
-  "overlayNoText": { "message": "No suitable text subtitle found" },
-  "overlayFailed": { "message": "Translated subtitles couldn't be prepared" },
-  "openQuickControls": { "message": "Open FlixTranslate controls" },
-  "quickControls": { "message": "FlixTranslate quick controls" },
-  "subtitleDisplayMode": { "message": "Subtitle display mode" },
-  "turnOff": { "message": "Turn off" },
-  "turnOn": { "message": "Turn on" },
-  "openSettings": { "message": "Open settings" },
-  "translationProgress": { "message": "Translation progress" },
-  "errorDownload": { "message": "The source subtitle could not be downloaded. Netflix playback can continue normally." },
-  "errorParse": { "message": "The source subtitle format could not be read." },
-  "errorTranslatorUnavailable": { "message": "On-device translation is unavailable in this browser." },
-  "errorPairUnsupported": { "message": "On-device translation does not support this language pair." },
-  "errorLanguageData": { "message": "Chrome could not prepare the language data." },
-  "errorWrongTrack": { "message": "This translation was created for a different subtitle track." },
-  "errorAmbiguousImport": { "message": "This subtitle file could not be matched safely to the current episode." },
-  "errorInvalidImport": { "message": "This file could not be read as a FlixTranslate translation." }
+  "extensionName": {
+    "message": "FlixTranslate"
+  },
+  "extensionDescription": {
+    "message": "Translate missing Netflix and TVer subtitles locally and display them in sync."
+  },
+  "tagline": {
+    "message": "Translate what streaming doesn't."
+  },
+  "onboardingDescription": {
+    "message": "Translate subtitles your streaming service doesn't provide."
+  },
+  "netflixDetected": {
+    "message": "Netflix episode detected"
+  },
+  "enableFlixTranslate": {
+    "message": "Enable FlixTranslate"
+  },
+  "translateTo": {
+    "message": "Translate to"
+  },
+  "targetLanguage": {
+    "message": "Target language"
+  },
+  "selectedLanguage": {
+    "message": "Selected language: $1"
+  },
+  "chooseLanguage": {
+    "message": "Choose a language"
+  },
+  "customLanguage": {
+    "message": "Other language or regional variant…"
+  },
+  "customLanguagePlaceholder": {
+    "message": "Enter a language code, e.g. es-MX"
+  },
+  "automaticLanguage": {
+    "message": "Automatic — match the active subtitle"
+  },
+  "invalidLanguage": {
+    "message": "Choose a language by name, or enter a valid language code."
+  },
+  "subtitleDisplay": {
+    "message": "Subtitle display"
+  },
+  "originalAndTranslation": {
+    "message": "Original + Translation"
+  },
+  "translationOnly": {
+    "message": "Translation only"
+  },
+  "off": {
+    "message": "Off"
+  },
+  "privacySummary": {
+    "message": "On-device translation is private and free. No account or FlixTranslate server is required."
+  },
+  "getStarted": {
+    "message": "Get started"
+  },
+  "translation": {
+    "message": "Translation"
+  },
+  "onDevicePrivateFree": {
+    "message": "On-device · Private · Free"
+  },
+  "onDevice": {
+    "message": "On-device"
+  },
+  "manualTranslation": {
+    "message": "Manual translation"
+  },
+  "display": {
+    "message": "Display"
+  },
+  "currentEpisode": {
+    "message": "Current episode"
+  },
+  "sourceSubtitleToTarget": {
+    "message": "Source subtitle → $1"
+  },
+  "subtitleLines": {
+    "message": "$1 subtitle lines"
+  },
+  "progressLines": {
+    "message": "$1 / $2 lines"
+  },
+  "startTranslation": {
+    "message": "Start translation"
+  },
+  "retry": {
+    "message": "Retry"
+  },
+  "exportFormat": {
+    "message": "Export format"
+  },
+  "flixTranslateJson": {
+    "message": "FlixTranslate JSON"
+  },
+  "exportSubtitles": {
+    "message": "Export subtitles"
+  },
+  "importTranslation": {
+    "message": "Import translation"
+  },
+  "sourceExported": {
+    "message": "Source subtitles exported."
+  },
+  "noActiveSubtitle": {
+    "message": "No active subtitle"
+  },
+  "fileTooLarge": {
+    "message": "The selected file is larger than 10 MB."
+  },
+  "importMatched": {
+    "message": "$1 $2 / $3 lines."
+  },
+  "advancedSettings": {
+    "message": "Advanced settings →"
+  },
+  "starOnGitHub": {
+    "message": "Give us a ★ on "
+  },
+  "starAria": {
+    "message": "Give FlixTranslate a star on GitHub"
+  },
+  "notNetflix": {
+    "message": "Open a Netflix video to translate available subtitles."
+  },
+  "noPlayer": {
+    "message": "Netflix detected. Start a movie or episode to use translated subtitles."
+  },
+  "importReady": {
+    "message": "Translation matched and is ready to use."
+  },
+  "importFailed": {
+    "message": "The translation could not be imported."
+  },
+  "statusWaiting": {
+    "message": "Waiting for an episode."
+  },
+  "statusDisabled": {
+    "message": "FlixTranslate is off."
+  },
+  "statusDiscovering": {
+    "message": "Finding available subtitles…"
+  },
+  "statusDownloadingSource": {
+    "message": "Downloading source subtitles…"
+  },
+  "statusParsingSource": {
+    "message": "Reading source subtitles…"
+  },
+  "statusCheckingCache": {
+    "message": "Checking saved translations…"
+  },
+  "statusTargetAvailable": {
+    "message": "This service already provides your selected target language."
+  },
+  "statusNeedsActivation": {
+    "message": "Chrome needs a user action before starting the local translator."
+  },
+  "statusDownloadingModel": {
+    "message": "Downloading language data…"
+  },
+  "statusTranslating": {
+    "message": "Preparing translated subtitles…"
+  },
+  "statusValidating": {
+    "message": "Checking the completed translation…"
+  },
+  "statusReady": {
+    "message": "Translated subtitles ready"
+  },
+  "statusSavedReady": {
+    "message": "Saved translation ready"
+  },
+  "statusImportedReady": {
+    "message": "Imported translation ready"
+  },
+  "statusImageUnsupported": {
+    "message": "This subtitle track is image-based. Automatic translation is not supported yet."
+  },
+  "statusNoTextTrack": {
+    "message": "No suitable text subtitle was found for this episode."
+  },
+  "statusFailed": {
+    "message": "Translated subtitles couldn't be prepared. Playback can continue normally."
+  },
+  "settingsTitle": {
+    "message": "FlixTranslate Settings"
+  },
+  "settingsSubtitle": {
+    "message": "Private, synchronized subtitle translation for Netflix and TVer"
+  },
+  "general": {
+    "message": "General"
+  },
+  "autoTranslateEpisodes": {
+    "message": "Auto-translate episodes"
+  },
+  "targetLanguageHelp": {
+    "message": "Choose by full name. The standard code appears in parentheses; custom BCP-47 tags are also accepted."
+  },
+  "preferredSourceLanguage": {
+    "message": "Preferred source language"
+  },
+  "sourceLanguageHelp": {
+    "message": "Optional. Leave automatic to match the active or audio subtitle."
+  },
+  "engine": {
+    "message": "Engine"
+  },
+  "engineHelp": {
+    "message": "On-device subtitle text stays in Chrome. Manual mode uses export/import."
+  },
+  "appearance": {
+    "message": "Appearance"
+  },
+  "subtitleStylePreset": {
+    "message": "Subtitle style"
+  },
+  "appearancePresetHelp": {
+    "message": "Start with a preset, then adjust any detail. Changes appear in the player immediately."
+  },
+  "netflixStyle": {
+    "message": "Netflix-like"
+  },
+  "softBoxStyle": {
+    "message": "Soft background"
+  },
+  "solidBoxStyle": {
+    "message": "Solid black background"
+  },
+  "outlineStyle": {
+    "message": "Outline"
+  },
+  "minimalStyle": {
+    "message": "Minimal"
+  },
+  "customStyle": {
+    "message": "Custom"
+  },
+  "subtitleBackground": {
+    "message": "Subtitle background"
+  },
+  "backgroundNone": {
+    "message": "None"
+  },
+  "backgroundSoft": {
+    "message": "Translucent black"
+  },
+  "backgroundSolid": {
+    "message": "Solid black"
+  },
+  "textOutline": {
+    "message": "Text outline"
+  },
+  "outlineNone": {
+    "message": "None"
+  },
+  "outlineShadow": {
+    "message": "Soft shadow"
+  },
+  "outlineStrong": {
+    "message": "Strong outline"
+  },
+  "textColor": {
+    "message": "Text color"
+  },
+  "fontWeight": {
+    "message": "Text weight"
+  },
+  "subtitleOpacity": {
+    "message": "Opacity"
+  },
+  "lineSpacing": {
+    "message": "Line spacing"
+  },
+  "stylePreview": {
+    "message": "Preview"
+  },
+  "previewOriginal": {
+    "message": "Original subtitle"
+  },
+  "previewTranslation": {
+    "message": "Translated subtitle"
+  },
+  "displayMode": {
+    "message": "Display mode"
+  },
+  "fontSize": {
+    "message": "Font size"
+  },
+  "verticalPosition": {
+    "message": "Vertical position"
+  },
+  "showPlayerStatus": {
+    "message": "Show player status"
+  },
+  "resetAppearance": {
+    "message": "Reset appearance"
+  },
+  "storage": {
+    "message": "Storage"
+  },
+  "cachedItems": {
+    "message": "$1 cached translations · $2 source subtitles"
+  },
+  "extensionStorageUsed": {
+    "message": "Extension storage used: $1"
+  },
+  "clearCache": {
+    "message": "Clear translation cache"
+  },
+  "clearCacheConfirm": {
+    "message": "Clear $1 cached translations? Your settings will not change."
+  },
+  "about": {
+    "message": "About"
+  },
+  "version": {
+    "message": "Version $1"
+  },
+  "independentNotice": {
+    "message": "FlixTranslate is independent and is not affiliated with or endorsed by Netflix or TVer."
+  },
+  "noTelemetryNotice": {
+    "message": "No telemetry or FlixTranslate backend. On-device translation uses Chrome browser-managed language data."
+  },
+  "developerDiagnostics": {
+    "message": "Developer diagnostics"
+  },
+  "diagnosticsHint": {
+    "message": "Open a supported episode to view diagnostics."
+  },
+  "overlayWaiting": {
+    "message": "Waiting for a video"
+  },
+  "overlayFinding": {
+    "message": "Finding subtitles…"
+  },
+  "overlayReading": {
+    "message": "Reading source subtitles…"
+  },
+  "overlayChecking": {
+    "message": "Checking saved translations…"
+  },
+  "overlayNativeAvailable": {
+    "message": "Your target language is already available"
+  },
+  "overlayReadyToTranslate": {
+    "message": "Ready to translate"
+  },
+  "overlayPreparing": {
+    "message": "Preparing translated subtitles…"
+  },
+  "overlayImageUnsupported": {
+    "message": "Image-based subtitles are not supported yet"
+  },
+  "overlayNoText": {
+    "message": "No suitable text subtitle found"
+  },
+  "overlayFailed": {
+    "message": "Translated subtitles couldn't be prepared"
+  },
+  "openQuickControls": {
+    "message": "Open FlixTranslate controls"
+  },
+  "quickControls": {
+    "message": "FlixTranslate quick controls"
+  },
+  "subtitleDisplayMode": {
+    "message": "Subtitle display mode"
+  },
+  "turnOff": {
+    "message": "Turn off"
+  },
+  "turnOn": {
+    "message": "Turn on"
+  },
+  "openSettings": {
+    "message": "Open settings"
+  },
+  "translationProgress": {
+    "message": "Translation progress"
+  },
+  "errorDownload": {
+    "message": "The source subtitle could not be downloaded. Playback can continue normally."
+  },
+  "errorParse": {
+    "message": "The source subtitle format could not be read."
+  },
+  "errorTranslatorUnavailable": {
+    "message": "On-device translation is unavailable in this browser."
+  },
+  "errorPairUnsupported": {
+    "message": "On-device translation does not support this language pair."
+  },
+  "errorLanguageData": {
+    "message": "Chrome could not prepare the language data."
+  },
+  "errorWrongTrack": {
+    "message": "This translation was created for a different subtitle track."
+  },
+  "errorAmbiguousImport": {
+    "message": "This subtitle file could not be matched safely to the current episode."
+  },
+  "errorInvalidImport": {
+    "message": "This file could not be read as a FlixTranslate translation."
+  },
+  "errorPlayerState": {
+    "message": "The player is not ready for translated subtitles yet."
+  },
+  "statusAdPlaying": {
+    "message": "Advertisement playing — translated subtitles are paused."
+  },
+  "overlayAdPlaying": {
+    "message": "Ad playing"
+  },
+  "platformDetected": {
+    "message": "$1 episode detected"
+  },
+  "notSupportedSite": {
+    "message": "Open a supported video (Netflix or TVer) to translate available subtitles."
+  },
+  "noPlayerGeneric": {
+    "message": "Supported site detected. Start a video to use translated subtitles."
+  },
+  "errorIncompleteTranslation": {
+    "message": "This file doesn't cover enough of the episode's lines. Check that every subtitle line has a translation."
+  },
+  "errorTranslationMismatch": {
+    "message": "This file's lines don't line up with the current subtitle track."
+  },
+  "importUntranslated": {
+    "message": "$1 lines had no translation and will stay blank."
+  }
 }

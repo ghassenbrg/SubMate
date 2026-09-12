@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { requestPageSubtitle, startNetflixBridge } from '../../src/content/message-bridge';
+import { requestPageSubtitle, startNetflixBridge } from '../../src/platforms/netflix/netflix-bridge';
 import { BRIDGE_NAMESPACE } from '../../src/netflix/netflix-types';
 
 describe('page subtitle data bridge', () => {

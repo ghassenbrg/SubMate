@@ -115,3 +115,92 @@ Use region/account-appropriate titles; do not rely on one fixed catalog item.
 
 Record Chrome version, Netflix region/profile, content IDs (not account data),
 observed profiles/host suffixes, pass/fail, and screenshots for failures.
+
+---
+
+# TVer verification
+
+## Status: NOT YET PERFORMED LIVE
+
+TVer support has **not** been verified against live caption-enabled episodes.
+This section is a checklist to execute, not a record of results. Do not treat
+the automated suite as a substitute: it covers parsing, merging, dedupe, ad
+gating, synchronization and teardown against fixtures, but it cannot prove what
+TVer's production stream actually contains.
+
+### Why it could not be run here
+
+The environment had no usable browser for TVer. The available sandbox browser
+blocked TVer's own `_next/static` chunks (`ERR_BLOCKED_BY_CLIENT`), so the SPA
+never booted and no player existed to observe, and no ordinary Chrome instance
+was connected. Network egress *was* in Japan and `tver.jp` returned HTTP 200, so
+geo-restriction was not the blocker.
+
+What that leaves unproven is listed under "Not verified" in
+`TVER_SUPPORT_NOTES.md` — above all, whether Japanese captions are delivered as
+`EXT-X-MEDIA:TYPE=SUBTITLES` WebVTT segments, and what IMA's ad markup looks
+like during a break.
+
+### How to run it
+
+Load `dist/chrome` unpacked in Chrome, enable **Debug mode** in options (this
+turns on the `[FlixTranslate:TVer]` log namespace), and open a caption-enabled
+episode from a Japanese connection.
+
+Expected log progression:
+
+```text
+[FlixTranslate:TVer] adapter started
+[FlixTranslate:TVer] content video changed
+[FlixTranslate:TVer] media manifest observed
+[FlixTranslate:TVer] subtitle segments received
+[FlixTranslate:TVer] subtitle cues normalized
+[FlixTranslate:TVer] source track ready
+```
+
+### Per-episode checklist (repeat on at least 3 programs)
+
+```text
+[ ] extension detects TVer
+[ ] Japanese subtitle track found
+[ ] VTT segments load
+[ ] cues are ordered correctly, with no duplicated lines
+[ ] translation starts automatically
+[ ] translated subtitle timing matches speech
+[ ] seek forward works, with no stale line
+[ ] seek backward works
+[ ] pause/resume works
+[ ] playback rates 0.5x / 1.5x / 2x stay in sync
+[ ] subtitles remain readable in fullscreen
+[ ] TVer's own Japanese captions can coexist without a duplicated source line
+[ ] ads show no stale translated dialogue
+[ ] translation resumes correctly after ads
+[ ] video element replacement does not break subtitles
+[ ] SPA episode switch loads the new episode's subtitles
+[ ] cached translation loads near-instantly after reload
+```
+
+### Edge cases
+
+```text
+[ ] episode without TVer captions → "no suitable text subtitle", not a failure
+[ ] network briefly offline → bounded retry, then a retryable error
+[ ] one subtitle segment unavailable → partial track still renders
+[ ] translation API unavailable → graceful failure, playback unaffected
+[ ] browser refresh mid-translation → clean restart, no duplicate work
+```
+
+### Privacy checks (do these explicitly)
+
+```text
+[ ] no signed media URL appears in any console log or the diagnostics panel
+[ ] no TVer cookie or authorization header leaves the page realm
+[ ] DevTools shows no extension request carrying media URLs off-origin
+```
+
+### If discovery fails
+
+Check whether `media manifest observed` ever appears. If it does not, the player
+is loading its manifest by a path the agent does not observe, and
+`tver-media-agent.ts` needs an additional observation source — not a hard-coded
+URL.

@@ -1,12 +1,14 @@
 # FlixTranslate
 
-**Private, synchronized subtitle translation for Netflix in Chrome.**
+**Private, synchronized subtitle translation for Netflix and TVer in Chrome.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-FlixTranslate is an independent Manifest V3 browser extension that translates available Netflix text subtitles on-device, caches the result locally, and displays it against the original cue timing. It has no FlixTranslate account, backend, analytics, or bundled API key.
+FlixTranslate is an independent Manifest V3 browser extension that translates streaming text subtitles on-device, caches the result locally, and displays it against the original cue timing. It has no FlixTranslate account, backend, analytics, or bundled API key.
 
-> FlixTranslate is not affiliated with, endorsed by, or sponsored by Netflix.
+Supported platforms are **Netflix** and **TVer**, each implemented as a platform adapter over a shared translation, caching, synchronization and rendering core. See [Architecture](docs/ARCHITECTURE.md).
+
+> FlixTranslate is not affiliated with, endorsed by, or sponsored by Netflix or TVer.
 
 ## Highlights
 
@@ -16,11 +18,13 @@ FlixTranslate is an independent Manifest V3 browser extension that translates av
 - Provides synchronized, fullscreen-aware, direction-aware overlays with adjustable appearance controls.
 - Supports import/export in FlixTranslate JSON, SRT, and VTT with alignment validation.
 - Ships English, Japanese, Arabic (including RTL), and French interface localizations.
-- Uses a narrowly scoped Netflix host permission and has no telemetry or FlixTranslate-operated server.
+- Extracts Japanese captions from TVer's segmented HLS WebVTT, merging and de-duplicating them into one episode track.
+- Hides translated subtitles during TVer advertisements and resynchronizes against content time afterwards.
+- Uses narrowly scoped Netflix and TVer host permissions, never `<all_urls>`, and has no telemetry or FlixTranslate-operated server.
 
 ## Demo
 
-1. Open a Netflix title with text subtitles and select a source subtitle.
+1. Open a Netflix title with text subtitles, or a caption-enabled TVer episode.
 2. Choose a target language in the FlixTranslate popup.
 3. Start translation from the popup or in-player controls. Chrome downloads language data if needed, then FlixTranslate renders synchronized translated subtitles.
 
@@ -33,7 +37,7 @@ For a live testing checklist and expected states, see [Manual testing](docs/MANU
 1. Download and extract the Chrome ZIP from the relevant [GitHub Release](https://github.com/ghassenbrg/FlixTranslate/releases), or build it locally as described below.
 2. In Chrome, open `chrome://extensions` and enable **Developer mode**.
 3. Select **Load unpacked**, then choose the extracted extension directory. For a local build, that directory is `dist/chrome/`.
-4. Pin FlixTranslate, open Netflix, then choose a target language from the popup.
+4. Pin FlixTranslate, open Netflix or TVer, then choose a target language from the popup.
 
 The packaged ZIP contains the extension files at its root. Extract it before using **Load unpacked**; it is also the file submitted to the Chrome Web Store.
 
@@ -92,8 +96,10 @@ Automatic translation only works for text subtitle tracks and language pairs ava
 public/       Manifest, HTML, localization files, CSS, and icons
 src/          Extension source code
   background/ Service worker
-  content/    Netflix content-script orchestration
-  page/       Page-realm manifest capture
+  content/    Platform-independent content-script orchestration
+  platforms/  Netflix and TVer adapters plus the adapter registry
+  core/       HLS parsing, segment merging, playback observation, retry
+  page/       Page-realm media/manifest agents
   subtitles/  Parsers, normalization, validation, and timing
   translation/ Translator provider and translation manager
   ui/         Popup and options interfaces

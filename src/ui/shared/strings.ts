@@ -4,8 +4,8 @@ import { t } from '../../i18n';
 export const strings = {
   get product() { return t('extensionName'); },
   get tagline() { return t('tagline'); },
-  get notNetflix() { return t('notNetflix'); },
-  get noPlayer() { return t('noPlayer'); },
+  get notNetflix() { return t('notSupportedSite'); },
+  get noPlayer() { return t('noPlayerGeneric'); },
   get importReady() { return t('importReady'); },
   get importFailed() { return t('importFailed'); },
 };

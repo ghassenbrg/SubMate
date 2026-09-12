@@ -4,6 +4,18 @@ import { isRtlLocale, t, uiLocale } from '../i18n';
 import type { SubtitleTrack, TranslationStatus } from '../subtitles/models';
 import { CueIndex } from './cue-index';
 
+/**
+ * Platform-supplied playback facts the renderer needs but must not discover
+ * itself. Keeping these behind an injected object is what allows the overlay to
+ * stay free of any Netflix- or TVer-specific DOM knowledge.
+ */
+export interface OverlayPlaybackContext {
+  /** True while an advertisement is playing instead of episode content. */
+  isAdPlaying(): boolean;
+  /** Text the platform's own subtitle layer is drawing right now, if readable. */
+  getNativeSubtitleText?(): string;
+}
+
 export interface OverlayActions {
   onActivate(): void;
   onRetry(): void;
@@ -44,6 +56,7 @@ export class SubtitleOverlay {
   private readonly actionRow: HTMLDivElement;
   private track: SubtitleTrack | undefined;
   private cueIndex: CueIndex | undefined;
+  private context: OverlayPlaybackContext | undefined;
   private video: HTMLVideoElement | undefined;
   private frame: number | undefined;
   private settings: FlixTranslateSettings;
@@ -87,11 +100,11 @@ export class SubtitleOverlay {
         .cue{display:table;margin:.12em auto;padding:var(--ft-cue-padding,.1em .36em);border-radius:var(--ft-radius,.18em);background:var(--ft-background,rgba(0,0,0,.68));color:var(--ft-color,#fff);text-shadow:var(--ft-text-shadow,0 2px 3px #000);max-width:min(86%,62rem);white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext}
         .source{font-size:calc(clamp(18px,2.1vw,32px)*var(--ft-scale,1));font-weight:500;opacity:.88}
         .translation{font-size:calc(clamp(20px,2.4vw,38px)*var(--ft-scale,1));font-weight:var(--ft-weight,650)}
-        .indicator{position:absolute;inset-inline-end:22px;bottom:20px;display:grid;place-items:center;width:42px;height:42px;padding:0;pointer-events:auto;border:0;border-radius:8px;background:rgba(18,18,21,.42);color:#fff;font:750 13px/1 Arial,sans-serif;cursor:pointer;box-shadow:none;opacity:1;transition:opacity .18s ease,transform .18s ease,background .16s ease}
-        .indicator:hover,.indicator[aria-expanded="true"]{background:rgba(255,255,255,.16);transform:scale(1.08)}
+        .indicator{position:absolute;inset-inline-end:22px;bottom:20px;display:grid;place-items:center;box-sizing:border-box;width:42px;height:42px;padding:0;pointer-events:auto;border:1px solid rgba(255,255,255,.32);border-radius:8px;background:rgba(16,16,20,.92);color:#fff;font:750 13px/1 Arial,sans-serif;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.45);opacity:1;transition:opacity .18s ease,transform .18s ease,background .16s ease,border-color .16s ease}
+        .indicator:hover,.indicator[aria-expanded="true"]{background:rgba(48,48,58,.98);border-color:rgba(255,255,255,.62);transform:scale(1.08)}
         .indicator-state{position:absolute;inset-inline-end:2px;top:2px;display:grid;place-items:center;min-width:13px;height:13px;padding:0 1px;border-radius:999px;background:#34c980;color:#07150e;font:900 9px/1 Arial,sans-serif;box-shadow:0 0 0 2px rgba(10,10,13,.88)}
         .indicator-state:empty{display:none}.indicator[data-state="failed"] .indicator-state{background:#ff5b66;color:#fff}
-        .indicator.quiet{opacity:0;pointer-events:none;transform:translateY(4px)}
+        .indicator.quiet:not(:hover){opacity:0;pointer-events:none;transform:translateY(4px)}
         .indicator:focus-visible,.panel button:focus-visible{outline:3px solid #fff;outline-offset:2px}
         .panel{position:absolute;inset-inline-end:22px;bottom:70px;width:min(300px,calc(100vw - 28px));max-height:min(74vh,570px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:linear-gradient(155deg,rgba(39,20,43,.98),rgba(14,14,19,.98) 45%);backdrop-filter:blur(20px);color:#f8f8fa;padding:0;box-shadow:0 22px 58px rgba(0,0,0,.62);font:13px/1.4 Inter,Arial,sans-serif}
         .panel::before{content:"";position:absolute;inset:0 18px auto;height:2px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,#b33ee1,#f04468)}
@@ -132,6 +145,13 @@ export class SubtitleOverlay {
       if (this.panel.classList.contains('open')) this.clearQuietTimer();
       else if (this.status.state === 'ready') this.scheduleQuietIndicator();
     });
+    // Holding the pointer still over the control produces no further pointermove
+    // events, so without these the quiet timer would fade it out from under the
+    // cursor the user is aiming with.
+    this.indicator.addEventListener('pointerenter', () => this.clearQuietTimer());
+    this.indicator.addEventListener('pointerleave', () => {
+      if (this.status.state === 'ready') this.scheduleQuietIndicator();
+    });
     this.shadow.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
       button.addEventListener('click', () => {
         const mode = button.dataset.mode as FlixTranslateSettings['displayMode'];
@@ -166,6 +186,15 @@ export class SubtitleOverlay {
     this.lastNativeSampleAt = Number.NEGATIVE_INFINITY;
     this.lastRenderSignature = '';
     this.host.dataset.trackCueCount = String(track?.cues.length ?? 0);
+    this.renderFrame();
+  }
+
+  /** Supplies the active platform's ad state and native-caption reader. */
+  setPlaybackContext(context?: OverlayPlaybackContext): void {
+    this.context = context;
+    this.lastNativeSampleAt = Number.NEGATIVE_INFINITY;
+    this.lastNativeText = '';
+    this.lastRenderSignature = '';
     this.renderFrame();
   }
 
@@ -305,20 +334,26 @@ export class SubtitleOverlay {
       this.hideSubtitle();
       return;
     }
+    // Episode subtitles must never stay on screen over an advertisement, and
+    // must never be matched against the ad's own clock.
+    if (this.context?.isAdPlaying()) {
+      this.hideSubtitle('ad');
+      return;
+    }
     const timeMs = Math.floor(this.video.currentTime * 1000);
     let cues = this.cueIndex.findAt(timeMs);
     let synchronization = 'time';
     const sampleAt = performance.now();
     if (sampleAt - this.lastNativeSampleAt >= 100) {
-      this.lastNativeText = visibleNetflixSubtitleText();
+      this.lastNativeText = this.context?.getNativeSubtitleText?.() ?? '';
       this.lastNativeSampleAt = sampleAt;
     }
     const nativeText = this.lastNativeText;
     if (nativeText) {
       const textMatched = this.cueIndex.findBySourceText(nativeText, timeMs);
-      // Prefer the cue Netflix is demonstrably rendering. A downloadable TTML
-      // profile can use a shifted clock, in which case a time lookup may return
-      // a different (but still translated) cue and look plausibly successful.
+      // Prefer the cue the platform is demonstrably rendering. A downloadable
+      // subtitle profile can use a shifted clock, in which case a time lookup
+      // may return a different (but still translated) cue and look plausible.
       if (textMatched.some((cue) => cue.translatedText?.trim())) {
         cues = textMatched;
         synchronization = 'native-text';
@@ -348,9 +383,9 @@ export class SubtitleOverlay {
     this.host.dataset.translationLength = String(translation.length);
     this.sourceLine.textContent = source;
     this.translationLine.textContent = translation;
-    // When Netflix is already drawing the original cue, bilingual means
-    // native Netflix source + our translation. Repeating the same source in
-    // our overlay produces the distracting three-line stack seen in-player.
+    // When the platform is already drawing the original cue, bilingual means
+    // native source + our translation. Repeating the same source in our own
+    // overlay produces a distracting three-line stack in-player.
     this.sourceLine.style.display = this.settings.displayMode === 'bilingual' && source && !nativeVisible ? '' : 'none';
     this.translationLine.style.display = translation ? '' : 'none';
     // `.subtitle` is hidden by default in the shadow stylesheet. An empty
@@ -373,25 +408,6 @@ export class SubtitleOverlay {
     this.host.dataset.translationLength = '0';
     this.host.dataset.subtitleVisible = 'false';
   }
-}
-
-function visibleNetflixSubtitleText(): string {
-  const values = [...document.querySelectorAll<HTMLElement>('.player-timedtext-text-container,[data-uia="player-subtitle"]')]
-    .filter((element) => {
-      const own = getComputedStyle(element);
-      const container = element.closest<HTMLElement>('.player-timedtext');
-      const parent = container ? getComputedStyle(container) : undefined;
-      const visible = (style?: CSSStyleDeclaration) => !style || (
-        style.display !== 'none' &&
-        style.visibility !== 'hidden' &&
-        style.visibility !== 'collapse' &&
-        style.opacity !== '0'
-      );
-      return visible(own) && visible(parent);
-    })
-    .map((element) => element.textContent?.trim() ?? '')
-    .filter(Boolean);
-  return [...new Set(values)].join('\n');
 }
 
 export function displayLanguage(tag: string): string {

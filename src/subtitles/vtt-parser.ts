@@ -11,10 +11,34 @@ function toPlainText(value: string): string {
   return document.body.textContent ?? '';
 }
 
-export function parseVtt(input: string): SubtitleCue[] {
-  const lines = input.replace(/^\uFEFF/, '').replaceAll('\r\n', '\n').replaceAll('\r', '\n').split('\n');
-  let index = lines[0]?.startsWith('WEBVTT') ? 1 : 0;
-  const cues: Array<{ id?: string; startMs: number; endMs: number; sourceText: string }> = [];
+export interface RawVttCue {
+  id?: string;
+  startMs: number;
+  endMs: number;
+  sourceText: string;
+}
+
+export interface VttDocument {
+  /** Everything before the first cue, where `X-TIMESTAMP-MAP` lives. */
+  header: string;
+  cues: RawVttCue[];
+}
+
+/**
+ * Parses a WebVTT document without normalizing or throwing.
+ *
+ * Segmented HLS subtitles legitimately contain segments with zero cues, so a
+ * segment-level parse must be able to report "parsed fine, nothing in it".
+ */
+export function parseVttDocument(input: string): VttDocument {
+  const lines = input.replace(/^﻿/, '').replaceAll('\r\n', '\n').replaceAll('\r', '\n').split('\n');
+  const headerLines: string[] = [];
+  let index = 0;
+  // The header block runs from WEBVTT up to the first blank line.
+  if (lines[0]?.startsWith('WEBVTT')) {
+    while (index < lines.length && lines[index]?.trim()) headerLines.push(lines[index++] ?? '');
+  }
+  const cues: RawVttCue[] = [];
   while (index < lines.length) {
     while (index < lines.length && !lines[index]?.trim()) index += 1;
     if (index >= lines.length) break;
@@ -42,11 +66,15 @@ export function parseVtt(input: string): SubtitleCue[] {
       cues.push({ ...(id ? { id } : {}), startMs, endMs, sourceText: toPlainText(text.join('\n')) });
     }
   }
-  const normalized = normalizeCues(cues);
+  return { header: headerLines.join('\n'), cues };
+}
+
+export function parseVtt(input: string): SubtitleCue[] {
+  const normalized = normalizeCues(parseVttDocument(input).cues);
   if (!normalized.length) throw new FlixTranslateError('SUBTITLE_PARSE_FAILED', 'No WebVTT cues found');
   return normalized;
 }
 
 export function parseSrt(input: string): SubtitleCue[] {
-  return parseVtt(input.replace(/^\uFEFF/, ''));
+  return parseVtt(input.replace(/^﻿/, ''));
 }

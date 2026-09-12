@@ -1,6 +1,17 @@
 import { FlixTranslateError } from '../shared-errors';
 import type { SubtitleTrack, TranslationResult } from './models';
 
+/**
+ * Share of translatable lines that may come back empty before a file is treated
+ * as broken rather than merely incomplete.
+ *
+ * Human and machine translators legitimately leave some cues blank — music
+ * stings, sound effects and on-screen signs carry nothing to translate. Failing
+ * a whole episode over a handful of those is far more disruptive than rendering
+ * nothing for them, while a systematically empty file is still caught.
+ */
+export const EMPTY_TRANSLATION_TOLERANCE = 0.5;
+
 export function validateTranslationResult(source: SubtitleTrack, result: TranslationResult): void {
   if (result.sourceHash !== source.sourceHash || result.sourceLanguage !== source.sourceLanguage) {
     throw new FlixTranslateError('TRANSLATION_ID_MISMATCH', 'Translation source identity mismatch');
@@ -15,14 +26,28 @@ export function validateTranslationResult(source: SubtitleTrack, result: Transla
     if (translatedIds.has(translation.id) || !sourceIds.has(translation.id)) {
       throw new FlixTranslateError('TRANSLATION_ID_MISMATCH', 'Duplicate or unknown translation cue ID');
     }
-    if (sourceById.get(translation.id)?.sourceText.trim() && !translation.text.trim()) {
-      throw new FlixTranslateError('TRANSLATION_INCOMPLETE', 'A non-empty source cue has an empty translation');
-    }
     translatedIds.add(translation.id);
   }
   if (translatedIds.size !== sourceIds.size) {
-    throw new FlixTranslateError('TRANSLATION_INCOMPLETE', 'Translation does not cover every source cue');
+    throw new FlixTranslateError(
+      'TRANSLATION_INCOMPLETE',
+      `Translation covers ${translatedIds.size} of ${sourceIds.size} lines`,
+    );
   }
+  const untranslated = countUntranslated(source, result);
+  const translatable = source.cues.filter((cue) => cue.sourceText.trim()).length;
+  if (translatable && untranslated > translatable * EMPTY_TRANSLATION_TOLERANCE) {
+    throw new FlixTranslateError(
+      'TRANSLATION_INCOMPLETE',
+      `${untranslated} of ${translatable} lines have no translation`,
+    );
+  }
+}
+
+/** Lines that carry source text but came back with an empty translation. */
+export function countUntranslated(source: SubtitleTrack, result: TranslationResult): number {
+  const byId = new Map(result.translations.map((item) => [item.id, item.text]));
+  return source.cues.filter((cue) => cue.sourceText.trim() && !(byId.get(cue.id) ?? '').trim()).length;
 }
 
 export function mergeTranslation(source: SubtitleTrack, result: TranslationResult): SubtitleTrack {

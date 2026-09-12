@@ -4,9 +4,9 @@ import { statusLabel } from '../../src/ui/shared/strings';
 describe('user-facing state copy', () => {
   it.each([
     ['discovering', 'Finding'], ['downloading_source', 'Downloading'], ['parsing_source', 'Reading'],
-    ['checking_cache', 'saved'], ['target_available', 'Netflix already'], ['needs_user_activation', 'user action'],
+    ['checking_cache', 'saved'], ['target_available', 'already provides your selected target language'], ['needs_user_activation', 'user action'],
     ['downloading_model', 'language data'], ['translating', 'Preparing'], ['validating', 'Checking'],
-    ['unsupported_image_track', 'image-based'], ['no_text_track', 'No suitable'], ['failed', 'playback can continue'],
+    ['unsupported_image_track', 'image-based'], ['no_text_track', 'No suitable'], ['failed', 'Playback can continue'],
   ] as const)('maps %s to actionable product copy', (state, phrase) => {
     expect(statusLabel({ state })).toContain(phrase);
   });
