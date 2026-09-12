@@ -1,4 +1,4 @@
-import { FlixTranslateError } from '../shared-errors';
+import { SubMateError } from '../shared-errors';
 import type { SubtitleCue } from './models';
 import { normalizeCues } from './normalize';
 import { parseWebVttTime } from './time';
@@ -71,7 +71,7 @@ export function parseVttDocument(input: string): VttDocument {
 
 export function parseVtt(input: string): SubtitleCue[] {
   const normalized = normalizeCues(parseVttDocument(input).cues);
-  if (!normalized.length) throw new FlixTranslateError('SUBTITLE_PARSE_FAILED', 'No WebVTT cues found');
+  if (!normalized.length) throw new SubMateError('SUBTITLE_PARSE_FAILED', 'No WebVTT cues found');
   return normalized;
 }
 

@@ -1,7 +1,7 @@
 /**
  * Minimal, dependency-free HLS playlist parsing focused on subtitle discovery.
  *
- * Only the tags FlixTranslate needs are interpreted; everything else is ignored
+ * Only the tags SubMate needs are interpreted; everything else is ignored
  * so that unrelated manifest evolution cannot break subtitle extraction. No CDN
  * host, path shape or segment naming convention is assumed anywhere.
  */

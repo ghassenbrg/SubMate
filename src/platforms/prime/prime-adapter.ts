@@ -1,6 +1,6 @@
 import { observeVideoElement } from '../../core/playback/video-observer';
-import type { FlixTranslateSettings } from '../../settings/schema';
-import { FlixTranslateError } from '../../shared-errors';
+import type { SubMateSettings } from '../../settings/schema';
+import { SubMateError } from '../../shared-errors';
 import { parseSubtitle } from '../../subtitles/parser';
 import { isPrimeVideoUrl, routeContentId } from './prime-detection';
 import { chooseSubtitleTrack, type PrimePlaybackSnapshot } from './prime-manifest';
@@ -86,7 +86,7 @@ export class PrimeVideoAdapter implements PlatformAdapter {
     return this.snapshot?.contentId ?? routeContentId();
   }
 
-  selectSource(settings: FlixTranslateSettings): SourceSelection {
+  selectSource(settings: SubMateSettings): SourceSelection {
     const snapshot = this.snapshot;
     if (!snapshot) return { kind: 'pending' };
     const choice = chooseSubtitleTrack(
@@ -112,7 +112,7 @@ export class PrimeVideoAdapter implements PlatformAdapter {
     signal: AbortSignal,
   ): Promise<ExtractedSource> {
     const snapshot = this.snapshot;
-    if (!snapshot) throw new FlixTranslateError('NO_MANIFEST', 'No captured Prime Video playback payload');
+    if (!snapshot) throw new SubMateError('NO_MANIFEST', 'No captured Prime Video playback payload');
     const forced = selection.trackId.endsWith(':forced');
     const raw = await requestPrimeSubtitle(snapshot.contentId, selection.language, forced, signal);
     const cues = parseSubtitle(raw.text, selection.profile ?? '', raw.contentType);

@@ -1,7 +1,7 @@
-import type { FlixTranslateSettings } from './schema';
+import type { SubMateSettings } from './schema';
 import { canonicalLanguage } from './schema';
 
-export const defaultSettings = (): FlixTranslateSettings => {
+export const defaultSettings = (): SubMateSettings => {
   let locale = 'und';
   try {
     locale = canonicalLanguage(chrome.i18n?.getUILanguage?.() || navigator.language || 'und');

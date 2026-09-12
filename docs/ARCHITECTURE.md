@@ -1,10 +1,10 @@
-# FlixTranslate architecture
+# SubMate architecture
 
-FlixTranslate is a multi-platform subtitle translation extension. Platform
+SubMate is a multi-platform subtitle translation extension. Platform
 knowledge lives in adapters; everything else is shared.
 
 ```text
-                      FlixTranslate
+                      SubMate
                             │
              ┌──────────────┴───────────────┐
              │                              │
@@ -114,3 +114,46 @@ failure:
    `src/page/` and keep signed URLs inside it.
 
 No core file needs to change.
+
+## Translation engines
+
+Engines sit behind `TranslationProvider` (`src/translation/provider.ts`) and are
+selected by `createProvider()` (`src/translation/provider-factory.ts`):
+
+| Engine | Where it runs | Notes |
+| --- | --- | --- |
+| `chrome-local` | Content script | Chrome's on-device Translator API. Default. |
+| `manual` | — | Export/import round trip. |
+
+The cache key includes the engine id and version, so engines coexist per episode
+and switching engines misses rather than serving another engine's output.
+
+## Interface theme
+
+Three surfaces render SubMate's UI, and all three draw from one palette sampled
+from the extension mark (`docs/icon.png`): a deep navy ground, the cyan-to-blue
+play gradient, and the gold sync badge.
+
+| Surface | Markup | Styles |
+| --- | --- | --- |
+| Popup | `src/ui/popup/popup.ts` | `public/ui/popup.css` |
+| Options | `src/ui/options/options.ts` | `public/ui/options.css` |
+| In-player overlay | `src/renderer/subtitle-overlay.ts` | inline, in its shadow root |
+
+`public/ui/theme.css` holds the tokens (`--cyan`, `--blue`, `--gold`, surfaces,
+text, status colours) plus the shared control primitives — selects, switches,
+ranges, buttons, focus rings. Both extension pages `@import` it; the overlay
+cannot, because a shadow root does not inherit page stylesheets, so it carries
+its own copy of the same values.
+
+Status colour is consistent across surfaces: gold while work is in progress
+(matching the badge on the mark), green when ready, red on failure.
+
+The overlay's logo mark is inline SVG rather than a reference to `icons/`.
+Loading a packaged image from a page would require a `web_accessible_resources`
+entry, which makes the extension trivially detectable by any site the user
+visits.
+
+Subtitle rendering itself is driven by `--ft-*` custom properties written from
+`subtitleAppearanceVariables()`, so the options preview and the real overlay
+style cues through the same variables.

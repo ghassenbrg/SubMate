@@ -49,11 +49,11 @@ await build({
 for (const file of ['manifest.json', 'popup.html', 'options.html']) {
   await cp(resolve(root, 'public', file), resolve(outdir, file));
 }
-for (const file of ['ui/popup.css', 'ui/options.css']) {
+for (const file of ['ui/theme.css', 'ui/popup.css', 'ui/options.css']) {
   await mkdir(dirname(resolve(outdir, file)), { recursive: true });
   await cp(resolve(root, 'public', file), resolve(outdir, file));
 }
 await cp(resolve(root, 'public', '_locales'), resolve(outdir, '_locales'), { recursive: true });
 await cp(resolve(root, 'public', 'icons'), resolve(outdir, 'icons'), { recursive: true });
 
-console.log(`Built FlixTranslate (${target}) into ${outdir}`);
+console.log(`Built SubMate (${target}) into ${outdir}`);

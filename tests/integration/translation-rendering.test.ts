@@ -7,7 +7,7 @@ import { mergeTranslation } from '../../src/subtitles/validation';
 import { sourceTrack } from '../unit/validation.test';
 import { visibleNetflixSubtitleText } from '../../src/platforms/netflix/native-captions';
 
-afterEach(() => document.getElementById('flixtranslate-root')?.remove());
+afterEach(() => document.getElementById('submate-root')?.remove());
 
 describe('synthetic episode translation and rendering', () => {
   it('applies background-free, outlined, colored, and transparent subtitle styles safely', () => {

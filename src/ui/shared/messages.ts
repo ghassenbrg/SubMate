@@ -1,4 +1,4 @@
-import type { FlixTranslateViewState } from '../../subtitles/models';
+import type { SubMateViewState } from '../../subtitles/models';
 import { selectAdapter } from '../../platforms';
 
 /**
@@ -64,7 +64,7 @@ export async function sendContent<T>(message: Record<string, unknown>): Promise<
   if (!tab?.id) return undefined;
   try {
     const response = await chrome.tabs.sendMessage(tab.id, message);
-    if (!response?.ok) throw Object.assign(new Error(response?.error ?? 'FlixTranslate request failed'), { code: response?.code });
+    if (!response?.ok) throw Object.assign(new Error(response?.error ?? 'SubMate request failed'), { code: response?.code });
     return response.value as T;
   } catch (error) {
     if (message.type === 'CONTENT_GET_STATE') return undefined;
@@ -72,4 +72,4 @@ export async function sendContent<T>(message: Record<string, unknown>): Promise<
   }
 }
 
-export const getContentState = () => sendContent<FlixTranslateViewState>({ type: 'CONTENT_GET_STATE' });
+export const getContentState = () => sendContent<SubMateViewState>({ type: 'CONTENT_GET_STATE' });

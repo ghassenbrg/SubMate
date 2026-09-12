@@ -9,7 +9,9 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.runtime.onMessage.addListener((raw: unknown, _sender, sendResponse) => {
-  const request = raw as CacheRequest | { type: 'OPEN_OPTIONS' };
+  const request = raw as
+    | CacheRequest
+    | { type: 'OPEN_OPTIONS' };
   if (!request || typeof request.type !== 'string') return false;
   if (request.type === 'OPEN_OPTIONS') {
     void chrome.runtime.openOptionsPage();

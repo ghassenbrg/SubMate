@@ -2,8 +2,8 @@ import { startNetflixBridge, requestPageSubtitle } from './netflix-bridge';
 import { chooseSourceTrack, chooseTextDownload } from '../../netflix/manifest-parser';
 import type { NetflixManifestSnapshot } from '../../netflix/netflix-types';
 import { observeVideoElement } from '../../core/playback/video-observer';
-import type { FlixTranslateSettings } from '../../settings/schema';
-import { FlixTranslateError } from '../../shared-errors';
+import type { SubMateSettings } from '../../settings/schema';
+import { SubMateError } from '../../shared-errors';
 import { parseSubtitle } from '../../subtitles/parser';
 import { visibleNetflixSubtitleText } from './native-captions';
 import type {
@@ -74,7 +74,7 @@ export class NetflixAdapter implements PlatformAdapter {
     return this.snapshot?.contentId ?? routeContentId();
   }
 
-  selectSource(settings: FlixTranslateSettings): SourceSelection {
+  selectSource(settings: SubMateSettings): SourceSelection {
     const snapshot = this.snapshot;
     if (!snapshot) return { kind: 'pending' };
     const choice = chooseSourceTrack(
@@ -100,7 +100,7 @@ export class NetflixAdapter implements PlatformAdapter {
     signal: AbortSignal,
   ): Promise<ExtractedSource> {
     const contentId = this.snapshot?.contentId;
-    if (!contentId) throw new FlixTranslateError('NETFLIX_MANIFEST_NOT_FOUND', 'No captured Netflix manifest');
+    if (!contentId) throw new SubMateError('NETFLIX_MANIFEST_NOT_FOUND', 'No captured Netflix manifest');
     const raw = await requestPageSubtitle(contentId, selection.trackId, selection.profile ?? '', signal);
     const cues = parseSubtitle(raw.text, selection.profile ?? '', raw.contentType);
     return {

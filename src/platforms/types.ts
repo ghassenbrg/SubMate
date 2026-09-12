@@ -1,5 +1,5 @@
 import type { PlatformId, SubtitleCue } from '../subtitles/models';
-import type { FlixTranslateSettings } from '../settings/schema';
+import type { SubMateSettings } from '../settings/schema';
 
 export type { PlatformId };
 
@@ -76,7 +76,7 @@ export interface PlatformAdapter {
   getContentId(): string | undefined;
 
   /** Decide which original track to translate, given the user's preferences. */
-  selectSource(settings: FlixTranslateSettings): SourceSelection;
+  selectSource(settings: SubMateSettings): SourceSelection;
 
   /** Retrieve and normalize the cues for a previously selected track. */
   extractSource(selection: Extract<SourceSelection, { kind: 'ready' }>, signal: AbortSignal): Promise<ExtractedSource>;

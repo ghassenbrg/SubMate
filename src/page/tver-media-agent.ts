@@ -56,7 +56,7 @@ import {
   // --- Non-destructive network observation -------------------------------
 
   const originalFetch = window.fetch;
-  const patchedFetch: typeof window.fetch = function flixTranslateFetch(this: unknown, ...args) {
+  const patchedFetch: typeof window.fetch = function subMateFetch(this: unknown, ...args) {
     try {
       const input = args[0];
       const url = typeof input === 'string' ? input
@@ -72,7 +72,7 @@ import {
   window.fetch = patchedFetch;
 
   const originalOpen = XMLHttpRequest.prototype.open;
-  const patchedOpen = function flixTranslateXhrOpen(
+  const patchedOpen = function subMateXhrOpen(
     this: XMLHttpRequest,
     ...args: Parameters<typeof XMLHttpRequest.prototype.open>
   ) {
@@ -295,7 +295,7 @@ import {
 
   for (const method of ['pushState', 'replaceState'] as const) {
     const original = history[method];
-    history[method] = function flixTranslateHistory(this: History, ...args: Parameters<History[typeof method]>) {
+    history[method] = function subMateHistory(this: History, ...args: Parameters<History[typeof method]>) {
       const result = original.apply(this, args);
       queueMicrotask(notifyNavigation);
       return result;

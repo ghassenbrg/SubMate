@@ -1,4 +1,4 @@
-import type { FlixTranslateSettings } from '../settings/schema';
+import type { SubMateSettings } from '../settings/schema';
 import { subtitleAppearanceVariables } from '../settings/appearance';
 import { isRtlLocale, t, uiLocale } from '../i18n';
 import type { SubtitleTrack, TranslationStatus } from '../subtitles/models';
@@ -19,7 +19,7 @@ export interface OverlayPlaybackContext {
 export interface OverlayActions {
   onActivate(): void;
   onRetry(): void;
-  onDisplayMode(mode: FlixTranslateSettings['displayMode']): void;
+  onDisplayMode(mode: SubMateSettings['displayMode']): void;
   onToggleEnabled(): void;
   onOpenSettings(): void;
 }
@@ -42,6 +42,24 @@ const STATUS_LABELS: Record<TranslationStatus['state'], string> = {
   failed: t('overlayFailed'),
 };
 
+/**
+ * Simplified SubMate mark: the play triangle over two subtitle bars.
+ *
+ * Drawn inline rather than loaded from icons/. Referencing a packaged image
+ * from a page would require a web_accessible_resources entry, which makes the
+ * extension trivially detectable by any site the user visits.
+ */
+const markSvg = (gradientId?: string): string => {
+  const fill = gradientId ? `url(#${gradientId})` : '#fff';
+  const defs = gradientId
+    ? `<defs><linearGradient id="${gradientId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0cd0fc"/><stop offset="1" stop-color="#1374f9"/></linearGradient></defs>`
+    : '';
+  return `<svg class="mark" viewBox="0 0 24 24" aria-hidden="true">${defs}`
+    + `<path d="M9.1 3.3 18.3 8a1.05 1.05 0 0 1 0 1.86l-9.2 4.72A1.05 1.05 0 0 1 7.6 13.64V4.24a1.05 1.05 0 0 1 1.5-.94z" fill="${fill}"/>`
+    + '<rect x="3.4" y="17.1" width="17.2" height="2.5" rx="1.25" fill="#fff" opacity=".92"/>'
+    + '<rect x="6.6" y="20.9" width="10.8" height="2.5" rx="1.25" fill="#fff" opacity=".55"/></svg>';
+};
+
 export class SubtitleOverlay {
   readonly host: HTMLDivElement;
   private readonly shadow: ShadowRoot;
@@ -59,7 +77,7 @@ export class SubtitleOverlay {
   private context: OverlayPlaybackContext | undefined;
   private video: HTMLVideoElement | undefined;
   private frame: number | undefined;
-  private settings: FlixTranslateSettings;
+  private settings: SubMateSettings;
   private status: TranslationStatus = { state: 'idle' };
   private sourceLanguage: string | undefined;
   private targetLanguage: string | undefined;
@@ -89,12 +107,12 @@ export class SubtitleOverlay {
     }
   };
 
-  constructor(settings: FlixTranslateSettings, private readonly actions: OverlayActions) {
-    document.getElementById('flixtranslate-root')?.remove();
+  constructor(settings: SubMateSettings, private readonly actions: OverlayActions) {
+    document.getElementById('submate-root')?.remove();
     this.settings = settings;
     this.host = document.createElement('div');
-    this.host.id = 'flixtranslate-root';
-    this.host.setAttribute('data-flixtranslate', 'root');
+    this.host.id = 'submate-root';
+    this.host.setAttribute('data-submate', 'root');
     this.host.dir = isRtlLocale() ? 'rtl' : 'ltr';
     this.shadow = this.host.attachShadow({ mode: 'closed' });
     this.shadow.innerHTML = `
@@ -104,26 +122,27 @@ export class SubtitleOverlay {
         .cue{display:table;margin:.12em auto;padding:var(--ft-cue-padding,.1em .36em);border-radius:var(--ft-radius,.18em);background:var(--ft-background,rgba(0,0,0,.68));color:var(--ft-color,#fff);text-shadow:var(--ft-text-shadow,0 2px 3px #000);max-width:min(86%,62rem);white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext}
         .source{font-size:calc(clamp(18px,2.1vw,32px)*var(--ft-scale,1));font-weight:500;opacity:.88}
         .translation{font-size:calc(clamp(20px,2.4vw,38px)*var(--ft-scale,1));font-weight:var(--ft-weight,650)}
-        .indicator{position:absolute;inset-inline-end:22px;bottom:20px;display:grid;place-items:center;box-sizing:border-box;width:42px;height:42px;padding:0;pointer-events:auto;border:1px solid rgba(255,255,255,.32);border-radius:8px;background:rgba(16,16,20,.92);color:#fff;font:750 13px/1 Arial,sans-serif;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.45);opacity:1;transition:opacity .18s ease,transform .18s ease,background .16s ease,border-color .16s ease}
-        .indicator:hover,.indicator[aria-expanded="true"]{background:rgba(48,48,58,.98);border-color:rgba(255,255,255,.62);transform:scale(1.08)}
-        .indicator-state{position:absolute;inset-inline-end:2px;top:2px;display:grid;place-items:center;min-width:13px;height:13px;padding:0 1px;border-radius:999px;background:#34c980;color:#07150e;font:900 9px/1 Arial,sans-serif;box-shadow:0 0 0 2px rgba(10,10,13,.88)}
-        .indicator-state:empty{display:none}.indicator[data-state="failed"] .indicator-state{background:#ff5b66;color:#fff}
+        .indicator{position:absolute;inset-inline-end:22px;bottom:20px;display:grid;place-items:center;box-sizing:border-box;width:42px;height:42px;padding:0;pointer-events:auto;border:1px solid rgba(120,170,240,.34);border-radius:12px;background:rgba(4,12,28,.94);color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);opacity:1;transition:opacity .18s ease,transform .18s ease,background .16s ease,border-color .16s ease}
+        .indicator:hover,.indicator[aria-expanded="true"]{background:rgba(12,34,70,.98);border-color:rgba(12,208,252,.62);transform:scale(1.08);box-shadow:0 6px 20px rgba(12,208,252,.26)}
+        .mark{display:block;width:22px;height:22px}.panel-mark .mark{width:21px;height:21px}
+        .indicator-state{position:absolute;inset-inline-end:2px;top:2px;display:grid;place-items:center;min-width:13px;height:13px;padding:0 1px;border-radius:999px;background:#2fd6a3;color:#04231a;font:900 9px/1 Arial,sans-serif;box-shadow:0 0 0 2px rgba(4,12,28,.92)}
+        .indicator-state:empty{display:none}.indicator[data-state="failed"] .indicator-state{background:#ff6b7d;color:#2a0810}
         .indicator.quiet:not(:hover){opacity:0;pointer-events:none;transform:translateY(4px)}
-        .indicator:focus-visible,.panel button:focus-visible{outline:3px solid #fff;outline-offset:2px}
-        .panel{position:absolute;inset-inline-end:22px;bottom:70px;width:min(300px,calc(100vw - 28px));max-height:min(74vh,570px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:linear-gradient(155deg,rgba(39,20,43,.98),rgba(14,14,19,.98) 45%);backdrop-filter:blur(20px);color:#f8f8fa;padding:0;box-shadow:0 22px 58px rgba(0,0,0,.62);font:13px/1.4 Inter,Arial,sans-serif}
-        .panel::before{content:"";position:absolute;inset:0 18px auto;height:2px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,#b33ee1,#f04468)}
-        .panel.open{display:block}.panel-head{display:grid;grid-template-columns:36px minmax(0,1fr);gap:11px;align-items:center;padding:16px 16px 13px}.panel-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,#8c35d9,#f04468);box-shadow:0 7px 18px rgba(191,48,154,.28);font-weight:850;font-size:12px}.title{font-weight:780;font-size:16px;letter-spacing:-.015em}.pair{color:#c8c5ce;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.panel-body{padding:0 16px 15px}.status-card{border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(255,255,255,.055);padding:10px 11px}.status{display:flex;align-items:center;gap:8px;font-weight:650}.status::before{content:"";width:7px;height:7px;flex:0 0 auto;border-radius:999px;background:#9b9ba6}.panel[data-state="ready"] .status::before{background:#46d58d;box-shadow:0 0 0 3px rgba(70,213,141,.12)}.panel[data-state="failed"] .status::before{background:#ff6570}.progress{width:100%;accent-color:#ed4770;height:6px;margin-top:8px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
-        .section-label{margin:14px 2px 7px;color:#9d99a6;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.panel button{border:1px solid rgba(255,255,255,.15);border-radius:9px;background:rgba(255,255,255,.07);color:#fff;padding:8px 10px;cursor:pointer;font:inherit;font-weight:650;transition:border-color .15s ease,background .15s ease,transform .15s ease}.panel button:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25)}.panel button.primary{background:linear-gradient(135deg,#aa3ddd,#ef4068);border-color:transparent}
-        .modes{display:grid;gap:6px}.modes button{position:relative;text-align:left;padding:10px 36px 10px 11px}.modes button[aria-pressed="true"]{border-color:rgba(235,79,159,.75);background:linear-gradient(105deg,rgba(169,57,218,.28),rgba(240,68,104,.19));box-shadow:inset 3px 0 0 #e44d88}.modes button[aria-pressed="true"]::after{content:"✓";position:absolute;inset-inline-end:12px;color:#64dfa0;font-weight:900}.footer{border-top:1px solid rgba(255,255,255,.1);margin-top:13px;padding-top:11px;display:flex;justify-content:space-between;gap:8px}.footer button:last-child{margin-inline-start:auto}
-        :host([dir="rtl"]) .modes button{text-align:right;padding:10px 11px 10px 36px}:host([dir="rtl"]) .modes button[aria-pressed="true"]{box-shadow:inset -3px 0 0 #e44d88}
+        .indicator:focus-visible,.panel button:focus-visible{outline:2px solid #0cd0fc;outline-offset:2px;box-shadow:0 0 0 4px rgba(12,208,252,.22)}
+        .panel{position:absolute;inset-inline-end:22px;bottom:70px;width:min(300px,calc(100vw - 28px));max-height:min(74vh,570px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(120,170,240,.16);border-radius:18px;background:linear-gradient(155deg,rgba(0,28,77,.98),rgba(3,10,25,.98) 55%);backdrop-filter:blur(20px);color:#e9f1fc;padding:0;box-shadow:0 22px 58px rgba(0,4,16,.66);font:13px/1.4 Inter,Arial,sans-serif}
+        .panel::before{content:"";position:absolute;inset:0 18px auto;height:2px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,#0cd0fc,#1374f9)}
+        .panel.open{display:block}.panel-head{display:grid;grid-template-columns:36px minmax(0,1fr);gap:11px;align-items:center;padding:16px 16px 13px}.panel-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,#0cd0fc,#1374f9);box-shadow:0 7px 18px rgba(19,116,249,.36)}.title{font-weight:780;font-size:16px;letter-spacing:-.015em}.pair{color:#9fb4d4;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.panel-body{padding:0 16px 15px}.status-card{border:1px solid rgba(120,170,240,.14);border-radius:11px;background:rgba(255,255,255,.045);padding:10px 11px}.status{display:flex;align-items:center;gap:8px;font-weight:650}.status::before{content:"";width:7px;height:7px;flex:0 0 auto;border-radius:999px;background:#7d93b5}.panel[data-state="translating"] .status::before,.panel[data-state="downloading_model"] .status::before{background:#fcd808;box-shadow:0 0 0 3px rgba(252,216,8,.14)}.panel[data-state="ready"] .status::before{background:#2fd6a3;box-shadow:0 0 0 3px rgba(47,214,163,.14)}.panel[data-state="failed"] .status::before{background:#ff6b7d;box-shadow:0 0 0 3px rgba(255,107,125,.16)}.progress{width:100%;accent-color:#1374f9;height:6px;margin-top:8px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+        .section-label{margin:14px 2px 7px;color:#8ba3c7;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.panel button{border:1px solid rgba(120,170,240,.18);border-radius:9px;background:rgba(255,255,255,.06);color:#e9f1fc;padding:8px 10px;cursor:pointer;font:inherit;font-weight:650;transition:border-color .15s ease,background .15s ease,transform .15s ease}.panel button:hover{background:rgba(255,255,255,.11);border-color:rgba(120,170,240,.36)}.panel button.primary{background:linear-gradient(135deg,#0cd0fc,#1374f9);border-color:transparent;color:#041024;font-weight:750}
+        .modes{display:grid;gap:6px}.modes button{position:relative;text-align:left;padding:10px 36px 10px 11px}.modes button[aria-pressed="true"]{border-color:rgba(12,208,252,.6);background:linear-gradient(105deg,rgba(12,208,252,.17),rgba(19,116,249,.17));box-shadow:inset 3px 0 0 #0cd0fc}.modes button[aria-pressed="true"]::after{content:"✓";position:absolute;inset-inline-end:12px;color:#2fd6a3;font-weight:900}.footer{border-top:1px solid rgba(120,170,240,.14);margin-top:13px;padding-top:11px;display:flex;justify-content:space-between;gap:8px}.footer button:last-child{margin-inline-start:auto}
+        :host([dir="rtl"]) .modes button{text-align:right;padding:10px 11px 10px 36px}:host([dir="rtl"]) .modes button[aria-pressed="true"]{box-shadow:inset -3px 0 0 #0cd0fc}
         @media (max-width:700px){.indicator{inset-inline-end:12px;bottom:12px}.panel{inset-inline-end:12px;bottom:60px}.cue{max-width:94%}.translation{font-size:calc(clamp(18px,5vw,30px)*var(--ft-scale,1))}.source{font-size:calc(clamp(16px,4.3vw,25px)*var(--ft-scale,1))}}
         @media (prefers-reduced-motion:no-preference){.panel{animation:ft-in .12s ease-out}@keyframes ft-in{from{opacity:0;transform:translateY(4px)}}}
         @media (prefers-reduced-motion:reduce){.indicator{transition:none}}
       </style>
       <div class="subtitle" aria-live="off"><div class="cue source" dir="auto"></div><div class="cue translation" dir="auto"></div></div>
-      <button class="indicator" type="button" aria-label="${t('openQuickControls')}" aria-controls="flixtranslate-quick-controls" aria-expanded="false"><span>FT</span><span class="indicator-state" aria-hidden="true"></span></button>
-      <section class="panel" id="flixtranslate-quick-controls" aria-label="${t('quickControls')}">
-        <div class="panel-head"><div class="panel-mark" aria-hidden="true">FT</div><div><div class="title">FlixTranslate</div><div class="pair" dir="auto"></div></div></div>
+      <button class="indicator" type="button" aria-label="${t('openQuickControls')}" aria-controls="submate-quick-controls" aria-expanded="false">${markSvg('submate-mark')}<span class="indicator-state" aria-hidden="true"></span></button>
+      <section class="panel" id="submate-quick-controls" aria-label="${t('quickControls')}">
+        <div class="panel-head"><div class="panel-mark" aria-hidden="true">${markSvg()}</div><div><div class="title">SubMate</div><div class="pair" dir="auto"></div></div></div>
         <div class="panel-body">
           <div class="status-card"><div class="status" role="status" aria-live="polite"></div><progress class="progress" max="1"></progress><div class="actions"></div></div>
           <div class="section-label">${t('display')}</div>
@@ -158,7 +177,7 @@ export class SubtitleOverlay {
     });
     this.shadow.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
       button.addEventListener('click', () => {
-        const mode = button.dataset.mode as FlixTranslateSettings['displayMode'];
+        const mode = button.dataset.mode as SubMateSettings['displayMode'];
         this.updateModeSelection(mode);
         this.actions.onDisplayMode(mode);
       });
@@ -220,7 +239,7 @@ export class SubtitleOverlay {
     if (pair) pair.textContent = source && target ? `${displayLanguage(source)} → ${displayLanguage(target)}` : '';
   }
 
-  applySettings(settings: FlixTranslateSettings): void {
+  applySettings(settings: SubMateSettings): void {
     this.settings = settings;
     this.host.style.setProperty('--ft-scale', String(settings.translatedFontScale));
     this.host.style.setProperty('--ft-bottom', `${Math.round(settings.verticalPosition * 100)}%`);
@@ -296,7 +315,7 @@ export class SubtitleOverlay {
     this.indicator.setAttribute('aria-expanded', String(open));
   }
 
-  private updateModeSelection(mode: FlixTranslateSettings['displayMode']): void {
+  private updateModeSelection(mode: SubMateSettings['displayMode']): void {
     this.shadow.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
     });

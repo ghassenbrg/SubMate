@@ -1,12 +1,12 @@
-# Publishing FlixTranslate
+# Publishing SubMate
 
-This guide is the release runbook for FlixTranslate. It covers the GitHub
+This guide is the release runbook for SubMate. It covers the GitHub
 release artifact and optional Chrome Web Store update path. Follow it from a
 clean, reviewed `main` branch.
 
 ## Release model
 
-FlixTranslate uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
+SubMate uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
 - **Patch** (`0.1.1`): backwards-compatible bug fixes.
 - **Minor** (`0.2.0`): backwards-compatible functionality.
@@ -40,7 +40,7 @@ release tag must be exactly `v` followed by that version (for example,
 8. Inspect the package with:
 
    ```sh
-   unzip -l dist/packages/flixtranslate-chrome-vX.Y.Z.zip
+   unzip -l dist/packages/submate-chrome-vX.Y.Z.zip
    ```
 
    `manifest.json` must be at the ZIP root, not inside a `dist/chrome/`
@@ -54,7 +54,7 @@ release tag must be exactly `v` followed by that version (for example,
 dist/
 ├── chrome/                       # unpacked production extension
 └── packages/
-    └── flixtranslate-chrome-vX.Y.Z.zip
+    └── submate-chrome-vX.Y.Z.zip
 ```
 
 `npm run build` is an alias for `npm run build:chrome`. Future targets should
@@ -66,7 +66,7 @@ get their own target configuration and output directory (such as
 After the release commit is on `main`, create and push an annotated tag:
 
 ```sh
-git tag -a vX.Y.Z -m "FlixTranslate vX.Y.Z"
+git tag -a vX.Y.Z -m "SubMate vX.Y.Z"
 git push origin vX.Y.Z
 ```
 
@@ -127,7 +127,7 @@ If automation is disabled or a manual review is preferred:
 
 1. Run `npm run pack:chrome` from the reviewed release commit.
 2. Open the Chrome Web Store Developer Dashboard and select the item.
-3. Upload `dist/packages/flixtranslate-chrome-vX.Y.Z.zip`.
+3. Upload `dist/packages/submate-chrome-vX.Y.Z.zip`.
 4. Verify the manifest version, permission disclosures, privacy disclosure,
    screenshots, descriptions, and supported language details.
 5. Submit the update for review, then monitor its status in the dashboard.

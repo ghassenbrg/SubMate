@@ -1,8 +1,7 @@
 # TVer support — implementation notes
 
-Companion to `FLIX_TRANSLATE_TVER_SUPPORT.md`. That document describes the
-intended design; this one records what TVer's production site actually looks
-like, where it differs from the spec's assumptions, and which behaviour remains
+What TVer's production site actually looks like, where it differs from the
+assumptions the adapter was designed against, and which behaviour remains
 unverified.
 
 ## What was inspected
@@ -23,7 +22,7 @@ geo-restricted to Japan; requests returned HTTP 200 and were not region-blocked)
 ### Deliberately not used
 
 TVer's player config (`player.tver.jp/player/streaks_info_v2.json`) is publicly
-served and contains **per-broadcaster STREAKS API keys**. FlixTranslate does not
+served and contains **per-broadcaster STREAKS API keys**. SubMate does not
 read, store or use them.
 
 Using those keys to mint our own playback sessions would mean the extension

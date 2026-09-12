@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <base href="/dist/">
-  <title>FlixTranslate Arabic popup harness</title>
-  <link rel="stylesheet" href="/dist/ui/popup.css">
+  <base href="/dist/chrome/">
+  <title>SubMate Arabic popup harness</title>
+  <link rel="stylesheet" href="/dist/chrome/ui/popup.css">
 </head>
 <body>
   <main id="app"></main>
@@ -38,8 +38,8 @@
       },
       storage: {
         local: {
-          get: async () => ({ flixtranslateSettings: mockSettings }),
-          set: async (value) => Object.assign(mockSettings, value.flixtranslateSettings)
+          get: async () => ({ submateSettings: mockSettings }),
+          set: async (value) => Object.assign(mockSettings, value.submateSettings)
         },
         onChanged: { addListener() {}, removeListener() {} }
       },
@@ -69,7 +69,7 @@
       }
     };
 
-    await import('/dist/ui/popup.js');
+    await import('/dist/chrome/ui/popup.js');
   </script>
 </body>
 </html>

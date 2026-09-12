@@ -1,4 +1,4 @@
-export const TVER_BRIDGE_NAMESPACE = 'flixtranslate:tver-media:v1';
+export const TVER_BRIDGE_NAMESPACE = 'submate:tver-media:v1';
 
 /**
  * One WebVTT segment handed from the page world to the extension world.

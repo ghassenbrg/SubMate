@@ -1,18 +1,18 @@
 {
-  "name": "flixtranslate",
+  "name": "submate",
   "version": "0.1.0",
-  "description": "Private, synchronized on-device subtitle translation for Netflix and TVer in Chrome.",
+  "description": "Private, synchronized on-device subtitle translation for Netflix, TVer and Prime Video in Chrome.",
   "private": true,
   "license": "MIT",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ghassenbrg/FlixTranslate.git"
+    "url": "git+https://github.com/ghassenbrg/SubMate.git"
   },
   "bugs": {
-    "url": "https://github.com/ghassenbrg/FlixTranslate/issues"
+    "url": "https://github.com/ghassenbrg/SubMate/issues"
   },
-  "homepage": "https://github.com/ghassenbrg/FlixTranslate#readme",
+  "homepage": "https://github.com/ghassenbrg/SubMate#readme",
   "engines": {
     "node": ">=20"
   },

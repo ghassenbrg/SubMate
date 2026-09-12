@@ -4,16 +4,16 @@ import { exportFileName, exportSource, importTranslation } from '../import-expor
 import { platformLabel } from '../platforms';
 import type { AdapterHost, PlatformAdapter, SourceSelection } from '../platforms/types';
 import { SubtitleOverlay } from '../renderer/subtitle-overlay';
-import { FlixTranslateError, friendlyError } from '../shared-errors';
+import { SubMateError, friendlyError } from '../shared-errors';
 import { loadSettings, saveSettings, watchSettings } from '../settings/store';
-import type { FlixTranslateSettings } from '../settings/schema';
+import type { SubMateSettings } from '../settings/schema';
 import { hashSubtitle } from '../subtitles/hashing';
-import type { FlixTranslateViewState, SubtitleTrack, TranslationStatus } from '../subtitles/models';
+import type { SubMateViewState, SubtitleTrack, TranslationStatus } from '../subtitles/models';
 import { countUntranslated, mergeTranslation, validateTranslationResult } from '../subtitles/validation';
 import { ChromeTranslatorProvider } from '../translation/providers/chrome-translator';
 import { TranslationManager } from '../translation/translation-manager';
 
-export type EpisodeEventListener = (state: FlixTranslateViewState) => void;
+export type EpisodeEventListener = (state: SubMateViewState) => void;
 
 /**
  * Platform-independent orchestration of the subtitle pipeline.
@@ -23,7 +23,7 @@ export type EpisodeEventListener = (state: FlixTranslateViewState) => void;
  * branch in this file depends on which streaming service is active.
  */
 export class EpisodeOrchestrator implements AdapterHost {
-  private settings!: FlixTranslateSettings;
+  private settings!: SubMateSettings;
   private overlay!: SubtitleOverlay;
   private readonly provider = new ChromeTranslatorProvider();
   private readonly manager = new TranslationManager();
@@ -64,7 +64,7 @@ export class EpisodeOrchestrator implements AdapterHost {
     return () => this.listeners.delete(listener);
   }
 
-  getState(): FlixTranslateViewState {
+  getState(): SubMateViewState {
     return this.viewState();
   }
 
@@ -125,7 +125,7 @@ export class EpisodeOrchestrator implements AdapterHost {
 
   debug(message: string, detail?: unknown): void {
     if (!this.settings?.debugMode) return;
-    const prefix = `[FlixTranslate:${platformLabel(this.adapter.id)}]`;
+    const prefix = `[SubMate:${platformLabel(this.adapter.id)}]`;
     if (detail === undefined) console.info(prefix, message);
     else console.info(prefix, message, detail);
   }
@@ -158,7 +158,7 @@ export class EpisodeOrchestrator implements AdapterHost {
     fileName: string,
   ): Promise<{ matched: number; total: number; untranslated: number; targetLanguage: string }> {
     const source = this.source;
-    if (!source) throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'No active source subtitle');
+    if (!source) throw new SubMateError('IMPORT_INVALID_SCHEMA', 'No active source subtitle');
     const result = importTranslation(input, fileName, source, this.settings.preferredTargetLanguage);
     validateTranslationResult(source, result);
     await this.manager.save(source, result);
@@ -179,7 +179,7 @@ export class EpisodeOrchestrator implements AdapterHost {
   }
 
   exportCurrent(format: 'json' | 'srt' | 'vtt'): { content: string; fileName: string; mimeType: string } {
-    if (!this.source) throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'No source subtitle is ready to export');
+    if (!this.source) throw new SubMateError('IMPORT_INVALID_SCHEMA', 'No source subtitle is ready to export');
     return {
       content: exportSource(this.source, format),
       fileName: exportFileName(this.source, undefined, format),
@@ -291,7 +291,9 @@ export class EpisodeOrchestrator implements AdapterHost {
       }
       const availability = await this.provider.availability(source.sourceLanguage, target);
       this.assertCurrent(generation);
-      if (availability === 'unavailable') throw new FlixTranslateError('LANGUAGE_PAIR_UNSUPPORTED', 'Chrome does not support this language pair');
+      if (availability === 'unavailable') {
+        throw new SubMateError('LANGUAGE_PAIR_UNSUPPORTED', 'Chrome does not support this language pair');
+      }
       if (this.provider.needsActivation(source.sourceLanguage, target)) {
         this.setStatus({ state: 'needs_user_activation', totalCues: source.cues.length });
         return;
@@ -389,7 +391,7 @@ export class EpisodeOrchestrator implements AdapterHost {
     this.setStatus({ state: 'ready', progress: 1, completedCues: source.cues.length, totalCues: source.cues.length });
   }
 
-  private async applySettings(settings: FlixTranslateSettings): Promise<void> {
+  private async applySettings(settings: SubMateSettings): Promise<void> {
     const old = this.settings;
     this.settings = settings;
     this.overlay.applySettings(settings);
@@ -434,14 +436,14 @@ export class EpisodeOrchestrator implements AdapterHost {
 
   private fail(error: unknown, generation: number): void {
     if (generation !== this.generation || (error instanceof DOMException && error.name === 'AbortError')) return;
-    const code = error instanceof FlixTranslateError ? error.code : 'TRANSLATION_FAILED';
+    const code = error instanceof SubMateError ? error.code : 'TRANSLATION_FAILED';
     // "No captions for this episode" is an ordinary outcome, not a failure.
     if (code === 'NO_TEXT_SUBTITLE_TRACK') {
       this.setStatus({ state: 'no_text_track', errorCode: code });
       return;
     }
     this.setStatus({ state: 'failed', errorCode: code, message: friendlyError(code) });
-    if (this.settings.debugMode) console.error(`[FlixTranslate:${platformLabel(this.adapter.id)}]`, error);
+    if (this.settings.debugMode) console.error(`[SubMate:${platformLabel(this.adapter.id)}]`, error);
   }
 
   private setStatus(status: TranslationStatus): void {
@@ -455,7 +457,7 @@ export class EpisodeOrchestrator implements AdapterHost {
     for (const listener of this.listeners) listener(state);
   }
 
-  private viewState(): FlixTranslateViewState {
+  private viewState(): SubMateViewState {
     const contentId = this.contentId ?? this.source?.contentId;
     const selection = this.source ? undefined : this.adapter.selectSource(this.settings);
     const sourceLanguage = this.source?.sourceLanguage

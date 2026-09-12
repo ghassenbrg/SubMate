@@ -18,6 +18,7 @@ const requiredFiles = [
   'options.html',
   'ui/popup.js',
   'ui/options.js',
+  'ui/theme.css',
   'ui/popup.css',
   'ui/options.css',
   '_locales/en/messages.json',

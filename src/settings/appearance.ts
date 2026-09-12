@@ -1,8 +1,8 @@
-import type { FlixTranslateSettings } from './schema';
+import type { SubMateSettings } from './schema';
 
-type PresetName = Exclude<FlixTranslateSettings['subtitleStylePreset'], 'custom'>;
+type PresetName = Exclude<SubMateSettings['subtitleStylePreset'], 'custom'>;
 type PresetValues = Pick<
-  FlixTranslateSettings,
+  SubMateSettings,
   | 'subtitleBackground'
   | 'subtitleOutline'
   | 'subtitleTextColor'
@@ -54,17 +54,17 @@ export const SUBTITLE_STYLE_PRESETS: Record<PresetName, PresetValues> = {
   },
 };
 
-export function appearanceForPreset(preset: PresetName): Partial<FlixTranslateSettings> {
+export function appearanceForPreset(preset: PresetName): Partial<SubMateSettings> {
   return { subtitleStylePreset: preset, ...SUBTITLE_STYLE_PRESETS[preset] };
 }
 
-export function subtitleAppearanceVariables(settings: FlixTranslateSettings): Record<string, string> {
-  const backgrounds: Record<FlixTranslateSettings['subtitleBackground'], string> = {
+export function subtitleAppearanceVariables(settings: SubMateSettings): Record<string, string> {
+  const backgrounds: Record<SubMateSettings['subtitleBackground'], string> = {
     none: 'transparent',
     soft: 'rgba(0,0,0,.68)',
     solid: 'rgba(0,0,0,.94)',
   };
-  const shadows: Record<FlixTranslateSettings['subtitleOutline'], string> = {
+  const shadows: Record<SubMateSettings['subtitleOutline'], string> = {
     none: 'none',
     shadow: '0 2px 3px #000,0 0 2px #000',
     outline: '-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 2px 2px #000',

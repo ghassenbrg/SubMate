@@ -10,7 +10,7 @@ implementation still patches `JSON.parse` at `document_start`, looks for
 `result.result.movieId`, accepts both `textTracks` / `timedtexttracks` and
 `downloadables` / `ttDownloadables`, and prefers the `dfxp-ls-sdh` text profile.
 
-FlixTranslate implements that current behavior without copying the reference
+SubMate implements that current behavior without copying the reference
 source. It also observes `Response.json`, tolerates current/legacy field names,
 handles hydrated manifest updates, tracks SPA navigation, rejects preload
 manifests whose content ID does not match `/watch/<id>`, and sends only a
@@ -82,8 +82,8 @@ language identifiers, sequential translation behavior, and unavailability in
 Web Workers.
 
 The published implementation list currently includes `ja`, `ar`, and `fr` (as
-well as the other suggestions shown by FlixTranslate), while warning that the
-list may change. FlixTranslate therefore keeps the picker descriptive and calls
+well as the other suggestions shown by SubMate), while warning that the
+list may change. SubMate therefore keeps the picker descriptive and calls
 `Translator.availability()` for the actual source/target pair:
 https://developer.chrome.com/docs/ai/translator-api#supported-languages
 
@@ -104,7 +104,7 @@ extension does not infer support from its language picker.
 
 ## Decision
 
-No FlixTranslate backend is justified. The service worker owns only durable
+No SubMate backend is justified. The service worker owns only durable
 extension-origin IndexedDB/cache coordination. Translation stays in a document
 context; Netflix-specific extraction stays isolated from translation, storage,
 and rendering.

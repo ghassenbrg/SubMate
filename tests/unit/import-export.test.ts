@@ -20,7 +20,7 @@ describe('manual import/export', () => {
 
   it('keeps malicious markup as inert text data', () => {
     const source = sourceTrack();
-    const input = JSON.stringify({ schemaVersion: 1, kind: 'flixtranslate-translation', sourceHash: source.sourceHash, sourceLanguage: 'de', targetLanguage: 'ar', translations: [
+    const input = JSON.stringify({ schemaVersion: 1, kind: 'submate-translation', sourceHash: source.sourceHash, sourceLanguage: 'de', targetLanguage: 'ar', translations: [
       { id: 'c000001', text: '<img src=x onerror=alert(1)>' }, { id: 'c000002', text: '<script>alert(1)</script>' },
     ] });
     const result = importTranslation(input, 'safe.json', source, 'en');
@@ -30,9 +30,9 @@ describe('manual import/export', () => {
 
   it('rejects wrong hashes, duplicate IDs, partial files, and ambiguous timing', () => {
     const source = sourceTrack();
-    const wrong = JSON.stringify({ schemaVersion: 1, kind: 'flixtranslate-translation', sourceHash: 'wrong', sourceLanguage: 'de', targetLanguage: 'en', translations: [] });
+    const wrong = JSON.stringify({ schemaVersion: 1, kind: 'submate-translation', sourceHash: 'wrong', sourceLanguage: 'de', targetLanguage: 'en', translations: [] });
     expect(() => importTranslation(wrong, 'wrong.json', source, 'en')).toThrow();
-    const duplicate = JSON.stringify({ schemaVersion: 1, kind: 'flixtranslate-translation', sourceHash: source.sourceHash, sourceLanguage: 'de', targetLanguage: 'en', translations: [
+    const duplicate = JSON.stringify({ schemaVersion: 1, kind: 'submate-translation', sourceHash: source.sourceHash, sourceLanguage: 'de', targetLanguage: 'en', translations: [
       { id: 'c000001', text: 'a' }, { id: 'c000001', text: 'b' },
     ] });
     expect(() => validateTranslationResult(source, importTranslation(duplicate, 'duplicate.json', source, 'en'))).toThrow();

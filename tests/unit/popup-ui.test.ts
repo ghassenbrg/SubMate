@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { FlixTranslateSettings } from '../../src/settings/schema';
-import type { FlixTranslateViewState } from '../../src/subtitles/models';
+import type { SubMateSettings } from '../../src/settings/schema';
+import type { SubMateViewState } from '../../src/subtitles/models';
 
 const originalChrome = globalThis.chrome;
-const settings = (): FlixTranslateSettings => ({
+const settings = (): SubMateSettings => ({
   enabled: true,
   autoTranslate: true,
   preferredTargetLanguage: 'fr',
@@ -23,7 +23,7 @@ const settings = (): FlixTranslateSettings => ({
   debugMode: false,
 });
 
-const activeState = (overrides: Partial<FlixTranslateViewState> = {}): FlixTranslateViewState => ({
+const activeState = (overrides: Partial<SubMateViewState> = {}): SubMateViewState => ({
   enabled: true,
   contentDetected: true,
   hasPlayer: true,
@@ -40,9 +40,9 @@ const activeState = (overrides: Partial<FlixTranslateViewState> = {}): FlixTrans
 });
 
 let sendMessage: ReturnType<typeof vi.fn>;
-let storedSettings: FlixTranslateSettings;
+let storedSettings: SubMateSettings;
 
-async function renderPopup(state: FlixTranslateViewState | undefined, options: { netflixTab?: boolean; onboarding?: boolean } = {}) {
+async function renderPopup(state: SubMateViewState | undefined, options: { netflixTab?: boolean; onboarding?: boolean } = {}) {
   storedSettings = { ...settings(), onboardingComplete: options.onboarding ?? true };
   sendMessage = vi.fn(async (_tabId: number, message: { type: string }) => ({
     ok: true,
@@ -55,8 +55,8 @@ async function renderPopup(state: FlixTranslateViewState | undefined, options: {
       i18n: { getUILanguage: () => 'en-US', getMessage: () => '' },
       storage: {
         local: {
-          get: vi.fn(async () => ({ flixtranslateSettings: storedSettings })),
-          set: vi.fn(async ({ flixtranslateSettings }: { flixtranslateSettings: FlixTranslateSettings }) => { storedSettings = flixtranslateSettings; }),
+          get: vi.fn(async () => ({ submateSettings: storedSettings })),
+          set: vi.fn(async ({ submateSettings }: { submateSettings: SubMateSettings }) => { storedSettings = submateSettings; }),
         },
         onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
       },
@@ -72,7 +72,7 @@ async function renderPopup(state: FlixTranslateViewState | undefined, options: {
   });
   vi.resetModules();
   await import('../../src/ui/popup/popup');
-  await vi.waitFor(() => expect(document.querySelector('#app')?.textContent).toContain('FlixTranslate'));
+  await vi.waitFor(() => expect(document.querySelector('#app')?.textContent).toContain('SubMate'));
 }
 
 beforeEach(() => {

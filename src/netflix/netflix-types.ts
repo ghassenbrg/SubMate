@@ -24,7 +24,7 @@ export interface NetflixManifestSnapshot {
   tracks: NetflixSubtitleCandidate[];
 }
 
-export const BRIDGE_NAMESPACE = 'flixtranslate:netflix-manifest:v1';
+export const BRIDGE_NAMESPACE = 'submate:netflix-manifest:v1';
 
 export type NetflixBridgeMessage =
   | { namespace: typeof BRIDGE_NAMESPACE; type: 'manifest'; snapshot: NetflixManifestSnapshot }

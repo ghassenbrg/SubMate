@@ -1,11 +1,11 @@
 <!doctype html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="/dist/"><title>FlixTranslate options harness</title><link rel="stylesheet" href="/dist/ui/options.css"></head>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="/dist/chrome/"><title>SubMate options harness</title><link rel="stylesheet" href="/dist/chrome/ui/options.css"></head>
 <body><main id="app"></main><script>
 const mockSettings={enabled:true,autoTranslate:true,preferredTargetLanguage:'fr',preferredSourceLanguage:'ko',translationEngine:'chrome-local',displayMode:'bilingual',translatedFontScale:1,verticalPosition:.13,subtitleStylePreset:'soft-box',subtitleBackground:'soft',subtitleOutline:'shadow',subtitleTextColor:'#ffffff',translatedFontWeight:650,subtitleOpacity:1,subtitleLineHeight:1.22,showPlayerStatus:true,onboardingComplete:true,debugMode:true};
 globalThis.chrome={
   i18n:{getUILanguage:()=> 'en-US'},
-  storage:{local:{get:async()=>({flixtranslateSettings:mockSettings}),set:async(v)=>Object.assign(mockSettings,v.flixtranslateSettings)},onChanged:{addListener(){},removeListener(){}}},
+  storage:{local:{get:async()=>({submateSettings:mockSettings}),set:async(v)=>Object.assign(mockSettings,v.submateSettings)},onChanged:{addListener(){},removeListener(){}}},
   tabs:{query:async()=>[{id:1,url:'https://www.netflix.com/watch/123'}],sendMessage:async()=>({ok:true,value:{contentId:'123',sourceTrack:'T:ko',sourceLanguage:'ko',profile:'dfxp-ls-sdh',cues:501,sourceHash:'sha256:8b77…',state:'ready',progress:1,cacheHit:true,videoTimeMs:302500,activeCue:'c000211'}})},
   runtime:{sendMessage:async()=>({ok:true,value:{translations:42,sources:18}}),getManifest:()=>({version:'0.1.0'}),openOptionsPage:async()=>{}}
 };
-</script><script src="/dist/ui/options.js"></script></body></html>
+</script><script src="/dist/chrome/ui/options.js"></script></body></html>

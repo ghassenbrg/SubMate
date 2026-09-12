@@ -1,6 +1,6 @@
 import type { PrimePlaybackSnapshot } from './prime-manifest';
 
-export const PRIME_BRIDGE_NAMESPACE = 'flixtranslate:prime-playback:v1';
+export const PRIME_BRIDGE_NAMESPACE = 'submate:prime-playback:v1';
 
 /**
  * Messages between the page realm and the extension realm.

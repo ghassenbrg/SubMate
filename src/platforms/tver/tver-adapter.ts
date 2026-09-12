@@ -1,6 +1,6 @@
 import { observeVideoElement } from '../../core/playback/video-observer';
 import { sameLanguage } from '../../core/subtitles/language';
-import type { FlixTranslateSettings } from '../../settings/schema';
+import type { SubMateSettings } from '../../settings/schema';
 import { isTVerHost, routeEpisodeId } from './tver-detection';
 import { isAdvertisementPlaying, pickContentVideo, readAdSignals } from './tver-player';
 import { requestTVerSubtitles, startTVerBridge } from './tver-bridge';
@@ -109,7 +109,7 @@ export class TVerAdapter implements PlatformAdapter {
     return this.contentId ?? routeEpisodeId();
   }
 
-  selectSource(settings: FlixTranslateSettings): SourceSelection {
+  selectSource(settings: SubMateSettings): SourceSelection {
     if (!this.getContentId()) return { kind: 'pending' };
     // Translating Japanese into Japanese is pointless; TVer already shows it.
     if (sameLanguage(settings.preferredTargetLanguage, TVER_SOURCE_LANGUAGE)) {

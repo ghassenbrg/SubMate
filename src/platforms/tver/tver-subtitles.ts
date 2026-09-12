@@ -1,5 +1,5 @@
 import { mergeSegmentCues, parseTimestampMap, type SegmentCues } from '../../core/subtitles/segments';
-import { FlixTranslateError } from '../../shared-errors';
+import { SubMateError } from '../../shared-errors';
 import type { SubtitleCue } from '../../subtitles/models';
 import { normalizeCues } from '../../subtitles/normalize';
 import { parseVttDocument } from '../../subtitles/vtt-parser';
@@ -95,7 +95,7 @@ export function cuesFromSegments(segments: TVerSubtitleSegment[]): SubtitleCue[]
     sourceText: cue.sourceText,
   })));
   if (!cues.length) {
-    throw new FlixTranslateError('SUBTITLE_PARSE_FAILED', 'No subtitle cues found in TVer segments');
+    throw new SubMateError('SUBTITLE_PARSE_FAILED', 'No subtitle cues found in TVer segments');
   }
   return cues;
 }

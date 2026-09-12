@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "FlixTranslate"
+    "message": "SubMate"
   },
   "extensionDescription": {
     "message": "ترجم ترجمات خدمات البث المفقودة محليًا واعرضها بشكل متزامن."
@@ -14,8 +14,8 @@
   "netflixDetected": {
     "message": "تم اكتشاف حلقة على Netflix"
   },
-  "enableFlixTranslate": {
-    "message": "تفعيل FlixTranslate"
+  "enableSubMate": {
+    "message": "تفعيل SubMate"
   },
   "translateTo": {
     "message": "الترجمة إلى"
@@ -54,7 +54,7 @@
     "message": "إيقاف"
   },
   "privacySummary": {
-    "message": "الترجمة على الجهاز خاصة ومجانية. لا يلزم حساب أو خادم FlixTranslate."
+    "message": "الترجمة على الجهاز خاصة ومجانية. لا يلزم حساب أو خادم SubMate."
   },
   "getStarted": {
     "message": "البدء"
@@ -95,8 +95,8 @@
   "exportFormat": {
     "message": "صيغة التصدير"
   },
-  "flixTranslateJson": {
-    "message": "FlixTranslate JSON"
+  "subMateJson": {
+    "message": "SubMate JSON"
   },
   "exportSubtitles": {
     "message": "تصدير الترجمات"
@@ -123,7 +123,7 @@
     "message": "امنحنا ★ على "
   },
   "starAria": {
-    "message": "امنح FlixTranslate نجمة على GitHub"
+    "message": "امنح SubMate نجمة على GitHub"
   },
   "notNetflix": {
     "message": "افتح فيديو Netflix لترجمة الترجمات المتاحة."
@@ -141,7 +141,7 @@
     "message": "في انتظار حلقة."
   },
   "statusDisabled": {
-    "message": "FlixTranslate متوقف."
+    "message": "SubMate متوقف."
   },
   "statusDiscovering": {
     "message": "جارٍ البحث عن الترجمات المتاحة…"
@@ -189,7 +189,7 @@
     "message": "تعذّر إعداد الترجمة. يمكن متابعة التشغيل بشكل طبيعي."
   },
   "settingsTitle": {
-    "message": "إعدادات FlixTranslate"
+    "message": "إعدادات SubMate"
   },
   "settingsSubtitle": {
     "message": "ترجمة ترجمات خاصة ومتزامنة لـ Netflix وTVer وPrime Video"
@@ -324,10 +324,10 @@
     "message": "الإصدار $1"
   },
   "independentNotice": {
-    "message": "FlixTranslate مشروع مستقل وغير تابع لـ Netflix أو TVer أو Amazon وغير معتمد منها."
+    "message": "SubMate مشروع مستقل وغير تابع لـ Netflix أو TVer أو Amazon وغير معتمد منها."
   },
   "noTelemetryNotice": {
-    "message": "لا توجد بيانات تتبع أو خادم FlixTranslate. تستخدم الترجمة على الجهاز بيانات اللغة التي يديرها Chrome."
+    "message": "لا توجد بيانات تتبع أو خادم SubMate. تستخدم الترجمة على الجهاز بيانات اللغة التي يديرها Chrome."
   },
   "developerDiagnostics": {
     "message": "تشخيصات المطور"
@@ -366,10 +366,10 @@
     "message": "تعذر إعداد الترجمات المترجمة"
   },
   "openQuickControls": {
-    "message": "فتح عناصر تحكم FlixTranslate"
+    "message": "فتح عناصر تحكم SubMate"
   },
   "quickControls": {
-    "message": "عناصر تحكم FlixTranslate السريعة"
+    "message": "عناصر تحكم SubMate السريعة"
   },
   "subtitleDisplayMode": {
     "message": "وضع عرض الترجمات"
@@ -408,7 +408,7 @@
     "message": "تعذرت مطابقة ملف الترجمة هذا بأمان مع الحلقة الحالية."
   },
   "errorInvalidImport": {
-    "message": "تعذرت قراءة هذا الملف كترجمة FlixTranslate."
+    "message": "تعذرت قراءة هذا الملف كترجمة SubMate."
   },
   "errorPlayerState": {
     "message": "المشغّل غير جاهز بعد لعرض الترجمة."

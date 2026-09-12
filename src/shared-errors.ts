@@ -1,4 +1,4 @@
-export type FlixTranslateErrorCode =
+export type SubMateErrorCode =
   | 'NETFLIX_MANIFEST_NOT_FOUND'
   | 'NO_PLAYER'
   | 'NO_MANIFEST'
@@ -21,14 +21,14 @@ export type FlixTranslateErrorCode =
   | 'IMPORT_AMBIGUOUS_ALIGNMENT'
   | 'RENDERER_PLAYER_NOT_FOUND';
 
-export class FlixTranslateError extends Error {
+export class SubMateError extends Error {
   constructor(
-    public readonly code: FlixTranslateErrorCode,
+    public readonly code: SubMateErrorCode,
     message: string,
     options?: ErrorOptions,
   ) {
     super(message, options);
-    this.name = 'FlixTranslateError';
+    this.name = 'SubMateError';
   }
 }
 

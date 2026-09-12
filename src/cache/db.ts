@@ -1,6 +1,6 @@
 import type { CachedTranslation, SubtitleTrack } from '../subtitles/models';
 
-const DB_NAME = 'flixtranslate-db';
+const DB_NAME = 'submate-db';
 const DB_VERSION = 1;
 const SOURCE_STORE = 'sourceSubtitles';
 const TRANSLATION_STORE = 'translations';

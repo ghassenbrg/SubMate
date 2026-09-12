@@ -1,4 +1,4 @@
-export interface FlixTranslateSettings {
+export interface SubMateSettings {
   enabled: boolean;
   autoTranslate: boolean;
   preferredTargetLanguage: string;
@@ -19,7 +19,7 @@ export interface FlixTranslateSettings {
   debugMode: boolean;
 }
 
-export const SETTINGS_KEY = 'flixtranslateSettings';
+export const SETTINGS_KEY = 'submateSettings';
 
 export const canonicalLanguage = (value: string): string => {
   const normalized = value.trim().replaceAll('_', '-');
@@ -33,17 +33,20 @@ export const canonicalLanguage = (value: string): string => {
   }
 };
 
-export const validateSettings = (value: unknown): FlixTranslateSettings => {
+export const validateSettings = (value: unknown): SubMateSettings => {
   if (!value || typeof value !== 'object') throw new TypeError('Settings must be an object');
   const v = value as Record<string, unknown>;
   const target = canonicalLanguage(String(v.preferredTargetLanguage ?? navigator.language));
   const source = v.preferredSourceLanguage
     ? canonicalLanguage(String(v.preferredSourceLanguage))
     : undefined;
-  const engine = v.translationEngine === 'manual' ? 'manual' : 'chrome-local';
+  const engines = ['chrome-local', 'manual'] as const;
+  const engine = engines.includes(v.translationEngine as (typeof engines)[number])
+    ? (v.translationEngine as SubMateSettings['translationEngine'])
+    : 'chrome-local';
   const modes = ['bilingual', 'translation-only', 'off'] as const;
   const displayMode = modes.includes(v.displayMode as (typeof modes)[number])
-    ? (v.displayMode as FlixTranslateSettings['displayMode'])
+    ? (v.displayMode as SubMateSettings['displayMode'])
     : 'bilingual';
   const scale = Number(v.translatedFontScale);
   const position = Number(v.verticalPosition);
@@ -51,13 +54,13 @@ export const validateSettings = (value: unknown): FlixTranslateSettings => {
   const backgrounds = ['none', 'soft', 'solid'] as const;
   const outlines = ['none', 'shadow', 'outline'] as const;
   const preset = stylePresets.includes(v.subtitleStylePreset as (typeof stylePresets)[number])
-    ? (v.subtitleStylePreset as FlixTranslateSettings['subtitleStylePreset'])
+    ? (v.subtitleStylePreset as SubMateSettings['subtitleStylePreset'])
     : 'soft-box';
   const background = backgrounds.includes(v.subtitleBackground as (typeof backgrounds)[number])
-    ? (v.subtitleBackground as FlixTranslateSettings['subtitleBackground'])
+    ? (v.subtitleBackground as SubMateSettings['subtitleBackground'])
     : 'soft';
   const outline = outlines.includes(v.subtitleOutline as (typeof outlines)[number])
-    ? (v.subtitleOutline as FlixTranslateSettings['subtitleOutline'])
+    ? (v.subtitleOutline as SubMateSettings['subtitleOutline'])
     : 'shadow';
   const textColor = typeof v.subtitleTextColor === 'string' && /^#[0-9a-f]{6}$/i.test(v.subtitleTextColor)
     ? v.subtitleTextColor.toLowerCase()

@@ -15,11 +15,11 @@ reference-repository inspection or synthetic fixture as live Netflix proof.
   though the active cue and Ready state were present. Root cause was the overlay
   show path inheriting its stylesheet's `display:none` rule.
 - Passed after rebuild/reload: content `83068200` visibly rendered French above
-  Netflix's Japanese cue. Only one Japanese source line remained; FlixTranslate
+  Netflix's Japanese cue. Only one Japanese source line remained; SubMate
   suppressed its duplicate source while the native cue was visible. Responsive
   subtitle sizing and the compact quick panel were also visible.
 - The unattended session then autoplayed to content `83068201`. The previous
-  episode was cleared and only one FlixTranslate root remained, but the loaded
+  episode was cleared and only one SubMate root remained, but the loaded
   bundle stayed in Discovering because Netflix had preloaded Episode B's
   manifest before changing the route. The current build now retains a bounded
   page-realm preload window and replays the matching safe manifest immediately
@@ -49,7 +49,7 @@ been exercised on two content IDs.
 3. Enable Developer mode, choose **Load unpacked**, and select this repository's
    `dist/chrome/` folder.
 4. Sign into Netflix normally. Do not share credentials with the extension.
-5. Open FlixTranslate, choose any target BCP-47 language supported by Chrome,
+5. Open SubMate, choose any target BCP-47 language supported by Chrome,
    and complete onboarding.
 6. In Advanced settings, enable Developer diagnostics for the test session.
 
@@ -62,7 +62,7 @@ Use region/account-appropriate titles; do not rely on one fixed catalog item.
   track ID, profile, nonzero cue count, and a SHA-256 source hash.
 - Confirm a textual representation is preferred when the same language also
   exposes image subtitle assets.
-- Export FlixTranslate JSON and inspect ordered IDs, integer millisecond timing,
+- Export SubMate JSON and inspect ordered IDs, integer millisecond timing,
   source language, and source hash.
 - Repeat with representative Latin, CJK, and RTL source/target scripts.
 - Switch the Netflix source subtitle and confirm a new track/hash is prepared.
@@ -86,7 +86,7 @@ Use region/account-appropriate titles; do not rely on one fixed catalog item.
 - Enter/leave fullscreen, resize the window, and vary OS display scaling.
 - Show/hide Netflix native subtitles and check collision offset.
 - Switch bilingual, translation-only, and off modes from both UI surfaces.
-- Confirm no stale cue survives a seek and only one FlixTranslate root exists.
+- Confirm no stale cue survives a seek and only one SubMate root exists.
 - Let the next episode autoplay while translation is in progress; Episode A
   must never render over Episode B.
 - Open Advanced settings and try Netflix-like, soft-background, solid-black,
@@ -94,7 +94,7 @@ Use region/account-appropriate titles; do not rely on one fixed catalog item.
   update, the black background can be removed/restored, and Custom is selected
   after changing background, outline, color, weight, opacity, or line spacing.
 - Confirm the in-player display-mode control clearly checks exactly one active
-  mode and that its compact FT trigger does not obscure Netflix controls.
+  mode and that its compact logo trigger does not obscure Netflix controls.
 
 ## Cache and manual workflow
 
@@ -144,18 +144,18 @@ like during a break.
 ### How to run it
 
 Load `dist/chrome` unpacked in Chrome, enable **Debug mode** in options (this
-turns on the `[FlixTranslate:TVer]` log namespace), and open a caption-enabled
+turns on the `[SubMate:TVer]` log namespace), and open a caption-enabled
 episode from a Japanese connection.
 
 Expected log progression:
 
 ```text
-[FlixTranslate:TVer] adapter started
-[FlixTranslate:TVer] content video changed
-[FlixTranslate:TVer] media manifest observed
-[FlixTranslate:TVer] subtitle segments received
-[FlixTranslate:TVer] subtitle cues normalized
-[FlixTranslate:TVer] source track ready
+[SubMate:TVer] adapter started
+[SubMate:TVer] content video changed
+[SubMate:TVer] media manifest observed
+[SubMate:TVer] subtitle segments received
+[SubMate:TVer] subtitle cues normalized
+[SubMate:TVer] source track ready
 ```
 
 ### Per-episode checklist (repeat on at least 3 programs)
@@ -227,11 +227,11 @@ subtitles on `primevideo.com` or an Amazon storefront video page.
 Expected log progression:
 
 ```text
-[FlixTranslate:Prime Video] adapter started
-[FlixTranslate:Prime Video] content video changed
-[FlixTranslate:Prime Video] playback payload captured
-[FlixTranslate:Prime Video] subtitle cues normalized
-[FlixTranslate:Prime Video] source track ready
+[SubMate:Prime Video] adapter started
+[SubMate:Prime Video] content video changed
+[SubMate:Prime Video] playback payload captured
+[SubMate:Prime Video] subtitle cues normalized
+[SubMate:Prime Video] source track ready
 ```
 
 **If `playback payload captured` never appears**, first look for

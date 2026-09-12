@@ -1,4 +1,4 @@
-import { FlixTranslateError } from '../shared-errors';
+import { SubMateError } from '../shared-errors';
 
 const NETFLIX_RESOURCE_SUFFIXES = [
   'netflix.com',
@@ -22,7 +22,7 @@ export function isAllowedNetflixSubtitleUrl(value: string): boolean {
 
 export function assertAllowedNetflixSubtitleUrl(value: string): URL {
   if (!isAllowedNetflixSubtitleUrl(value)) {
-    throw new FlixTranslateError('SUBTITLE_DOWNLOAD_FAILED', 'Rejected untrusted subtitle URL');
+    throw new SubMateError('SUBTITLE_DOWNLOAD_FAILED', 'Rejected untrusted subtitle URL');
   }
   return new URL(value);
 }

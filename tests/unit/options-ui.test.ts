@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defaultSettings } from '../../src/settings/defaults';
-import type { FlixTranslateSettings } from '../../src/settings/schema';
+import type { SubMateSettings } from '../../src/settings/schema';
 
 vi.mock('../../src/cache/messages', () => ({
   sendCacheMessage: vi.fn(async (message: { type: string }) => message.type === 'CACHE_STATS' ? { translations: 2, sources: 1 } : undefined),
@@ -8,7 +8,7 @@ vi.mock('../../src/cache/messages', () => ({
 vi.mock('../../src/ui/shared/messages', () => ({ sendContent: vi.fn(async () => ({})) }));
 
 const originalChrome = globalThis.chrome;
-let storedSettings: FlixTranslateSettings;
+let storedSettings: SubMateSettings;
 
 function rowControl(label: string): HTMLElement {
   const item = [...document.querySelectorAll<HTMLElement>('.row')].find((candidate) => candidate.querySelector('strong')?.textContent === label);
@@ -25,8 +25,8 @@ async function renderOptions(): Promise<void> {
       i18n: { getUILanguage: () => 'en-US', getMessage: () => '' },
       storage: {
         local: {
-          get: vi.fn(async () => ({ flixtranslateSettings: storedSettings })),
-          set: vi.fn(async ({ flixtranslateSettings }: { flixtranslateSettings: FlixTranslateSettings }) => { storedSettings = flixtranslateSettings; }),
+          get: vi.fn(async () => ({ submateSettings: storedSettings })),
+          set: vi.fn(async ({ submateSettings }: { submateSettings: SubMateSettings }) => { storedSettings = submateSettings; }),
         },
         onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
       },

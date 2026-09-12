@@ -1,13 +1,13 @@
-import { FlixTranslateError } from '../shared-errors';
+import { SubMateError } from '../shared-errors';
 import type { PlatformId, SubtitleTrack, TranslationResult } from '../subtitles/models';
 import { normalizeText } from '../subtitles/normalize';
 import { formatSrtTime, formatVttTime } from '../subtitles/time';
 import { parseSrt, parseVtt } from '../subtitles/vtt-parser';
 import { canonicalLanguage } from '../settings/schema';
 
-export interface FlixTranslateSourcePackage {
+export interface SubMateSourcePackage {
   schemaVersion: 1;
-  kind: 'flixtranslate-source';
+  kind: 'submate-source';
   platform: PlatformId;
   contentId: string;
   sourceLanguage: string;
@@ -15,15 +15,15 @@ export interface FlixTranslateSourcePackage {
   cues: Array<{ id: string; startMs: number; endMs: number; text: string }>;
 }
 
-export interface FlixTranslateTranslationPackage extends TranslationResult {
+export interface SubMateTranslationPackage extends TranslationResult {
   schemaVersion: 1;
-  kind: 'flixtranslate-translation';
+  kind: 'submate-translation';
 }
 
-export function sourcePackage(track: SubtitleTrack): FlixTranslateSourcePackage {
+export function sourcePackage(track: SubtitleTrack): SubMateSourcePackage {
   return {
     schemaVersion: 1,
-    kind: 'flixtranslate-source',
+    kind: 'submate-source',
     platform: track.platform,
     contentId: track.contentId,
     sourceLanguage: track.sourceLanguage,
@@ -45,35 +45,38 @@ export function exportSource(track: SubtitleTrack, format: 'json' | 'srt' | 'vtt
   return format === 'vtt' ? `WEBVTT\n\n${body}\n` : `${body}\n`;
 }
 
+// 'flixtranslate-translation' is the pre-rename kind; files exported before the rename still import.
+const TRANSLATION_KINDS = new Set(['submate-translation', 'flixtranslate-translation']);
+
 function parseTranslationJson(input: string, source: SubtitleTrack): TranslationResult {
   let parsed: unknown;
   try {
     parsed = JSON.parse(input);
   } catch (error) {
-    throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'Translation JSON is malformed', { cause: error });
+    throw new SubMateError('IMPORT_INVALID_SCHEMA', 'Translation JSON is malformed', { cause: error });
   }
-  if (!parsed || typeof parsed !== 'object') throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'Expected an object');
+  if (!parsed || typeof parsed !== 'object') throw new SubMateError('IMPORT_INVALID_SCHEMA', 'Expected an object');
   const value = parsed as Record<string, unknown>;
-  if (value.schemaVersion !== 1 || value.kind !== 'flixtranslate-translation') {
-    throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'Unsupported translation schema');
+  if (value.schemaVersion !== 1 || typeof value.kind !== 'string' || !TRANSLATION_KINDS.has(value.kind)) {
+    throw new SubMateError('IMPORT_INVALID_SCHEMA', 'Unsupported translation schema');
   }
   if (value.sourceHash !== source.sourceHash || value.sourceLanguage !== source.sourceLanguage) {
-    throw new FlixTranslateError('IMPORT_HASH_MISMATCH', 'Translation source hash or language does not match');
+    throw new SubMateError('IMPORT_HASH_MISMATCH', 'Translation source hash or language does not match');
   }
   if (!Array.isArray(value.translations) || value.translations.length > 20_000) {
-    throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'Translations must be a bounded array');
+    throw new SubMateError('IMPORT_INVALID_SCHEMA', 'Translations must be a bounded array');
   }
   let targetLanguage: string;
   try {
     targetLanguage = canonicalLanguage(String(value.targetLanguage ?? ''));
   } catch (error) {
-    throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'Invalid target language', { cause: error });
+    throw new SubMateError('IMPORT_INVALID_SCHEMA', 'Invalid target language', { cause: error });
   }
   const translations = value.translations.map((raw) => {
-    if (!raw || typeof raw !== 'object') throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'Malformed translation entry');
+    if (!raw || typeof raw !== 'object') throw new SubMateError('IMPORT_INVALID_SCHEMA', 'Malformed translation entry');
     const item = raw as Record<string, unknown>;
     if (typeof item.id !== 'string' || item.id.length > 100 || typeof item.text !== 'string' || item.text.length > 100_000) {
-      throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'Malformed translation entry');
+      throw new SubMateError('IMPORT_INVALID_SCHEMA', 'Malformed translation entry');
     }
     return { id: item.id, text: normalizeText(item.text) };
   });
@@ -92,12 +95,12 @@ function alignTimedImport(
   targetLanguage: string,
 ): TranslationResult {
   if (imported.length !== source.cues.length) {
-    throw new FlixTranslateError('TRANSLATION_INCOMPLETE', `${imported.length} of ${source.cues.length} cues supplied`);
+    throw new SubMateError('TRANSLATION_INCOMPLETE', `${imported.length} of ${source.cues.length} cues supplied`);
   }
   const translations = imported.map((cue, index) => {
     const sourceCue = source.cues[index];
     if (!sourceCue || Math.abs(cue.startMs - sourceCue.startMs) > 300 || Math.abs(cue.endMs - sourceCue.endMs) > 300) {
-      throw new FlixTranslateError('IMPORT_AMBIGUOUS_ALIGNMENT', `Cue ${index + 1} timing does not match`);
+      throw new SubMateError('IMPORT_AMBIGUOUS_ALIGNMENT', `Cue ${index + 1} timing does not match`);
     }
     return { id: sourceCue.id, text: cue.sourceText };
   });
@@ -116,17 +119,17 @@ export function importTranslation(
   source: SubtitleTrack,
   selectedTargetLanguage: string,
 ): TranslationResult {
-  if (input.length > 10_000_000) throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'Import exceeds size limit');
+  if (input.length > 10_000_000) throw new SubMateError('IMPORT_INVALID_SCHEMA', 'Import exceeds size limit');
   const lower = fileName.toLowerCase();
   if (lower.endsWith('.json') || input.trimStart().startsWith('{')) return parseTranslationJson(input, source);
   if (lower.endsWith('.vtt') || input.trimStart().startsWith('WEBVTT')) {
     return alignTimedImport(parseVtt(input), source, selectedTargetLanguage);
   }
   if (lower.endsWith('.srt')) return alignTimedImport(parseSrt(input), source, selectedTargetLanguage);
-  throw new FlixTranslateError('IMPORT_INVALID_SCHEMA', 'Unsupported import type');
+  throw new SubMateError('IMPORT_INVALID_SCHEMA', 'Unsupported import type');
 }
 
 export function exportFileName(track: SubtitleTrack, target: string | undefined, extension: string): string {
   const clean = (value: string) => value.replaceAll(/[^\p{L}\p{N}._-]+/gu, '-').slice(0, 80);
-  return `flixtranslate-${clean(track.platform)}-${clean(track.contentId)}-${clean(track.sourceLanguage)}-${target ? clean(target) : 'source'}.${extension}`;
+  return `submate-${clean(track.platform)}-${clean(track.contentId)}-${clean(track.sourceLanguage)}-${target ? clean(target) : 'source'}.${extension}`;
 }

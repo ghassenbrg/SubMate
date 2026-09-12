@@ -7,7 +7,7 @@ const root = resolve(import.meta.dirname, '..');
 const extensionDir = resolve(root, 'dist', 'chrome');
 const packageJson = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
 const packagesDir = resolve(root, 'dist', 'packages');
-const filename = `flixtranslate-chrome-v${packageJson.version}.zip`;
+const filename = `submate-chrome-v${packageJson.version}.zip`;
 const outputPath = resolve(packagesDir, filename);
 
 await mkdir(packagesDir, { recursive: true });

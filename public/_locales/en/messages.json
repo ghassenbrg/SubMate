@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "FlixTranslate"
+    "message": "SubMate"
   },
   "extensionDescription": {
     "message": "Translate missing streaming subtitles locally and display them in sync."
@@ -14,8 +14,8 @@
   "netflixDetected": {
     "message": "Netflix episode detected"
   },
-  "enableFlixTranslate": {
-    "message": "Enable FlixTranslate"
+  "enableSubMate": {
+    "message": "Enable SubMate"
   },
   "translateTo": {
     "message": "Translate to"
@@ -54,7 +54,7 @@
     "message": "Off"
   },
   "privacySummary": {
-    "message": "On-device translation is private and free. No account or FlixTranslate server is required."
+    "message": "On-device translation is private and free. No account or SubMate server is required."
   },
   "getStarted": {
     "message": "Get started"
@@ -95,8 +95,8 @@
   "exportFormat": {
     "message": "Export format"
   },
-  "flixTranslateJson": {
-    "message": "FlixTranslate JSON"
+  "subMateJson": {
+    "message": "SubMate JSON"
   },
   "exportSubtitles": {
     "message": "Export subtitles"
@@ -123,7 +123,7 @@
     "message": "Give us a ★ on "
   },
   "starAria": {
-    "message": "Give FlixTranslate a star on GitHub"
+    "message": "Give SubMate a star on GitHub"
   },
   "notNetflix": {
     "message": "Open a Netflix video to translate available subtitles."
@@ -141,7 +141,7 @@
     "message": "Waiting for an episode."
   },
   "statusDisabled": {
-    "message": "FlixTranslate is off."
+    "message": "SubMate is off."
   },
   "statusDiscovering": {
     "message": "Finding available subtitles…"
@@ -189,7 +189,7 @@
     "message": "Translated subtitles couldn't be prepared. Playback can continue normally."
   },
   "settingsTitle": {
-    "message": "FlixTranslate Settings"
+    "message": "SubMate Settings"
   },
   "settingsSubtitle": {
     "message": "Private, synchronized subtitle translation for Netflix, TVer and Prime Video"
@@ -324,10 +324,10 @@
     "message": "Version $1"
   },
   "independentNotice": {
-    "message": "FlixTranslate is independent and is not affiliated with or endorsed by Netflix, TVer or Amazon."
+    "message": "SubMate is independent and is not affiliated with or endorsed by Netflix, TVer or Amazon."
   },
   "noTelemetryNotice": {
-    "message": "No telemetry or FlixTranslate backend. On-device translation uses Chrome browser-managed language data."
+    "message": "No telemetry or SubMate backend. On-device translation uses Chrome browser-managed language data."
   },
   "developerDiagnostics": {
     "message": "Developer diagnostics"
@@ -366,10 +366,10 @@
     "message": "Translated subtitles couldn't be prepared"
   },
   "openQuickControls": {
-    "message": "Open FlixTranslate controls"
+    "message": "Open SubMate controls"
   },
   "quickControls": {
-    "message": "FlixTranslate quick controls"
+    "message": "SubMate quick controls"
   },
   "subtitleDisplayMode": {
     "message": "Subtitle display mode"
@@ -408,7 +408,7 @@
     "message": "This subtitle file could not be matched safely to the current episode."
   },
   "errorInvalidImport": {
-    "message": "This file could not be read as a FlixTranslate translation."
+    "message": "This file could not be read as a SubMate translation."
   },
   "errorPlayerState": {
     "message": "The player is not ready for translated subtitles yet."

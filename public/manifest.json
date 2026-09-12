@@ -27,7 +27,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "FlixTranslate",
+    "default_title": "SubMate",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   CachedTranslation,
-  FlixTranslateViewState,
+  SubMateViewState,
   SubtitleTrack,
   TranslationRequest,
   TranslationResult,
@@ -222,7 +222,7 @@ describe('episode orchestration', () => {
       ? new Promise((resolve) => { resolveA = resolve; })
       : Promise.resolve({ cues: [cue('안녕')], language: 'ko', trackId: 'T:ko' });
 
-    const states: FlixTranslateViewState[] = [];
+    const states: SubMateViewState[] = [];
     const orchestrator = await startOrchestrator(adapter);
     orchestrator.onState((state) => states.push(state));
     await vi.waitFor(() => expect(adapter.extractCalls).toEqual(['100']));
@@ -258,8 +258,8 @@ describe('episode orchestration', () => {
   it('treats a missing caption track as an ordinary outcome, not a failure', async () => {
     const adapter = new FakeAdapter();
     adapter.extractImpl = async () => {
-      const { FlixTranslateError } = await import('../../src/shared-errors');
-      throw new FlixTranslateError('NO_TEXT_SUBTITLE_TRACK', 'This episode has no captions');
+      const { SubMateError } = await import('../../src/shared-errors');
+      throw new SubMateError('NO_TEXT_SUBTITLE_TRACK', 'This episode has no captions');
     };
     const orchestrator = await startOrchestrator(adapter);
     await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('no_text_track'));
@@ -270,8 +270,8 @@ describe('episode orchestration', () => {
   it('surfaces a genuine extraction failure as a retryable error', async () => {
     const adapter = new FakeAdapter();
     adapter.extractImpl = async () => {
-      const { FlixTranslateError } = await import('../../src/shared-errors');
-      throw new FlixTranslateError('SUBTITLE_SEGMENT_FAILED', 'network down');
+      const { SubMateError } = await import('../../src/shared-errors');
+      throw new SubMateError('SUBTITLE_SEGMENT_FAILED', 'network down');
     };
     const orchestrator = await startOrchestrator(adapter);
     await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('failed'));

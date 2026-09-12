@@ -1,4 +1,4 @@
-import { FlixTranslateError } from '../../shared-errors';
+import { SubMateError } from '../../shared-errors';
 
 /**
  * Hosts Amazon serves Prime Video sidecar subtitles from.
@@ -45,7 +45,7 @@ export function isAllowedPrimeSubtitleUrl(value: string): boolean {
 
 export function assertAllowedPrimeSubtitleUrl(value: string): URL {
   if (!isAllowedPrimeSubtitleUrl(value)) {
-    throw new FlixTranslateError('SUBTITLE_DOWNLOAD_FAILED', 'Rejected untrusted subtitle URL');
+    throw new SubMateError('SUBTITLE_DOWNLOAD_FAILED', 'Rejected untrusted subtitle URL');
   }
   return new URL(value);
 }

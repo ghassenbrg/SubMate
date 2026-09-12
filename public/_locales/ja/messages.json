@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "FlixTranslate"
+    "message": "SubMate"
   },
   "extensionDescription": {
     "message": "配信サービスの不足している字幕をローカルで翻訳し、同期して表示します。"
@@ -14,8 +14,8 @@
   "netflixDetected": {
     "message": "Netflixのエピソードを検出"
   },
-  "enableFlixTranslate": {
-    "message": "FlixTranslateを有効にする"
+  "enableSubMate": {
+    "message": "SubMateを有効にする"
   },
   "translateTo": {
     "message": "翻訳先"
@@ -54,7 +54,7 @@
     "message": "オフ"
   },
   "privacySummary": {
-    "message": "端末上の翻訳は無料でプライベートです。アカウントやFlixTranslateサーバーは不要です。"
+    "message": "端末上の翻訳は無料でプライベートです。アカウントやSubMateサーバーは不要です。"
   },
   "getStarted": {
     "message": "始める"
@@ -95,8 +95,8 @@
   "exportFormat": {
     "message": "エクスポート形式"
   },
-  "flixTranslateJson": {
-    "message": "FlixTranslate JSON"
+  "subMateJson": {
+    "message": "SubMate JSON"
   },
   "exportSubtitles": {
     "message": "字幕をエクスポート"
@@ -123,7 +123,7 @@
     "message": "★で応援："
   },
   "starAria": {
-    "message": "GitHubでFlixTranslateにスターを付ける"
+    "message": "GitHubでSubMateにスターを付ける"
   },
   "notNetflix": {
     "message": "Netflixの動画を開くと、利用可能な字幕を翻訳できます。"
@@ -141,7 +141,7 @@
     "message": "エピソードを待っています。"
   },
   "statusDisabled": {
-    "message": "FlixTranslateはオフです。"
+    "message": "SubMateはオフです。"
   },
   "statusDiscovering": {
     "message": "利用可能な字幕を探しています…"
@@ -189,7 +189,7 @@
     "message": "翻訳字幕を準備できませんでした。再生はそのまま続行できます。"
   },
   "settingsTitle": {
-    "message": "FlixTranslate 設定"
+    "message": "SubMate 設定"
   },
   "settingsSubtitle": {
     "message": "Netflix・TVer・Prime Video のためのプライベートで同期された字幕翻訳"
@@ -324,10 +324,10 @@
     "message": "バージョン $1"
   },
   "independentNotice": {
-    "message": "FlixTranslate は独立したプロジェクトであり、Netflix・TVer・Amazon とは提携しておらず、承認も受けていません。"
+    "message": "SubMate は独立したプロジェクトであり、Netflix・TVer・Amazon とは提携しておらず、承認も受けていません。"
   },
   "noTelemetryNotice": {
-    "message": "テレメトリーやFlixTranslateサーバーはありません。端末上の翻訳にはChrome管理の言語データを使用します。"
+    "message": "テレメトリーやSubMateサーバーはありません。端末上の翻訳にはChrome管理の言語データを使用します。"
   },
   "developerDiagnostics": {
     "message": "開発者向け診断"
@@ -366,10 +366,10 @@
     "message": "翻訳字幕を準備できませんでした"
   },
   "openQuickControls": {
-    "message": "FlixTranslateの操作パネルを開く"
+    "message": "SubMateの操作パネルを開く"
   },
   "quickControls": {
-    "message": "FlixTranslate クイック操作"
+    "message": "SubMate クイック操作"
   },
   "subtitleDisplayMode": {
     "message": "字幕の表示モード"
@@ -408,7 +408,7 @@
     "message": "この字幕ファイルを現在のエピソードに安全に対応付けできませんでした。"
   },
   "errorInvalidImport": {
-    "message": "このファイルはFlixTranslateの翻訳として読み取れません。"
+    "message": "このファイルはSubMateの翻訳として読み取れません。"
   },
   "errorPlayerState": {
     "message": "プレーヤーはまだ翻訳字幕を表示できる状態ではありません。"

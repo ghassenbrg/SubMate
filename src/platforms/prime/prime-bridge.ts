@@ -1,4 +1,4 @@
-import { FlixTranslateError } from '../../shared-errors';
+import { SubMateError } from '../../shared-errors';
 import { isPrimeSnapshot, type PrimePlaybackSnapshot } from './prime-manifest';
 import { PRIME_BRIDGE_NAMESPACE, PRIME_LIMITS } from './prime-types';
 
@@ -43,7 +43,7 @@ export function requestPrimeSubtitle(
       if (data.type !== 'subtitle-response' || data.requestId !== requestId) return;
       cleanup();
       if (data.ok !== true) {
-        reject(new FlixTranslateError(
+        reject(new SubMateError(
           'SUBTITLE_DOWNLOAD_FAILED',
           typeof data.error === 'string' ? data.error.slice(0, 200) : 'Subtitle download failed',
         ));
@@ -55,14 +55,14 @@ export function requestPrimeSubtitle(
         typeof data.contentType !== 'string' ||
         data.contentType.length > 200
       ) {
-        reject(new FlixTranslateError('SUBTITLE_DOWNLOAD_FAILED', 'Malformed subtitle response'));
+        reject(new SubMateError('SUBTITLE_DOWNLOAD_FAILED', 'Malformed subtitle response'));
         return;
       }
       resolve({ text: data.text, contentType: data.contentType });
     };
     const timeout = window.setTimeout(() => {
       cleanup();
-      reject(new FlixTranslateError('SUBTITLE_DOWNLOAD_FAILED', 'Subtitle download timed out'));
+      reject(new SubMateError('SUBTITLE_DOWNLOAD_FAILED', 'Subtitle download timed out'));
     }, 45_000);
     window.addEventListener('message', listener);
     signal?.addEventListener('abort', onAbort, { once: true });

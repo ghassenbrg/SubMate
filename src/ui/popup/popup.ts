@@ -1,8 +1,8 @@
 import { friendlyError } from '../../shared-errors';
 import { applyDocumentLocale, t } from '../../i18n';
 import { loadSettings, saveSettings } from '../../settings/store';
-import type { FlixTranslateSettings } from '../../settings/schema';
-import type { FlixTranslateViewState } from '../../subtitles/models';
+import type { SubMateSettings } from '../../settings/schema';
+import type { SubMateViewState } from '../../subtitles/models';
 import { FEATURED_LANGUAGE_CODES, isSuggestedLanguage, languageInputValue, languageName, parseLanguageInput, sortedLanguageSuggestions } from '../shared/languages';
 import { getContentState, sendContent } from '../shared/messages';
 import { platformLabel } from '../../platforms';
@@ -12,8 +12,8 @@ const appNode = document.querySelector<HTMLElement>('#app');
 if (!appNode) throw new Error('Popup root missing');
 const app = appNode;
 applyDocumentLocale();
-let settings: FlixTranslateSettings;
-let state: FlixTranslateViewState | undefined;
+let settings: SubMateSettings;
+let state: SubMateViewState | undefined;
 let feedback = '';
 let feedbackError = false;
 
@@ -37,6 +37,33 @@ function brandIcon(className = 'brand-icon'): HTMLImageElement {
   icon.width = 40;
   icon.height = 40;
   return icon;
+}
+
+/**
+ * Inline stroke icons. Kept as path data rather than image files so the popup
+ * needs no extra network round trip and the glyphs inherit currentColor.
+ */
+const ICON_PATHS = {
+  export: 'M12 3v12m-4-4 4 4 4-4M4 20h16',
+  import: 'M12 21V9m-4 4 4-4 4 4M4 4h16',
+  sliders: 'M4 7h5m4 0h7M4 17h11m4 0h1M11 4.5v5M17 14.5v5',
+  star: 'm12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z',
+} as const;
+
+function icon(name: keyof typeof ICON_PATHS): SVGSVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'icon');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', ICON_PATHS[name]);
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-width', '2');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'round');
+  svg.append(path);
+  return svg;
 }
 
 function languageControl(value: string, onCommit: (language: string) => void): HTMLDivElement {
@@ -99,7 +126,7 @@ function renderOnboarding(): void {
   const privacy = element('p', 'privacy', t('privacySummary'));
   const start = element('button', 'primary wide', t('getStarted'));
   start.addEventListener('click', async () => {
-    settings = await saveSettings({ preferredTargetLanguage: selected, displayMode: display.value as FlixTranslateSettings['displayMode'], onboardingComplete: true });
+    settings = await saveSettings({ preferredTargetLanguage: selected, displayMode: display.value as SubMateSettings['displayMode'], onboardingComplete: true });
     state = await getContentState();
     render();
   });
@@ -118,12 +145,12 @@ function render(): void {
   header.append(titles);
   if (state?.contentDetected) {
     const label = state.platform ? platformLabel(state.platform) : 'Netflix';
-    header.append(element('span', 'detected', `● ${t('platformDetected', label)}`));
+    header.append(element('span', 'detected pill', t('platformDetected', label)));
   }
   shell.append(header);
 
   const toggleLabel = element('label', 'toggle-row');
-  toggleLabel.append(element('span', '', t('enableFlixTranslate')));
+  toggleLabel.append(element('span', '', t('enableSubMate')));
   const toggle = element('input') as HTMLInputElement;
   toggle.type = 'checkbox'; toggle.role = 'switch'; toggle.checked = settings.enabled;
   toggle.addEventListener('change', async () => { settings = await saveSettings({ enabled: toggle.checked }); state = await getContentState(); render(); });
@@ -134,19 +161,23 @@ function render(): void {
     settings = await saveSettings({ preferredTargetLanguage: value });
     state = await getContentState(); render();
   });
-  shell.append(field(t('targetLanguage').toUpperCase(), language));
+  const controls = element('section', 'controls');
+  controls.append(field(t('targetLanguage').toUpperCase(), language));
 
   const engine = element('select', 'selectlike') as HTMLSelectElement;
-  engine.append(new Option(t('onDevicePrivateFree'), 'chrome-local'), new Option(t('manualTranslation'), 'manual'));
+  engine.append(
+    new Option(t('onDevicePrivateFree'), 'chrome-local'),
+    new Option(t('manualTranslation'), 'manual'),
+  );
   engine.value = settings.translationEngine;
-  engine.addEventListener('change', async () => { settings = await saveSettings({ translationEngine: engine.value as FlixTranslateSettings['translationEngine'] }); state = await getContentState(); render(); });
-  shell.append(field(t('translation').toUpperCase(), engine));
+  engine.addEventListener('change', async () => { settings = await saveSettings({ translationEngine: engine.value as SubMateSettings['translationEngine'] }); state = await getContentState(); render(); });
+  controls.append(field(t('translation').toUpperCase(), engine));
 
   const display = element('select', 'selectlike') as HTMLSelectElement;
   display.append(new Option(t('originalAndTranslation'), 'bilingual'), new Option(t('translationOnly'), 'translation-only'), new Option(t('off'), 'off'));
   display.value = settings.displayMode;
-  display.addEventListener('change', async () => { settings = await saveSettings({ displayMode: display.value as FlixTranslateSettings['displayMode'] }); });
-  shell.append(field(t('display').toUpperCase(), display));
+  display.addEventListener('change', async () => { settings = await saveSettings({ displayMode: display.value as SubMateSettings['displayMode'] }); });
+  controls.append(field(t('display').toUpperCase(), display));
 
   const card = element('section', 'episode');
   card.append(element('div', 'eyebrow', t('currentEpisode').toUpperCase()));
@@ -179,13 +210,14 @@ function render(): void {
       card.append(retry);
     }
   }
-  shell.append(card);
+  shell.append(card, controls);
 
   const tools = element('section', 'tools');
   const format = element('select', 'compact') as HTMLSelectElement;
-  format.append(new Option(t('flixTranslateJson'), 'json'), new Option('SRT', 'srt'), new Option('VTT', 'vtt'));
+  format.append(new Option(t('subMateJson'), 'json'), new Option('SRT', 'srt'), new Option('VTT', 'vtt'));
   format.setAttribute('aria-label', t('exportFormat'));
   const exportButton = element('button', 'secondary', t('exportSubtitles'));
+  exportButton.prepend(icon('export'));
   exportButton.disabled = !state?.sourceCueCount;
   exportButton.addEventListener('click', async () => {
     try {
@@ -198,6 +230,7 @@ function render(): void {
     } catch (error) { feedback = error instanceof Error ? error.message : String(error); feedbackError = true; render(); }
   });
   const importButton = element('button', 'secondary', t('importTranslation'));
+  importButton.prepend(icon('import'));
   importButton.disabled = !state?.sourceCueCount;
   const input = element('input') as HTMLInputElement;
   input.type = 'file'; input.accept = '.json,.srt,.vtt,application/json,text/vtt'; input.hidden = true;
@@ -224,17 +257,18 @@ function render(): void {
   shell.append(tools);
   if (feedback) { const alert = element('p', feedbackError ? 'feedback error' : 'feedback success', feedback); alert.role = feedbackError ? 'alert' : 'status'; shell.append(alert); }
   const advanced = element('button', 'link', t('advancedSettings'));
+  advanced.prepend(icon('sliders'));
   advanced.addEventListener('click', () => void chrome.runtime.openOptionsPage());
   shell.append(advanced);
   const footer = element('footer', 'popup-footer');
   footer.append(element('span', 'version', `v${chrome.runtime.getManifest().version}`));
   footer.append(element('span', 'footer-divider', '|'));
   const github = element('a', 'github-link');
-  github.href = 'https://github.com/ghassenbrg/FlixTranslate';
+  github.href = 'https://github.com/ghassenbrg/SubMate';
   github.target = '_blank';
   github.rel = 'noopener noreferrer';
   github.setAttribute('aria-label', t('starAria'));
-  github.append(t('starOnGitHub'), element('strong', '', 'GitHub'));
+  github.append(icon('star'), t('starOnGitHub'), element('strong', '', 'GitHub'));
   footer.append(github);
   shell.append(footer);
   app.append(shell);

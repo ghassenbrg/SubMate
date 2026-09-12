@@ -80,14 +80,14 @@ import { PRIME_BRIDGE_NAMESPACE, PRIME_LIMITS } from '../platforms/prime/prime-t
   };
 
   const originalParse = JSON.parse;
-  JSON.parse = function flixTranslateJsonParse(text: string, reviver?: (this: unknown, key: string, value: unknown) => unknown) {
+  JSON.parse = function subMateJsonParse(text: string, reviver?: (this: unknown, key: string, value: unknown) => unknown) {
     const result = originalParse.call(JSON, text, reviver);
     observe(result);
     return result;
   };
 
   const originalResponseJson = Response.prototype.json;
-  Response.prototype.json = async function flixTranslateResponseJson() {
+  Response.prototype.json = async function subMateResponseJson() {
     const result = await originalResponseJson.call(this);
     observe(result);
     return result;
@@ -111,7 +111,7 @@ import { PRIME_BRIDGE_NAMESPACE, PRIME_LIMITS } from '../platforms/prime/prime-t
 
   for (const method of ['pushState', 'replaceState'] as const) {
     const original = history[method];
-    history[method] = function flixTranslateHistory(this: History, ...args: Parameters<History[typeof method]>) {
+    history[method] = function subMateHistory(this: History, ...args: Parameters<History[typeof method]>) {
       const result = original.apply(this, args);
       queueMicrotask(notifyNavigation);
       return result;

@@ -1,6 +1,6 @@
-# FlixTranslate localization
+# SubMate localization
 
-FlixTranslate uses Chrome's native extension localization system. English is the fallback locale; Japanese, Arabic, and French ship with the MVP.
+SubMate uses Chrome's native extension localization system. English is the fallback locale; Japanese, Arabic, and French ship with the MVP.
 
 ## Add a UI locale
 

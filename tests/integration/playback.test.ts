@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { SubtitleOverlay } from '../../src/renderer/subtitle-overlay';
 import { defaultSettings } from '../../src/settings/defaults';
-import type { FlixTranslateSettings } from '../../src/settings/schema';
+import type { SubMateSettings } from '../../src/settings/schema';
 import type { SubtitleTrack } from '../../src/subtitles/models';
 
-const settings = (patch: Partial<FlixTranslateSettings> = {}): FlixTranslateSettings => ({
+const settings = (patch: Partial<SubMateSettings> = {}): SubMateSettings => ({
   ...defaultSettings(),
   onboardingComplete: true,
   ...patch,
@@ -56,7 +56,7 @@ let overlay: SubtitleOverlay | undefined;
 let adPlaying = false;
 let nativeText = '';
 
-function mount(patch: Partial<FlixTranslateSettings> = {}): { overlay: SubtitleOverlay; video: FakeVideo } {
+function mount(patch: Partial<SubMateSettings> = {}): { overlay: SubtitleOverlay; video: FakeVideo } {
   const instance = new SubtitleOverlay(settings(patch), noopActions);
   instance.setPlaybackContext({
     isAdPlaying: () => adPlaying,
@@ -334,9 +334,9 @@ describe('player replacement and display modes', () => {
 
   it('removes its host element and listeners on destroy', () => {
     const { overlay: view } = mount();
-    expect(document.getElementById('flixtranslate-root')).not.toBeNull();
+    expect(document.getElementById('submate-root')).not.toBeNull();
     view.destroy();
     overlay = undefined;
-    expect(document.getElementById('flixtranslate-root')).toBeNull();
+    expect(document.getElementById('submate-root')).toBeNull();
   });
 });

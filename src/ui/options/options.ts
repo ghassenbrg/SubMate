@@ -1,7 +1,7 @@
 import { sendCacheMessage } from '../../cache/messages';
 import { applyDocumentLocale, t } from '../../i18n';
 import { loadSettings, saveSettings } from '../../settings/store';
-import type { FlixTranslateSettings } from '../../settings/schema';
+import type { SubMateSettings } from '../../settings/schema';
 import { appearanceForPreset, subtitleAppearanceVariables } from '../../settings/appearance';
 import { FEATURED_LANGUAGE_CODES, isSuggestedLanguage, languageInputValue, parseLanguageInput, sortedLanguageSuggestions } from '../shared/languages';
 import { sendContent } from '../shared/messages';
@@ -10,7 +10,7 @@ const appNode = document.querySelector<HTMLElement>('#app');
 if (!appNode) throw new Error('Options root missing');
 const app = appNode;
 applyDocumentLocale();
-let settings: FlixTranslateSettings;
+let settings: SubMateSettings;
 let stats: { translations: number; sources: number };
 let storageUsage: number | undefined;
 let debugInfo: Record<string, unknown> | undefined;
@@ -54,11 +54,14 @@ function rangeControl(
   return wrapper;
 }
 
-function applyAppearancePreview(preview: HTMLElement, value: FlixTranslateSettings): void {
+function applyAppearancePreview(preview: HTMLElement, value: SubMateSettings): void {
   for (const [property, cssValue] of Object.entries(subtitleAppearanceVariables(value))) {
     preview.style.setProperty(property, cssValue);
   }
   preview.style.setProperty('--ft-scale', String(value.translatedFontScale));
+  // Lets the vertical-position slider show where the cue actually lands rather
+  // than only reporting a percentage.
+  preview.style.setProperty('--ft-position', `${Math.round(value.verticalPosition * 100)}%`);
 }
 
 function languagePicker(value: string | undefined, allowAutomatic: boolean, onCommit: (language?: string) => void): HTMLDivElement {
@@ -115,11 +118,12 @@ function render(): void {
   const icon = el('img', 'brand-icon') as HTMLImageElement; icon.src = 'icons/icon-48.png'; icon.alt = ''; icon.width = 48; icon.height = 48;
   header.append(icon, el('div'));
   header.lastElementChild?.append(el('h1', '', t('settingsTitle')), el('p', '', t('settingsSubtitle')));
+  header.append(el('span', 'version-pill', `v${chrome.runtime.getManifest().version}`));
   app.append(header);
 
   const general = el('section'); general.append(el('h2', '', t('general')));
   general.append(
-    row(t('enableFlixTranslate'), toggle(settings.enabled, (enabled) => void update({ enabled }))),
+    row(t('enableSubMate'), toggle(settings.enabled, (enabled) => void update({ enabled }))),
     row(t('autoTranslateEpisodes'), toggle(settings.autoTranslate, (autoTranslate) => void update({ autoTranslate }))),
   );
   const target = languagePicker(settings.preferredTargetLanguage, false, (language) => { if (language) void update({ preferredTargetLanguage: language }); });
@@ -131,8 +135,13 @@ function render(): void {
   app.append(general);
 
   const translation = el('section'); translation.append(el('h2', '', t('translation')));
-  const engine = el('select') as HTMLSelectElement; engine.append(new Option(t('onDevice'), 'chrome-local'), new Option(t('manualTranslation'), 'manual')); engine.value = settings.translationEngine;
-  engine.addEventListener('change', () => void update({ translationEngine: engine.value as FlixTranslateSettings['translationEngine'] }));
+  const engine = el('select') as HTMLSelectElement;
+  engine.append(
+    new Option(t('onDevice'), 'chrome-local'),
+    new Option(t('manualTranslation'), 'manual'),
+  );
+  engine.value = settings.translationEngine;
+  engine.addEventListener('change', () => void update({ translationEngine: engine.value as SubMateSettings['translationEngine'] }));
   translation.append(row(t('engine'), engine, t('engineHelp')));
   app.append(translation);
 
@@ -150,18 +159,18 @@ function render(): void {
   preset.value = settings.subtitleStylePreset;
   preset.addEventListener('change', () => {
     if (preset.value === 'custom') return;
-    void update(appearanceForPreset(preset.value as Exclude<FlixTranslateSettings['subtitleStylePreset'], 'custom'>));
+    void update(appearanceForPreset(preset.value as Exclude<SubMateSettings['subtitleStylePreset'], 'custom'>));
   });
   const mode = el('select') as HTMLSelectElement; mode.append(new Option(t('originalAndTranslation'), 'bilingual'), new Option(t('translationOnly'), 'translation-only'), new Option(t('off'), 'off')); mode.value = settings.displayMode;
-  mode.addEventListener('change', () => void update({ displayMode: mode.value as FlixTranslateSettings['displayMode'] }));
+  mode.addEventListener('change', () => void update({ displayMode: mode.value as SubMateSettings['displayMode'] }));
   const background = el('select') as HTMLSelectElement;
   background.append(new Option(t('backgroundNone'), 'none'), new Option(t('backgroundSoft'), 'soft'), new Option(t('backgroundSolid'), 'solid'));
   background.value = settings.subtitleBackground;
-  background.addEventListener('change', () => void update({ subtitleStylePreset: 'custom', subtitleBackground: background.value as FlixTranslateSettings['subtitleBackground'] }));
+  background.addEventListener('change', () => void update({ subtitleStylePreset: 'custom', subtitleBackground: background.value as SubMateSettings['subtitleBackground'] }));
   const outline = el('select') as HTMLSelectElement;
   outline.append(new Option(t('outlineNone'), 'none'), new Option(t('outlineShadow'), 'shadow'), new Option(t('outlineStrong'), 'outline'));
   outline.value = settings.subtitleOutline;
-  outline.addEventListener('change', () => void update({ subtitleStylePreset: 'custom', subtitleOutline: outline.value as FlixTranslateSettings['subtitleOutline'] }));
+  outline.addEventListener('change', () => void update({ subtitleStylePreset: 'custom', subtitleOutline: outline.value as SubMateSettings['subtitleOutline'] }));
   const color = el('input') as HTMLInputElement; color.type = 'color'; color.value = settings.subtitleTextColor; color.setAttribute('aria-label', t('textColor'));
   color.addEventListener('change', () => void update({ subtitleStylePreset: 'custom', subtitleTextColor: color.value }));
   const weight = el('select') as HTMLSelectElement;
@@ -245,7 +254,7 @@ addEventListener('pagehide', () => {
   diagnosticsTimer = undefined;
 }, { once: true });
 
-async function update(patch: Partial<FlixTranslateSettings>, rerender = true): Promise<void> {
+async function update(patch: Partial<SubMateSettings>, rerender = true): Promise<void> {
   const wasDebug = settings.debugMode;
   settings = await saveSettings(patch);
   syncDiagnosticsPolling();

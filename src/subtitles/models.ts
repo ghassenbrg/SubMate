@@ -70,7 +70,7 @@ export interface TranslationStatus {
   imported?: boolean;
 }
 
-export interface FlixTranslateViewState {
+export interface SubMateViewState {
   enabled: boolean;
   platform?: PlatformId;
   adPlaying?: boolean;

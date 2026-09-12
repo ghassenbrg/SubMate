@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AdapterHost } from '../../src/platforms/types';
 import { defaultSettings } from '../../src/settings/defaults';
-import type { FlixTranslateSettings } from '../../src/settings/schema';
+import type { SubMateSettings } from '../../src/settings/schema';
 import type { PrimePlaybackSnapshot } from '../../src/platforms/prime/prime-manifest';
 
 const mocks = vi.hoisted(() => ({
@@ -17,7 +17,7 @@ vi.mock('../../src/platforms/prime/prime-bridge', () => ({
 
 import { PrimeVideoAdapter } from '../../src/platforms/prime/prime-adapter';
 
-const settings = (patch: Partial<FlixTranslateSettings> = {}): FlixTranslateSettings => ({
+const settings = (patch: Partial<SubMateSettings> = {}): SubMateSettings => ({
   ...defaultSettings(), preferredTargetLanguage: 'ar', ...patch,
 });
 

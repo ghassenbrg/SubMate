@@ -1,6 +1,6 @@
 import { isManifestSnapshot } from '../../netflix/manifest-parser';
 import { BRIDGE_NAMESPACE, type NetflixManifestSnapshot } from '../../netflix/netflix-types';
-import { FlixTranslateError } from '../../shared-errors';
+import { SubMateError } from '../../shared-errors';
 
 export interface NetflixBridgeHandlers {
   onManifest(snapshot: NetflixManifestSnapshot): void;
@@ -29,18 +29,18 @@ export function requestPageSubtitle(
       if (!data || data.namespace !== BRIDGE_NAMESPACE || data.type !== 'subtitle-response' || data.requestId !== requestId) return;
       cleanup();
       if (data.ok !== true) {
-        reject(new FlixTranslateError('SUBTITLE_DOWNLOAD_FAILED', typeof data.error === 'string' ? data.error.slice(0, 200) : 'Subtitle download failed'));
+        reject(new SubMateError('SUBTITLE_DOWNLOAD_FAILED', typeof data.error === 'string' ? data.error.slice(0, 200) : 'Subtitle download failed'));
         return;
       }
       if (typeof data.text !== 'string' || data.text.length > 10_000_000 || typeof data.contentType !== 'string' || data.contentType.length > 200) {
-        reject(new FlixTranslateError('SUBTITLE_DOWNLOAD_FAILED', 'Malformed subtitle response'));
+        reject(new SubMateError('SUBTITLE_DOWNLOAD_FAILED', 'Malformed subtitle response'));
         return;
       }
       resolve({ text: data.text, contentType: data.contentType });
     };
     const timeout = window.setTimeout(() => {
       cleanup();
-      reject(new FlixTranslateError('SUBTITLE_DOWNLOAD_FAILED', 'Subtitle download timed out'));
+      reject(new SubMateError('SUBTITLE_DOWNLOAD_FAILED', 'Subtitle download timed out'));
     }, 30_000);
     window.addEventListener('message', listener);
     signal?.addEventListener('abort', onAbort, { once: true });

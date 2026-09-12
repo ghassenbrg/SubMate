@@ -1,4 +1,4 @@
-import { FlixTranslateError } from '../shared-errors';
+import { SubMateError } from '../shared-errors';
 import type { SubtitleCue } from './models';
 import { normalizeCues } from './normalize';
 import { parseTimeExpression } from './time';
@@ -24,7 +24,7 @@ function plainCueText(element: Element): string {
 export function parseTtml(xmlText: string): SubtitleCue[] {
   const xml = new DOMParser().parseFromString(xmlText, 'application/xml');
   if (xml.querySelector('parsererror')) {
-    throw new FlixTranslateError('SUBTITLE_PARSE_FAILED', 'Malformed TTML/DFXP XML');
+    throw new SubMateError('SUBTITLE_PARSE_FAILED', 'Malformed TTML/DFXP XML');
   }
   const root = xml.documentElement;
   const frameRate = Number(localAttribute(root, 'frameRate')) || 30;
@@ -45,6 +45,6 @@ export function parseTtml(xmlText: string): SubtitleCue[] {
     };
   });
   const cues = normalizeCues(parsed);
-  if (!cues.length) throw new FlixTranslateError('SUBTITLE_PARSE_FAILED', 'No timed text cues in TTML');
+  if (!cues.length) throw new SubMateError('SUBTITLE_PARSE_FAILED', 'No timed text cues in TTML');
   return cues;
 }

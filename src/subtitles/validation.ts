@@ -1,4 +1,4 @@
-import { FlixTranslateError } from '../shared-errors';
+import { SubMateError } from '../shared-errors';
 import type { SubtitleTrack, TranslationResult } from './models';
 
 /**
@@ -14,22 +14,22 @@ export const EMPTY_TRANSLATION_TOLERANCE = 0.5;
 
 export function validateTranslationResult(source: SubtitleTrack, result: TranslationResult): void {
   if (result.sourceHash !== source.sourceHash || result.sourceLanguage !== source.sourceLanguage) {
-    throw new FlixTranslateError('TRANSLATION_ID_MISMATCH', 'Translation source identity mismatch');
+    throw new SubMateError('TRANSLATION_ID_MISMATCH', 'Translation source identity mismatch');
   }
   const sourceIds = new Set(source.cues.map((cue) => cue.id));
   const sourceById = new Map(source.cues.map((cue) => [cue.id, cue]));
   const translatedIds = new Set<string>();
   for (const translation of result.translations) {
     if (typeof translation.id !== 'string' || typeof translation.text !== 'string') {
-      throw new FlixTranslateError('TRANSLATION_ID_MISMATCH', 'Translation entry is malformed');
+      throw new SubMateError('TRANSLATION_ID_MISMATCH', 'Translation entry is malformed');
     }
     if (translatedIds.has(translation.id) || !sourceIds.has(translation.id)) {
-      throw new FlixTranslateError('TRANSLATION_ID_MISMATCH', 'Duplicate or unknown translation cue ID');
+      throw new SubMateError('TRANSLATION_ID_MISMATCH', 'Duplicate or unknown translation cue ID');
     }
     translatedIds.add(translation.id);
   }
   if (translatedIds.size !== sourceIds.size) {
-    throw new FlixTranslateError(
+    throw new SubMateError(
       'TRANSLATION_INCOMPLETE',
       `Translation covers ${translatedIds.size} of ${sourceIds.size} lines`,
     );
@@ -37,7 +37,7 @@ export function validateTranslationResult(source: SubtitleTrack, result: Transla
   const untranslated = countUntranslated(source, result);
   const translatable = source.cues.filter((cue) => cue.sourceText.trim()).length;
   if (translatable && untranslated > translatable * EMPTY_TRANSLATION_TOLERANCE) {
-    throw new FlixTranslateError(
+    throw new SubMateError(
       'TRANSLATION_INCOMPLETE',
       `${untranslated} of ${translatable} lines have no translation`,
     );

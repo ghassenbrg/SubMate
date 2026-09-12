@@ -1,4 +1,4 @@
-import { FlixTranslateError } from '../../shared-errors';
+import { SubMateError } from '../../shared-errors';
 import type { TranslationRequest, TranslationResult } from '../../subtitles/models';
 import { chunkCues } from '../chunker';
 import type { TranslationProgress, TranslationProvider } from '../provider';
@@ -53,7 +53,7 @@ export class ChromeTranslatorProvider implements TranslationProvider {
     onProgress?: (progress: TranslationProgress) => void,
   ): Promise<void> {
     const api = translatorApi();
-    if (!api) throw new FlixTranslateError('TRANSLATOR_UNAVAILABLE', 'Translator API is not exposed in this document');
+    if (!api) throw new SubMateError('TRANSLATOR_UNAVAILABLE', 'Translator API is not exposed in this document');
     if (this.session && this.pair === `${sourceLanguage}|${targetLanguage}`) return;
     this.destroy();
     // Deliberately call create synchronously in the activation event before awaiting.
@@ -69,13 +69,13 @@ export class ChromeTranslatorProvider implements TranslationProvider {
         },
       });
     } catch (error) {
-      throw new FlixTranslateError('TRANSLATOR_NEEDS_ACTIVATION', 'Chrome rejected translator creation', { cause: error });
+      throw new SubMateError('TRANSLATOR_NEEDS_ACTIVATION', 'Chrome rejected translator creation', { cause: error });
     }
     try {
       this.session = await creation;
       this.pair = `${sourceLanguage}|${targetLanguage}`;
     } catch (error) {
-      throw new FlixTranslateError('TRANSLATOR_MODEL_DOWNLOAD_FAILED', 'Translator creation or model download failed', { cause: error });
+      throw new SubMateError('TRANSLATOR_MODEL_DOWNLOAD_FAILED', 'Translator creation or model download failed', { cause: error });
     }
   }
 
@@ -85,7 +85,7 @@ export class ChromeTranslatorProvider implements TranslationProvider {
     signal?: AbortSignal,
   ): Promise<TranslationResult> {
     if (!this.session || this.pair !== `${input.sourceLanguage}|${input.targetLanguage}`) {
-      throw new FlixTranslateError('TRANSLATOR_NEEDS_ACTIVATION', 'Translator session has not been activated');
+      throw new SubMateError('TRANSLATOR_NEEDS_ACTIVATION', 'Translator session has not been activated');
     }
     const translations: Array<{ id: string; text: string }> = [];
     let complete = 0;
@@ -97,7 +97,7 @@ export class ChromeTranslatorProvider implements TranslationProvider {
           translations.push({ id: cue.id, text });
         } catch (error) {
           if (signal?.aborted) throw error;
-          throw new FlixTranslateError('TRANSLATION_FAILED', `Translation failed for cue ${cue.id}`, { cause: error });
+          throw new SubMateError('TRANSLATION_FAILED', `Translation failed for cue ${cue.id}`, { cause: error });
         }
         complete += 1;
         onProgress?.({

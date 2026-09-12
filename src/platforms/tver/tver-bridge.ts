@@ -1,4 +1,4 @@
-import { FlixTranslateError } from '../../shared-errors';
+import { SubMateError } from '../../shared-errors';
 import {
   TVER_BRIDGE_NAMESPACE,
   TVER_LIMITS,
@@ -81,19 +81,19 @@ export function requestTVerSubtitles(
       if (data.ok !== true) {
         const rawCode = String(data.code ?? '') as keyof typeof ERROR_CODES;
         const code = ERROR_CODES[rawCode] ?? 'SUBTITLE_DOWNLOAD_FAILED';
-        reject(new FlixTranslateError(code, typeof data.error === 'string' ? data.error.slice(0, 200) : 'TVer subtitle discovery failed'));
+        reject(new SubMateError(code, typeof data.error === 'string' ? data.error.slice(0, 200) : 'TVer subtitle discovery failed'));
         return;
       }
       const payload = readPayload(data);
       if (!payload) {
-        reject(new FlixTranslateError('SUBTITLE_DOWNLOAD_FAILED', 'Malformed TVer subtitle response'));
+        reject(new SubMateError('SUBTITLE_DOWNLOAD_FAILED', 'Malformed TVer subtitle response'));
         return;
       }
       resolve(payload);
     };
     const timeout = window.setTimeout(() => {
       cleanup();
-      reject(new FlixTranslateError('SUBTITLE_DOWNLOAD_FAILED', 'TVer subtitle discovery timed out'));
+      reject(new SubMateError('SUBTITLE_DOWNLOAD_FAILED', 'TVer subtitle discovery timed out'));
     }, 130_000);
     window.addEventListener('message', listener);
     signal?.addEventListener('abort', onAbort, { once: true });
