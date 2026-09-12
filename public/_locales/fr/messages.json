@@ -436,5 +436,44 @@
   },
   "importUntranslated": {
     "message": "$1 lignes sans traduction resteront vides."
+  },
+  "cloudTranslation": {
+    "message": "API cloud"
+  },
+  "cloudSection": {
+    "message": "Traduction cloud"
+  },
+  "cloudVendorLabel": {
+    "message": "Fournisseur"
+  },
+  "cloudApiKey": {
+    "message": "Clé API"
+  },
+  "cloudApiKeyHelp": {
+    "message": "Stockée uniquement sur cet appareil et jamais synchronisée. Laissez vide et enregistrez pour la supprimer."
+  },
+  "cloudApiKeyPlaceholder": {
+    "message": "Collez votre clé API"
+  },
+  "cloudApiKeySaved": {
+    "message": "Une clé est enregistrée sur cet appareil."
+  },
+  "cloudApiKeyMissing": {
+    "message": "Aucune clé enregistrée."
+  },
+  "cloudApiKeyClear": {
+    "message": "Supprimer la clé"
+  },
+  "cloudModel": {
+    "message": "Modèle"
+  },
+  "cloudModelHelp": {
+    "message": "Laissez vide pour utiliser le modèle par défaut du fournisseur."
+  },
+  "cloudPrivacyWarning": {
+    "message": "La traduction cloud envoie le texte des sous-titres au fournisseur choisi. Il quitte cet appareil et relève des conditions et tarifs de ce fournisseur. La traduction sur l'appareil reste locale."
+  },
+  "statusCloudNotConfigured": {
+    "message": "Ajoutez une clé API dans les paramètres pour utiliser la traduction cloud."
   }
 }

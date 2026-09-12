@@ -436,5 +436,44 @@
   },
   "importUntranslated": {
     "message": "$1 سطرًا بدون ترجمة وستبقى فارغة."
+  },
+  "cloudTranslation": {
+    "message": "واجهة سحابية"
+  },
+  "cloudSection": {
+    "message": "الترجمة السحابية"
+  },
+  "cloudVendorLabel": {
+    "message": "المزوّد"
+  },
+  "cloudApiKey": {
+    "message": "مفتاح API"
+  },
+  "cloudApiKeyHelp": {
+    "message": "يُحفظ على هذا الجهاز فقط ولا تتم مزامنته. اتركه فارغًا واحفظ لإزالته."
+  },
+  "cloudApiKeyPlaceholder": {
+    "message": "الصق مفتاح API"
+  },
+  "cloudApiKeySaved": {
+    "message": "تم حفظ مفتاح على هذا الجهاز."
+  },
+  "cloudApiKeyMissing": {
+    "message": "لم يتم حفظ أي مفتاح بعد."
+  },
+  "cloudApiKeyClear": {
+    "message": "إزالة المفتاح"
+  },
+  "cloudModel": {
+    "message": "النموذج"
+  },
+  "cloudModelHelp": {
+    "message": "اتركه فارغًا لاستخدام النموذج الافتراضي للمزوّد."
+  },
+  "cloudPrivacyWarning": {
+    "message": "ترسل الترجمة السحابية نص الترجمة إلى المزوّد الذي تختاره. تغادر البيانات هذا الجهاز وتخضع لشروط المزوّد وأسعاره. أما الترجمة على الجهاز فتبقى محلية."
+  },
+  "statusCloudNotConfigured": {
+    "message": "أضف مفتاح API في الإعدادات لاستخدام الترجمة السحابية."
   }
 }

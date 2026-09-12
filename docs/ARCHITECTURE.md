@@ -123,10 +123,15 @@ selected by `createProvider()` (`src/translation/provider-factory.ts`):
 | Engine | Where it runs | Notes |
 | --- | --- | --- |
 | `chrome-local` | Content script | Chrome's on-device Translator API. Default. |
+| `cloud-api` | Background worker | Bring-your-own-key. See `CLOUD_TRANSLATION.md`. |
 | `manual` | — | Export/import round trip. |
 
 The cache key includes the engine id and version, so engines coexist per episode
 and switching engines misses rather than serving another engine's output.
+
+The API key lives outside `SubMateSettings`, in its own `storage.local` entry
+that only the background worker and options page read — the content script never
+receives it.
 
 ## Interface theme
 

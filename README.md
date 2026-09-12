@@ -7,7 +7,7 @@
 
 SubMate is an independent Manifest V3 browser extension that translates streaming text subtitles on-device, caches the result locally, and renders it against the original cue timing.
 
-It has no SubMate account, no backend, no analytics, and no bundled API key. Subtitle text never leaves your browser.
+It has no SubMate account, no backend, no analytics, and no bundled API key. With the default on-device engine, subtitle text never leaves your browser.
 
 Supported platforms are **Netflix**, **TVer** and **Amazon Prime Video**, each implemented as a platform adapter over a shared translation, caching, synchronization and rendering core. See [Architecture](docs/ARCHITECTURE.md).
 
@@ -16,6 +16,7 @@ Supported platforms are **Netflix**, **TVer** and **Amazon Prime Video**, each i
 ## Highlights
 
 - Translates with Chrome's built-in on-device Translator API; subtitle text stays in the browser.
+- Optionally translates through a cloud model with your own API key (Google Gemini), for higher-quality, context-aware output. Opt-in, never the default, and it sends subtitle text to the provider you choose — see [Cloud translation](docs/CLOUD_TRANSLATION.md).
 - Reads TTML/DFXP and WebVTT tracks, preserves cue timing, and offers bilingual, translation-only, and off display modes.
 - Caches source subtitles and translations in IndexedDB, so reloads and episode changes recover instantly.
 - Renders a synchronized, fullscreen-aware, direction-aware overlay with adjustable appearance controls.

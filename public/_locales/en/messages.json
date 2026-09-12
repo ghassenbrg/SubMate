@@ -436,5 +436,44 @@
   },
   "importUntranslated": {
     "message": "$1 lines had no translation and will stay blank."
+  },
+  "cloudTranslation": {
+    "message": "Cloud API"
+  },
+  "cloudSection": {
+    "message": "Cloud translation"
+  },
+  "cloudVendorLabel": {
+    "message": "Provider"
+  },
+  "cloudApiKey": {
+    "message": "API key"
+  },
+  "cloudApiKeyHelp": {
+    "message": "Stored on this device only and never synced. Leave blank and save to remove it."
+  },
+  "cloudApiKeyPlaceholder": {
+    "message": "Paste your API key"
+  },
+  "cloudApiKeySaved": {
+    "message": "A key is saved on this device."
+  },
+  "cloudApiKeyMissing": {
+    "message": "No key saved yet."
+  },
+  "cloudApiKeyClear": {
+    "message": "Remove key"
+  },
+  "cloudModel": {
+    "message": "Model"
+  },
+  "cloudModelHelp": {
+    "message": "Leave blank to use the provider default."
+  },
+  "cloudPrivacyWarning": {
+    "message": "Cloud translation sends subtitle text to your chosen provider. It leaves this device and is subject to that provider’s terms and pricing. On-device translation stays local."
+  },
+  "statusCloudNotConfigured": {
+    "message": "Add an API key in settings to use cloud translation."
   }
 }
