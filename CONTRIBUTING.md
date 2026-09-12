@@ -1,12 +1,13 @@
-# Contributing to FlixTranslate
+# Contributing to SubMate
 
-Thanks for helping improve FlixTranslate. By contributing, you agree that your contributions may be distributed under the repository's [MIT License](LICENSE).
+Thanks for helping improve SubMate. By contributing, you agree that your contributions may be distributed under the repository's [MIT License](LICENSE).
 
 ## Before you start
 
 - Search existing issues and pull requests before opening a new one.
 - For security-sensitive findings, follow [SECURITY.md](SECURITY.md) instead of filing a public issue.
-- Keep the extension independent of Netflix. Do not add Netflix credentials, copyrighted subtitle files, account details, or private viewing data to the repository, issues, screenshots, tests, or pull requests.
+- Keep the extension independent of the services it supports. Do not add streaming-service credentials, copyrighted subtitle files, account details, or private viewing data to the repository, issues, screenshots, tests, or pull requests.
+- New platforms belong behind the `PlatformAdapter` contract rather than in the shared core. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Local workflow
 

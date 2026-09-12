@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a reproducible problem with FlixTranslate
+about: Report a reproducible problem with SubMate
 title: "[Bug]: "
 labels: bug
 ---
@@ -21,9 +21,10 @@ labels: bug
 
 ## Environment
 
-- FlixTranslate version:
+- SubMate version:
 - Chrome version:
 - Operating system:
+- Streaming platform (Netflix / TVer / Prime Video):
 - Source subtitle language:
 - Target language:
 

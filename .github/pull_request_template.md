@@ -11,5 +11,5 @@
 ## Checklist
 
 - [ ] This PR is focused and avoids unrelated changes.
-- [ ] I did not commit generated files, credentials, private Netflix data, or copyrighted subtitle content.
+- [ ] I did not commit generated files, credentials, private streaming-service data, or copyrighted subtitle content.
 - [ ] I added or updated tests for changed behavior.

@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an improvement to FlixTranslate
+about: Suggest an improvement to SubMate
 title: "[Feature]: "
 labels: enhancement
 ---
@@ -19,4 +19,4 @@ labels: enhancement
 
 ## Additional context
 
-<!-- Do not include Netflix credentials, account information, or copyrighted subtitle files. -->
+<!-- Do not include streaming-service credentials, account information, or copyrighted subtitle files. -->

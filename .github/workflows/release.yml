@@ -55,7 +55,7 @@ jobs:
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flixtranslate-chrome
+          name: submate-chrome
           path: dist/packages/*.zip
           if-no-files-found: error
           retention-days: 30
@@ -70,7 +70,7 @@ jobs:
       - name: Download release artifact
         uses: actions/download-artifact@v4
         with:
-          name: flixtranslate-chrome
+          name: submate-chrome
           path: release
 
       - name: Create or update GitHub Release
@@ -81,7 +81,7 @@ jobs:
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" release/*.zip --clobber
           else
-            gh release create "$RELEASE_TAG" release/*.zip --generate-notes --title "FlixTranslate $RELEASE_TAG"
+            gh release create "$RELEASE_TAG" release/*.zip --generate-notes --title "SubMate $RELEASE_TAG"
           fi
 
   chrome-web-store:
@@ -94,7 +94,7 @@ jobs:
       - name: Download release artifact
         uses: actions/download-artifact@v4
         with:
-          name: flixtranslate-chrome
+          name: submate-chrome
           path: release
 
       - name: Upload and submit the package with the Chrome Web Store API v2

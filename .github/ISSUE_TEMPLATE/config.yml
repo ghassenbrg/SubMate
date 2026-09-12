@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/ghassenbrg/FlixTranslate/security/advisories/new
+    url: https://github.com/ghassenbrg/SubMate/security/advisories/new
     about: Report a potential security issue privately when private reporting is enabled.
   - name: Support and setup help
-    url: https://github.com/ghassenbrg/FlixTranslate/blob/main/SUPPORT.md
+    url: https://github.com/ghassenbrg/SubMate/blob/main/SUPPORT.md
     about: Read the support guide before opening an issue.
