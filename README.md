@@ -1,14 +1,14 @@
 # FlixTranslate
 
-**Private, synchronized subtitle translation for Netflix and TVer in Chrome.**
+**Private, synchronized subtitle translation for Netflix, TVer and Prime Video in Chrome.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 FlixTranslate is an independent Manifest V3 browser extension that translates streaming text subtitles on-device, caches the result locally, and displays it against the original cue timing. It has no FlixTranslate account, backend, analytics, or bundled API key.
 
-Supported platforms are **Netflix** and **TVer**, each implemented as a platform adapter over a shared translation, caching, synchronization and rendering core. See [Architecture](docs/ARCHITECTURE.md).
+Supported platforms are **Netflix**, **TVer** and **Amazon Prime Video**, each implemented as a platform adapter over a shared translation, caching, synchronization and rendering core. See [Architecture](docs/ARCHITECTURE.md).
 
-> FlixTranslate is not affiliated with, endorsed by, or sponsored by Netflix or TVer.
+> FlixTranslate is not affiliated with, endorsed by, or sponsored by Netflix, TVer or Amazon.
 
 ## Highlights
 
@@ -97,7 +97,7 @@ public/       Manifest, HTML, localization files, CSS, and icons
 src/          Extension source code
   background/ Service worker
   content/    Platform-independent content-script orchestration
-  platforms/  Netflix and TVer adapters plus the adapter registry
+  platforms/  Netflix, TVer and Prime Video adapters plus the adapter registry
   core/       HLS parsing, segment merging, playback observation, retry
   page/       Page-realm media/manifest agents
   subtitles/  Parsers, normalization, validation, and timing

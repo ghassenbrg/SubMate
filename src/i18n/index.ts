@@ -1,6 +1,6 @@
 const ENGLISH_MESSAGES = {
   extensionName: 'FlixTranslate',
-  extensionDescription: 'Translate missing Netflix and TVer subtitles locally and display them in sync.',
+  extensionDescription: 'Translate missing streaming subtitles locally and display them in sync.',
   tagline: "Translate what streaming doesn't.",
   onboardingDescription: "Translate subtitles your streaming service doesn't provide.",
   netflixDetected: 'Netflix episode detected',
@@ -63,7 +63,7 @@ const ENGLISH_MESSAGES = {
   statusNoTextTrack: 'No suitable text subtitle was found for this episode.',
   statusFailed: "Translated subtitles couldn't be prepared. Playback can continue normally.",
   settingsTitle: 'FlixTranslate Settings',
-  settingsSubtitle: 'Private, synchronized subtitle translation for Netflix and TVer',
+  settingsSubtitle: 'Private, synchronized subtitle translation for Netflix, TVer and Prime Video',
   general: 'General',
   autoTranslateEpisodes: 'Auto-translate episodes',
   targetLanguageHelp: 'Choose by full name. The standard code appears in parentheses; custom BCP-47 tags are also accepted.',
@@ -107,7 +107,7 @@ const ENGLISH_MESSAGES = {
   clearCacheConfirm: 'Clear $1 cached translations? Your settings will not change.',
   about: 'About',
   version: 'Version $1',
-  independentNotice: 'FlixTranslate is independent and is not affiliated with or endorsed by Netflix or TVer.',
+  independentNotice: 'FlixTranslate is independent and is not affiliated with or endorsed by Netflix, TVer or Amazon.',
   noTelemetryNotice: 'No telemetry or FlixTranslate backend. On-device translation uses Chrome browser-managed language data.',
   developerDiagnostics: 'Developer diagnostics',
   diagnosticsHint: 'Open a supported episode to view diagnostics.',
@@ -143,7 +143,7 @@ const ENGLISH_MESSAGES = {
   statusAdPlaying: 'Advertisement playing — translated subtitles are paused.',
   overlayAdPlaying: 'Ad playing',
   platformDetected: '$1 episode detected',
-  notSupportedSite: 'Open a supported video (Netflix or TVer) to translate available subtitles.',
+  notSupportedSite: 'Open a supported video (Netflix, TVer or Prime Video) to translate available subtitles.',
   noPlayerGeneric: 'Supported site detected. Start a video to use translated subtitles.',
 } as const;
 

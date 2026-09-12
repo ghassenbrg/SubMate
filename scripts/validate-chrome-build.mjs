@@ -13,6 +13,7 @@ const requiredFiles = [
   'content/bootstrap.js',
   'page/netflix-manifest-agent.js',
   'page/tver-media-agent.js',
+  'page/prime-media-agent.js',
   'popup.html',
   'options.html',
   'ui/popup.js',

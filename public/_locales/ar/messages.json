@@ -3,7 +3,7 @@
     "message": "FlixTranslate"
   },
   "extensionDescription": {
-    "message": "ترجم ترجمات Netflix وTVer المفقودة محليًا واعرضها بشكل متزامن."
+    "message": "ترجم ترجمات خدمات البث المفقودة محليًا واعرضها بشكل متزامن."
   },
   "tagline": {
     "message": "ترجم ما لا تترجمه خدمات البث."
@@ -192,7 +192,7 @@
     "message": "إعدادات FlixTranslate"
   },
   "settingsSubtitle": {
-    "message": "ترجمة ترجمات خاصة ومتزامنة لـ Netflix وTVer"
+    "message": "ترجمة ترجمات خاصة ومتزامنة لـ Netflix وTVer وPrime Video"
   },
   "general": {
     "message": "عام"
@@ -324,7 +324,7 @@
     "message": "الإصدار $1"
   },
   "independentNotice": {
-    "message": "FlixTranslate مشروع مستقل وغير تابع لـ Netflix أو TVer وغير معتمد منهما."
+    "message": "FlixTranslate مشروع مستقل وغير تابع لـ Netflix أو TVer أو Amazon وغير معتمد منها."
   },
   "noTelemetryNotice": {
     "message": "لا توجد بيانات تتبع أو خادم FlixTranslate. تستخدم الترجمة على الجهاز بيانات اللغة التي يديرها Chrome."
@@ -423,7 +423,7 @@
     "message": "تم اكتشاف حلقة على $1"
   },
   "notSupportedSite": {
-    "message": "افتح فيديو مدعومًا (Netflix أو TVer) لترجمة الترجمات المتاحة."
+    "message": "افتح فيديو مدعومًا (Netflix أو TVer أو Prime Video) لترجمة الترجمات المتاحة."
   },
   "noPlayerGeneric": {
     "message": "تم اكتشاف موقع مدعوم. شغّل فيديو لاستخدام الترجمة."

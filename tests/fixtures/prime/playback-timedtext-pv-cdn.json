@@ -1,0 +1,12 @@
+{
+  "playbackResources": {
+    "timedText": {
+      "tracks": [
+        {
+          "url": "https://cf-timedtext.aux.pv-cdn.net/<redacted>",
+          "languageCode": "ja"
+        }
+      ]
+    }
+  }
+}

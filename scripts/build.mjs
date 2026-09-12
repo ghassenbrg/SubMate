@@ -27,6 +27,7 @@ await mkdir(outdir, { recursive: true });
 const entries = {
   'page/netflix-manifest-agent': 'src/page/netflix-manifest-agent.ts',
   'page/tver-media-agent': 'src/page/tver-media-agent.ts',
+  'page/prime-media-agent': 'src/page/prime-media-agent.ts',
   'content/bootstrap': 'src/content/bootstrap.ts',
   'background/service-worker': 'src/background/service-worker.ts',
   'ui/popup': 'src/ui/popup/popup.ts',

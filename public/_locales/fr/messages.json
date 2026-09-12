@@ -3,7 +3,7 @@
     "message": "FlixTranslate"
   },
   "extensionDescription": {
-    "message": "Traduisez localement les sous-titres manquants de Netflix et TVer et affichez-les en synchronisation."
+    "message": "Traduisez localement les sous-titres manquants des services de streaming et affichez-les en synchronisation."
   },
   "tagline": {
     "message": "Traduisez ce que le streaming ne traduit pas."
@@ -192,7 +192,7 @@
     "message": "Paramètres de FlixTranslate"
   },
   "settingsSubtitle": {
-    "message": "Traduction de sous-titres privée et synchronisée pour Netflix et TVer"
+    "message": "Traduction de sous-titres privée et synchronisée pour Netflix, TVer et Prime Video"
   },
   "general": {
     "message": "Général"
@@ -324,7 +324,7 @@
     "message": "Version $1"
   },
   "independentNotice": {
-    "message": "FlixTranslate est indépendant et n'est ni affilié à Netflix ou TVer, ni approuvé par eux."
+    "message": "FlixTranslate est indépendant et n'est ni affilié à Netflix, TVer ou Amazon, ni approuvé par eux."
   },
   "noTelemetryNotice": {
     "message": "Aucune télémétrie ni serveur FlixTranslate. La traduction locale utilise les données linguistiques gérées par Chrome."
@@ -423,7 +423,7 @@
     "message": "Épisode $1 détecté"
   },
   "notSupportedSite": {
-    "message": "Ouvrez une vidéo prise en charge (Netflix ou TVer) pour traduire les sous-titres disponibles."
+    "message": "Ouvrez une vidéo prise en charge (Netflix, TVer ou Prime Video) pour traduire les sous-titres disponibles."
   },
   "noPlayerGeneric": {
     "message": "Site pris en charge détecté. Lancez une vidéo pour utiliser les sous-titres traduits."

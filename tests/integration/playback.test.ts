@@ -186,6 +186,111 @@ describe('advertisement handling', () => {
   });
 });
 
+describe('untranslated cues', () => {
+  /** A translator leaves non-speech cues blank; those must not become gaps. */
+  const mixedTrack: SubtitleTrack = {
+    ...track,
+    cues: [
+      { id: 'm1', startMs: 1_000, endMs: 3_000, sourceText: '♪～', translatedText: '' },
+      { id: 'm2', startMs: 5_000, endMs: 7_000, sourceText: '何でもない。', translatedText: "It's nothing." },
+    ],
+  };
+
+  it('shows the original text when a line has no translation', () => {
+    const instance = new SubtitleOverlay(settings(), noopActions);
+    instance.setPlaybackContext({ isAdPlaying: () => adPlaying });
+    const video = makeVideo();
+    instance.setPlayer(video as unknown as HTMLVideoElement);
+    instance.setTrack(mixedTrack);
+    overlay = instance;
+
+    video.seekTo(2_000);
+    const rendered = instance.getRenderedText();
+    expect(rendered.visible).toBe(true);
+    expect(rendered.translation).toBe('♪～');
+    // The source line is omitted so the same text is not stacked twice.
+    expect(rendered.source).toBe('');
+  });
+
+  it('still renders normally for lines that do have a translation', () => {
+    const instance = new SubtitleOverlay(settings(), noopActions);
+    instance.setPlaybackContext({ isAdPlaying: () => adPlaying });
+    const video = makeVideo();
+    instance.setPlayer(video as unknown as HTMLVideoElement);
+    instance.setTrack(mixedTrack);
+    overlay = instance;
+
+    video.seekTo(6_000);
+    const rendered = instance.getRenderedText();
+    expect(rendered.translation).toBe("It's nothing.");
+    expect(rendered.source).toBe('何でもない。');
+  });
+});
+
+describe('overlay positioning', () => {
+  const withRect = (video: FakeVideo, box: { left: number; top: number; width: number; height: number }) => {
+    video.getBoundingClientRect = () => ({
+      ...box, right: box.left + box.width, bottom: box.top + box.height, x: box.left, y: box.top,
+      toJSON: () => ({}),
+    }) as DOMRect;
+  };
+
+  it('anchors to the video box for an embedded player', () => {
+    const instance = new SubtitleOverlay(settings(), noopActions);
+    const video = makeVideo();
+    // An embedded player on a normal page, not filling the viewport.
+    withRect(video, { left: 320, top: 140, width: 960, height: 540 });
+    instance.setPlayer(video as unknown as HTMLVideoElement);
+    overlay = instance;
+
+    expect(instance.host.style.position).toBe('fixed');
+    expect(instance.host.style.left).toBe('320px');
+    expect(instance.host.style.top).toBe('140px');
+    expect(instance.host.style.width).toBe('960px');
+    expect(instance.host.style.height).toBe('540px');
+  });
+
+  it('follows the player when it moves or resizes', () => {
+    const instance = new SubtitleOverlay(settings(), noopActions);
+    const video = makeVideo();
+    withRect(video, { left: 320, top: 140, width: 960, height: 540 });
+    instance.setPlayer(video as unknown as HTMLVideoElement);
+    overlay = instance;
+
+    withRect(video, { left: 0, top: 0, width: 1280, height: 720 });
+    dispatchEvent(new Event('resize'));
+    expect(instance.host.style.left).toBe('0px');
+    expect(instance.host.style.width).toBe('1280px');
+  });
+
+  it('falls back to the viewport when the box is not trustworthy', () => {
+    const instance = new SubtitleOverlay(settings(), noopActions);
+    const video = makeVideo();
+    // Collapsed or mid-transition: covering the viewport is the safe default.
+    withRect(video, { left: 0, top: 0, width: 0, height: 0 });
+    instance.setPlayer(video as unknown as HTMLVideoElement);
+    overlay = instance;
+
+    expect(instance.host.style.inset).toMatch(/^0(px)?$/);
+    expect(instance.host.style.left).toBe('');
+  });
+
+  it('releases its observers and listeners on destroy', () => {
+    const instance = new SubtitleOverlay(settings(), noopActions);
+    const video = makeVideo();
+    withRect(video, { left: 10, top: 10, width: 800, height: 450 });
+    instance.setPlayer(video as unknown as HTMLVideoElement);
+    instance.destroy();
+    overlay = undefined;
+
+    // A resize after teardown must not touch the detached host.
+    const before = instance.host.style.left;
+    withRect(video, { left: 99, top: 99, width: 800, height: 450 });
+    dispatchEvent(new Event('resize'));
+    expect(instance.host.style.left).toBe(before);
+  });
+});
+
 describe('player replacement and display modes', () => {
   it('re-binds to a replacement video element and keeps the track', () => {
     const { overlay: view, video } = mount();

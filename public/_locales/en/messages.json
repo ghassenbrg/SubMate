@@ -3,7 +3,7 @@
     "message": "FlixTranslate"
   },
   "extensionDescription": {
-    "message": "Translate missing Netflix and TVer subtitles locally and display them in sync."
+    "message": "Translate missing streaming subtitles locally and display them in sync."
   },
   "tagline": {
     "message": "Translate what streaming doesn't."
@@ -192,7 +192,7 @@
     "message": "FlixTranslate Settings"
   },
   "settingsSubtitle": {
-    "message": "Private, synchronized subtitle translation for Netflix and TVer"
+    "message": "Private, synchronized subtitle translation for Netflix, TVer and Prime Video"
   },
   "general": {
     "message": "General"
@@ -324,7 +324,7 @@
     "message": "Version $1"
   },
   "independentNotice": {
-    "message": "FlixTranslate is independent and is not affiliated with or endorsed by Netflix or TVer."
+    "message": "FlixTranslate is independent and is not affiliated with or endorsed by Netflix, TVer or Amazon."
   },
   "noTelemetryNotice": {
     "message": "No telemetry or FlixTranslate backend. On-device translation uses Chrome browser-managed language data."
@@ -423,7 +423,7 @@
     "message": "$1 episode detected"
   },
   "notSupportedSite": {
-    "message": "Open a supported video (Netflix or TVer) to translate available subtitles."
+    "message": "Open a supported video (Netflix, TVer or Prime Video) to translate available subtitles."
   },
   "noPlayerGeneric": {
     "message": "Supported site detected. Start a video to use translated subtitles."

@@ -3,7 +3,7 @@
     "message": "FlixTranslate"
   },
   "extensionDescription": {
-    "message": "Netflix と TVer の不足している字幕をローカルで翻訳し、同期して表示します。"
+    "message": "配信サービスの不足している字幕をローカルで翻訳し、同期して表示します。"
   },
   "tagline": {
     "message": "配信サービスにない字幕を翻訳。"
@@ -192,7 +192,7 @@
     "message": "FlixTranslate 設定"
   },
   "settingsSubtitle": {
-    "message": "Netflix と TVer のためのプライベートで同期された字幕翻訳"
+    "message": "Netflix・TVer・Prime Video のためのプライベートで同期された字幕翻訳"
   },
   "general": {
     "message": "一般"
@@ -324,7 +324,7 @@
     "message": "バージョン $1"
   },
   "independentNotice": {
-    "message": "FlixTranslate は独立したプロジェクトであり、Netflix や TVer とは提携しておらず、承認も受けていません。"
+    "message": "FlixTranslate は独立したプロジェクトであり、Netflix・TVer・Amazon とは提携しておらず、承認も受けていません。"
   },
   "noTelemetryNotice": {
     "message": "テレメトリーやFlixTranslateサーバーはありません。端末上の翻訳にはChrome管理の言語データを使用します。"
@@ -423,7 +423,7 @@
     "message": "$1 のエピソードを検出しました"
   },
   "notSupportedSite": {
-    "message": "対応している動画（Netflix または TVer）を開くと、字幕を翻訳できます。"
+    "message": "対応している動画（Netflix・TVer・Prime Video）を開くと、字幕を翻訳できます。"
   },
   "noPlayerGeneric": {
     "message": "対応サイトを検出しました。動画を再生すると翻訳字幕を利用できます。"

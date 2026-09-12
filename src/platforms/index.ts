@@ -1,4 +1,5 @@
 import { NetflixAdapter } from './netflix/netflix-adapter';
+import { PrimeVideoAdapter } from './prime/prime-adapter';
 import { TVerAdapter } from './tver/tver-adapter';
 import type { PlatformAdapter } from './types';
 
@@ -8,7 +9,11 @@ export type { PlatformAdapter, PlatformCapabilities, AdapterHost, SourceSelectio
  * Central adapter registry. Supporting another service means adding its adapter
  * here — no core translation, cache, synchronization or rendering code changes.
  */
-export const createAdapters = (): PlatformAdapter[] => [new NetflixAdapter(), new TVerAdapter()];
+export const createAdapters = (): PlatformAdapter[] => [
+  new NetflixAdapter(),
+  new TVerAdapter(),
+  new PrimeVideoAdapter(),
+];
 
 /** Selects the adapter responsible for a location, if any. */
 export function selectAdapter(
@@ -18,5 +23,11 @@ export function selectAdapter(
   return adapters.find((adapter) => adapter.matches(url));
 }
 
+const PLATFORM_LABELS: Record<string, string> = {
+  netflix: 'Netflix',
+  tver: 'TVer',
+  prime: 'Prime Video',
+};
+
 /** Human-readable platform name for UI surfaces. */
-export const platformLabel = (id: string): string => (id === 'netflix' ? 'Netflix' : id === 'tver' ? 'TVer' : id);
+export const platformLabel = (id: string): string => PLATFORM_LABELS[id] ?? id;

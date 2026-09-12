@@ -17,7 +17,10 @@
   "host_permissions": [
     "https://www.netflix.com/*",
     "https://tver.jp/*",
-    "https://*.tver.jp/*"
+    "https://*.tver.jp/*",
+    "https://*.primevideo.com/*",
+    "https://www.amazon.co.jp/gp/video/*",
+    "https://www.amazon.com/gp/video/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js",
@@ -76,6 +79,32 @@
       ],
       "run_at": "document_start",
       "world": "ISOLATED"
+    },
+    {
+      "matches": [
+        "https://*.primevideo.com/*",
+        "https://www.amazon.co.jp/gp/video/*",
+        "https://www.amazon.com/gp/video/*"
+      ],
+      "js": [
+        "page/prime-media-agent.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://*.primevideo.com/*",
+        "https://www.amazon.co.jp/gp/video/*",
+        "https://www.amazon.com/gp/video/*"
+      ],
+      "js": [
+        "content/bootstrap.js"
+      ],
+      "run_at": "document_start",
+      "world": "ISOLATED",
+      "all_frames": true
     }
   ],
   "content_security_policy": {

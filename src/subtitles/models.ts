@@ -1,5 +1,5 @@
 /** Identifier of a supported streaming platform. */
-export type PlatformId = 'netflix' | 'tver';
+export type PlatformId = 'netflix' | 'tver' | 'prime';
 
 export interface SubtitleCue {
   id: string;

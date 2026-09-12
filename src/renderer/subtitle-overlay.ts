@@ -67,6 +67,10 @@ export class SubtitleOverlay {
   private lastNativeSampleAt = Number.NEGATIVE_INFINITY;
   private lastRenderSignature = '';
   private quietTimer: number | undefined;
+  private videoResize: ResizeObserver | undefined;
+  private lastRectSyncAt = Number.NEGATIVE_INFINITY;
+  private lastRectSignature = '';
+  private readonly onViewportChange = () => this.positionToVideo();
   private readonly onTimeUpdate = () => {
     this.renderFrame();
     if (this.video && !this.video.paused && !this.frame) this.startLoop();
@@ -162,6 +166,11 @@ export class SubtitleOverlay {
     this.shadow.querySelector<HTMLButtonElement>('[data-toggle]')?.addEventListener('click', () => this.actions.onToggleEnabled());
     this.shadow.querySelector<HTMLButtonElement>('[data-settings]')?.addEventListener('click', () => this.actions.onOpenSettings());
     document.addEventListener('fullscreenchange', this.onFullscreen);
+    // The overlay tracks the media element's box, so anything that can move or
+    // resize that box has to re-run positioning. Scroll is captured because the
+    // player often lives inside its own scrolling container.
+    addEventListener('resize', this.onViewportChange, { passive: true });
+    addEventListener('scroll', this.onViewportChange, { capture: true, passive: true });
     document.addEventListener('pointermove', this.onPointerActivity, { passive: true });
     document.addEventListener('keydown', this.onKeyDown);
     this.mount();
@@ -175,6 +184,12 @@ export class SubtitleOverlay {
     this.lastNativeSampleAt = Number.NEGATIVE_INFINITY;
     this.lastRenderSignature = '';
     if (this.video) for (const event of ['timeupdate', 'seeked', 'ratechange', 'play', 'pause']) this.video.addEventListener(event, this.onTimeUpdate);
+    this.videoResize?.disconnect();
+    this.videoResize = undefined;
+    if (this.video && typeof ResizeObserver !== 'undefined') {
+      this.videoResize = new ResizeObserver(() => this.positionToVideo());
+      this.videoResize.observe(this.video);
+    }
     this.mount();
     this.startLoop();
     this.updateIndicatorVisibility();
@@ -248,6 +263,10 @@ export class SubtitleOverlay {
     if (this.frame) cancelAnimationFrame(this.frame);
     this.clearQuietTimer();
     document.removeEventListener('fullscreenchange', this.onFullscreen);
+    removeEventListener('resize', this.onViewportChange);
+    removeEventListener('scroll', this.onViewportChange, { capture: true });
+    this.videoResize?.disconnect();
+    this.videoResize = undefined;
     document.removeEventListener('pointermove', this.onPointerActivity);
     document.removeEventListener('keydown', this.onKeyDown);
     this.setPlayer(null);
@@ -314,9 +333,43 @@ export class SubtitleOverlay {
     if (fullscreen) {
       fullscreen.append(this.host);
       Object.assign(this.host.style, { position: 'absolute', inset: '0', left: '', top: '', width: '', height: '' });
+      this.lastRectSignature = 'fullscreen';
+      return;
+    }
+    document.documentElement.append(this.host);
+    this.host.style.position = 'fixed';
+    this.positionToVideo();
+  }
+
+  /**
+   * Anchors the overlay to the media element's box rather than the viewport.
+   *
+   * A player that fills the window (Netflix) makes the two equivalent, but an
+   * embedded player on a normal page (TVer windowed) does not: cues positioned
+   * against the viewport drift off the video entirely. Falling back to the
+   * viewport keeps behaviour unchanged whenever a trustworthy box is
+   * unavailable — during layout transitions, or in environments with no real
+   * layout at all.
+   */
+  private positionToVideo(): void {
+    if (document.fullscreenElement) return;
+    const rect = this.video?.getBoundingClientRect?.();
+    const usable = rect && rect.width >= 120 && rect.height >= 80;
+    const signature = usable
+      ? `${Math.round(rect.left)}:${Math.round(rect.top)}:${Math.round(rect.width)}:${Math.round(rect.height)}`
+      : 'viewport';
+    if (signature === this.lastRectSignature) return;
+    this.lastRectSignature = signature;
+    if (usable) {
+      Object.assign(this.host.style, {
+        inset: '',
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+      });
     } else {
-      document.documentElement.append(this.host);
-      Object.assign(this.host.style, { position: 'fixed', inset: '0' });
+      Object.assign(this.host.style, { inset: '0', left: '', top: '', width: '', height: '' });
     }
   }
 
@@ -340,6 +393,14 @@ export class SubtitleOverlay {
       this.hideSubtitle('ad');
       return;
     }
+    // Safety net for layout changes no observer reported (a player expanding,
+    // a sticky header collapsing). Throttled so it never costs a layout read
+    // per frame.
+    const sampleRectAt = performance.now();
+    if (sampleRectAt - this.lastRectSyncAt >= 250) {
+      this.lastRectSyncAt = sampleRectAt;
+      this.positionToVideo();
+    }
     const timeMs = Math.floor(this.video.currentTime * 1000);
     let cues = this.cueIndex.findAt(timeMs);
     let synchronization = 'time';
@@ -359,8 +420,15 @@ export class SubtitleOverlay {
         synchronization = 'native-text';
       }
     }
-    const source = cues.map((cue) => cue.sourceText).filter(Boolean).join('\n');
-    const translation = cues.map((cue) => cue.translatedText ?? '').filter(Boolean).join('\n');
+    // A translator legitimately leaves some cues blank — music stings, sound
+    // effects, on-screen signs. Showing the original for those beats showing a
+    // gap, and the source line then omits them so the text is not doubled up.
+    const hasTranslation = (cue: (typeof cues)[number]) => Boolean(cue.translatedText?.trim());
+    const translation = cues
+      .map((cue) => (hasTranslation(cue) ? cue.translatedText ?? '' : cue.sourceText))
+      .filter(Boolean)
+      .join('\n');
+    const source = cues.filter(hasTranslation).map((cue) => cue.sourceText).filter(Boolean).join('\n');
     if (!translation) {
       this.hideSubtitle(cues.length ? synchronization : 'none');
       return;

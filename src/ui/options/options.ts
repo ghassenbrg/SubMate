@@ -210,8 +210,49 @@ function render(): void {
   app.append(about);
 }
 
+/**
+ * Diagnostics are read from the player tab, which can change at any moment, so
+ * they are refetched on demand rather than only once at page load. Without
+ * this, switching the toggle on showed the "open an episode" hint even with an
+ * episode already playing in another tab.
+ */
+async function refreshDiagnostics(rerender = true): Promise<void> {
+  try {
+    debugInfo = await sendContent<Record<string, unknown>>({ type: 'CONTENT_GET_DEBUG' });
+  } catch {
+    debugInfo = undefined;
+  }
+  if (rerender) render();
+}
+
+let diagnosticsTimer: number | undefined;
+
+/** Polls while the panel is open so the values track playback. */
+function syncDiagnosticsPolling(): void {
+  const wanted = settings.debugMode;
+  if (wanted && diagnosticsTimer === undefined) {
+    diagnosticsTimer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void refreshDiagnostics();
+    }, 1_500);
+  } else if (!wanted && diagnosticsTimer !== undefined) {
+    window.clearInterval(diagnosticsTimer);
+    diagnosticsTimer = undefined;
+  }
+}
+
+addEventListener('pagehide', () => {
+  if (diagnosticsTimer !== undefined) window.clearInterval(diagnosticsTimer);
+  diagnosticsTimer = undefined;
+}, { once: true });
+
 async function update(patch: Partial<FlixTranslateSettings>, rerender = true): Promise<void> {
+  const wasDebug = settings.debugMode;
   settings = await saveSettings(patch);
+  syncDiagnosticsPolling();
+  if (!wasDebug && settings.debugMode) {
+    await refreshDiagnostics();
+    return;
+  }
   if (rerender) render();
   else {
     const preset = app.querySelector<HTMLSelectElement>('select[data-style-preset]');
@@ -224,8 +265,9 @@ void (async () => {
   settings = await loadSettings();
   stats = await sendCacheMessage<{ translations: number; sources: number }>({ type: 'CACHE_STATS' });
   storageUsage = (await navigator.storage?.estimate?.())?.usage;
-  debugInfo = await sendContent<Record<string, unknown>>({ type: 'CONTENT_GET_DEBUG' });
+  await refreshDiagnostics(false);
   render();
+  syncDiagnosticsPolling();
 })();
 
 function formatBytes(value: number): string {

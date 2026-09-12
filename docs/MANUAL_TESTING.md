@@ -204,3 +204,65 @@ Check whether `media manifest observed` ever appears. If it does not, the player
 is loading its manifest by a path the agent does not observe, and
 `tver-media-agent.ts` needs an additional observation source — not a hard-coded
 URL.
+
+---
+
+# Prime Video verification
+
+## Status: DISCOVERY VERIFIED LIVE; END-TO-END RETEST REQUIRED
+
+On 2026-09-12, an authenticated, entitled Chrome playback session confirmed
+that the existing page-realm JSON observer receives a subtitle descriptor. The
+descriptor's host was `cf-timedtext.aux.pv-cdn.net`; it was rejected by the URL
+policy before a playback snapshot could be published. The policy now permits
+the `pv-cdn.net` timed-text family. See `PRIME_VIDEO_NOTES.md` for the redacted
+structure-only record. Extraction, parsing, translation, rendering, and ad
+behaviour still need the checklist below after reloading the rebuilt extension.
+
+### How to run it
+
+Load `dist/chrome` unpacked, enable **Debug mode**, and open a title with
+subtitles on `primevideo.com` or an Amazon storefront video page.
+
+Expected log progression:
+
+```text
+[FlixTranslate:Prime Video] adapter started
+[FlixTranslate:Prime Video] content video changed
+[FlixTranslate:Prime Video] playback payload captured
+[FlixTranslate:Prime Video] subtitle cues normalized
+[FlixTranslate:Prime Video] source track ready
+```
+
+**If `playback payload captured` never appears**, first look for
+`subtitle-host-rejected <host>`. That means the structural parser did recognise
+the descriptor and the allowlist needs a narrowly justified Amazon resource
+suffix. If neither log appears, the JSON observer did not see a usable payload;
+then widen the interception or matcher based on a structure-only capture, never
+a signed URL.
+
+### Checklist (repeat on at least 3 titles, including one series)
+
+```text
+[ ] extension detects Prime Video on primevideo.com
+[ ] extension detects Prime Video on an amazon.* /gp/video page
+[ ] extension stays inactive on the Amazon shop
+[ ] subtitle track discovered and translated
+[ ] translated subtitle timing matches speech
+[ ] seek forward / backward, pause/resume, 0.5x–2x all stay in sync
+[ ] subtitles sit on the video in windowed mode, not on the page
+[ ] fullscreen remains readable
+[ ] cached translation loads quickly after reload
+[ ] next-episode autoplay loads the new title's subtitles
+[ ] ads show no stale dialogue, and translation resumes afterwards
+[ ] a title whose target language Amazon already provides is skipped
+[ ] a title with no subtitles reports "no suitable text subtitle"
+```
+
+### Privacy checks
+
+```text
+[ ] no subtitle URL appears in any console log or the diagnostics panel
+[ ] no Amazon cookie accompanies a subtitle download (check request headers)
+[ ] no licence, key or protected-media request is made by the extension
+```

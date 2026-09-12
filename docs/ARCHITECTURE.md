@@ -12,8 +12,8 @@ knowledge lives in adapters; everything else is shared.
              │                              │
    ┌─────────┴─────────┐        ┌───────────┴────────────────┐
    │                   │        │                            │
-NetflixAdapter     TVerAdapter  translation · cache · sync ·
-                                overlay · settings · UI · errors
+NetflixAdapter  TVerAdapter  translation · cache · sync ·
+PrimeVideoAdapter            overlay · settings · UI · errors
 ```
 
 ## Layout
@@ -27,6 +27,13 @@ src/
       netflix-adapter.ts      Netflix behind the shared contract
       netflix-bridge.ts       MAIN-world manifest bridge (isolated side)
       native-captions.ts      reads Netflix's own timed-text layer
+    prime/
+      prime-adapter.ts        Prime Video behind the shared contract
+      prime-detection.ts      host + path scoping, ASIN extraction
+      prime-manifest.ts       structural playback-payload parsing
+      prime-bridge.ts         page-world bridge (isolated side)
+      prime-player.ts         Prime ad selectors
+      prime-url-policy.ts     Amazon host allowlist
     tver/
       tver-adapter.ts         TVer behind the shared contract
       tver-detection.ts       host + route + runtime detection
@@ -40,11 +47,13 @@ src/
     subtitles/language.ts     BCP-47 / ISO-639 matching
     subtitles/segments.ts     X-TIMESTAMP-MAP, merge, dedupe
     playback/video-observer.ts video element tracking + replacement
+    playback/ad-signals.ts    selector-driven advertisement detection
     retry.ts                  bounded backoff
 
   page/
     netflix-manifest-agent.ts MAIN-world Netflix agent
     tver-media-agent.ts       MAIN-world TVer agent
+    prime-media-agent.ts      MAIN-world Prime Video agent
 
   content/
     bootstrap.ts              selects an adapter, starts the orchestrator
