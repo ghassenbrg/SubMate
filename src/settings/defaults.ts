@@ -27,6 +27,7 @@ export const defaultSettings = (): SubMateSettings => {
     subtitleOpacity: 1,
     subtitleLineHeight: 1.22,
     showPlayerStatus: true,
+    theme: 'system',
     onboardingComplete: false,
     debugMode: false,
   };

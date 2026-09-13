@@ -71,7 +71,7 @@ header p { margin: 0; color: var(--muted); font-size: 12.5px; overflow: hidden; 
 }
 .settings-nav-link .icon { width: 16px; height: 16px; opacity: .85; }
 .settings-nav-link:hover, .settings-nav-link:focus-visible { color: var(--text); background: var(--raised); }
-.settings-nav-link.active { color: var(--accent); background: var(--accent-soft); }
+.settings-nav-link.active { color: var(--accent-text); background: var(--accent-soft); }
 .settings-nav-link.active .icon { opacity: 1; }
 .settings-content { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--surface-solid); box-shadow: var(--shadow-md); }
 .settings-content-intro { padding: 23px 24px 18px; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--text) 2.5%, transparent); }
@@ -159,11 +159,11 @@ h2 .icon { width: 15px; height: 15px; opacity: .8; }
   text-align: center;
 }
 .style-tile:hover { border-color: var(--border-hover); }
-.style-tile[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.style-tile[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); }
 /* Each swatch is a scrap of video with a cue on it, so a preset previews as
    what it does rather than as a coloured square. The chip stays dark in both
    themes because that is what the cue will actually sit on. */
-.style-tile-sample { display: grid; place-items: center; width: 100%; height: 25px; border-radius: 5px; background: linear-gradient(135deg, #414b5c, #252b36); }
+.style-tile-sample { display: grid; place-items: center; width: 100%; height: 25px; border-radius: 5px; background: #6c6c96 url("preview-scene.svg") 62% 88% / 260% auto no-repeat; }
 .style-tile-cue { padding: 1px 5px; border-radius: 3px; color: #fff; font-size: 12px; font-weight: 750; line-height: 1.3; }
 .style-tile[data-preset="netflix"] .style-tile-cue { text-shadow: 0 1px 2px #000, 0 0 2px #000; }
 .style-tile[data-preset="soft-box"] .style-tile-cue { background: rgba(0, 0, 0, .68); }
@@ -233,11 +233,14 @@ h2 .icon { width: 15px; height: 15px; opacity: .8; }
   --ft-cue-padding: .1em .36em;
   position: relative;
   min-height: 210px;
+  aspect-ratio: 16 / 7;
   margin: 10px 0 16px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: #171b23;
+  /* A stand-in frame of footage rather than a flat box: subtitles have to read
+     over bright sand, a sunlit reflection and dark rock alike. */
+  background: #4f5f9c url("preview-scene.svg") 50% 82% / cover no-repeat;
 }
 
 /* Faux scrubber: sells the box as a video frame, so the position slider reads
@@ -247,13 +250,14 @@ h2 .icon { width: 15px; height: 15px; opacity: .8; }
   position: absolute;
   inset: auto 0 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--accent) 0 38%, rgba(255, 255, 255, 0.22) 38%);
+  background: linear-gradient(90deg, var(--brand-cyan), var(--brand-blue)) 0 0 / 38% 100% no-repeat, rgba(255, 255, 255, 0.3);
 }
 
 .preview-label {
   position: absolute;
   inset: 13px auto auto 14px;
-  color: rgba(255, 255, 255, .6);
+  color: rgba(255, 255, 255, .82);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .14em;
@@ -353,7 +357,7 @@ section > .link-row { margin-top: 18px; }
 }
 
 .cloud-get-key {
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 12.5px;
   font-weight: 650;
 }

@@ -1,18 +1,29 @@
 import { t } from '../../i18n';
+import type { SubMateSettings } from '../../settings/schema';
+import { loadSettings, saveSettings, watchSettings } from '../../settings/store';
 
-export type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeMode = SubMateSettings['theme'];
 
-const STORAGE_KEY = 'submate-theme';
+/**
+ * The preference itself lives in settings, so the in-player controls — which
+ * run in a content script and cannot see this page's localStorage — follow it
+ * too. localStorage only caches it, so the page can paint in the right theme
+ * before the async settings read comes back.
+ */
+const CACHE_KEY = 'submate-theme';
 const ORDER: ThemeMode[] = ['system', 'light', 'dark'];
+const listeners = new Set<() => void>();
+let current: ThemeMode | undefined;
 
 function isThemeMode(value: unknown): value is ThemeMode {
   return value === 'system' || value === 'light' || value === 'dark';
 }
 
 export function getStoredTheme(): ThemeMode {
+  if (current) return current;
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (isThemeMode(stored)) return stored;
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (isThemeMode(cached)) return cached;
   } catch {
     // Private contexts can disallow storage access; fall back to system.
   }
@@ -20,18 +31,30 @@ export function getStoredTheme(): ThemeMode {
 }
 
 function applyTheme(mode: ThemeMode): void {
+  current = mode;
+  try { localStorage.setItem(CACHE_KEY, mode); } catch { /* ignore */ }
   if (mode === 'system') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = mode;
+  for (const listener of listeners) listener();
 }
 
 export function setTheme(mode: ThemeMode): void {
-  try { localStorage.setItem(STORAGE_KEY, mode); } catch { /* ignore */ }
   applyTheme(mode);
+  void saveSettings({ theme: mode }).catch(() => undefined);
 }
 
-/** Applies the stored preference immediately, before first paint if called early enough. */
+/**
+ * Applies the cached preference immediately, then the stored setting, and
+ * keeps following it when another surface changes it.
+ */
 export function initTheme(): void {
   applyTheme(getStoredTheme());
+  void loadSettings().then((settings) => {
+    if (settings.theme !== current) applyTheme(settings.theme);
+  }).catch(() => undefined);
+  watchSettings((settings) => {
+    if (settings.theme !== current) applyTheme(settings.theme);
+  });
 }
 
 const LABEL_KEY: Record<ThemeMode, 'themeSystem' | 'themeLight' | 'themeDark'> = {
@@ -81,12 +104,16 @@ export function createThemeToggle(): HTMLButtonElement {
   };
 
   button.addEventListener('click', () => {
-    const current = getStoredTheme();
-    const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length] ?? 'system';
-    setTheme(next);
-    sync();
+    const mode = getStoredTheme();
+    setTheme(ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length] ?? 'system');
   });
 
+  // Follows changes made elsewhere too, and stops once the button is gone.
+  const listener = () => {
+    if (!button.isConnected && button.dataset.mode) listeners.delete(listener);
+    else sync();
+  };
+  listeners.add(listener);
   sync();
   return button;
 }

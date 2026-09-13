@@ -23,6 +23,7 @@ const settings = (): SubMateSettings => ({
   subtitleLineHeight: 1.22,
   showPlayerStatus: true,
   onboardingComplete: true,
+  theme: 'system',
   debugMode: false,
 });
 

@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <!--
+    Stand-in video frame for the subtitle appearance preview. A flat dark box
+    flatters every style; real footage does not. The band where subtitles sit
+    deliberately crosses bright sand, a sunlit reflection and dark rock, so
+    background, outline and colour choices can be judged against all three.
+  -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2b55"/>
+      <stop offset=".34" stop-color="#4f5f9c"/>
+      <stop offset=".58" stop-color="#d98a78"/>
+      <stop offset=".72" stop-color="#ffc98f"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="1120" cy="500" r="330" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff6d8"/>
+      <stop offset=".16" stop-color="#ffe2a4" stop-opacity=".95"/>
+      <stop offset=".5" stop-color="#ffb877" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#ff9e6b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9a98a"/>
+      <stop offset=".3" stop-color="#8a7a9e"/>
+      <stop offset="1" stop-color="#27335a"/>
+    </linearGradient>
+    <linearGradient id="glint" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff3cf" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#ffd39a" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7dcb4"/>
+      <stop offset=".55" stop-color="#e3b98a"/>
+      <stop offset="1" stop-color="#b88a63"/>
+    </linearGradient>
+    <linearGradient id="rock" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c2236"/>
+      <stop offset="1" stop-color="#090c16"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx=".5" cy=".45" r=".75">
+      <stop offset=".6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".38"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#sun)"/>
+  <circle cx="1120" cy="500" r="58" fill="#fff8e2"/>
+
+  <g fill="#fbe3d0" opacity=".32">
+    <ellipse cx="330" cy="210" rx="210" ry="22"/>
+    <ellipse cx="470" cy="238" rx="150" ry="15"/>
+    <ellipse cx="1330" cy="300" rx="240" ry="20"/>
+    <ellipse cx="880" cy="360" rx="180" ry="12"/>
+  </g>
+
+  <path d="M0 515 110 470 230 492 360 440 470 470 600 430 720 478 820 462 900 500 1000 486 1080 520 0 520Z" fill="#6c6c96" opacity=".75"/>
+  <path d="M0 528 150 498 300 516 420 488 560 512 680 494 800 522 0 530Z" fill="#4c5381"/>
+  <path d="M1250 526 1340 500 1450 510 1600 486 1600 530Z" fill="#5a5f8e" opacity=".8"/>
+
+  <rect y="526" width="1600" height="374" fill="url(#sea)"/>
+  <g fill="url(#glint)">
+    <rect x="1070" y="530" width="100" height="10" rx="5"/>
+    <rect x="1040" y="556" width="160" height="7" rx="3.5"/>
+    <rect x="1085" y="578" width="70" height="6" rx="3"/>
+    <rect x="1010" y="604" width="220" height="7" rx="3.5"/>
+    <rect x="1060" y="636" width="120" height="6" rx="3"/>
+    <rect x="980" y="672" width="270" height="8" rx="4"/>
+    <rect x="1040" y="712" width="160" height="7" rx="3.5"/>
+    <rect x="950" y="758" width="330" height="9" rx="4.5"/>
+    <rect x="1010" y="808" width="220" height="8" rx="4"/>
+  </g>
+
+  <path d="M0 700C140 688 300 700 460 734 610 766 720 812 780 900H0Z" fill="url(#sand)"/>
+  <path d="M0 708C150 698 300 710 450 742" stroke="#fff4dd" stroke-width="5" fill="none" opacity=".75"/>
+
+  <path d="M1600 612C1520 616 1470 650 1430 700 1390 690 1340 712 1310 760 1250 772 1210 820 1190 900H1600Z" fill="url(#rock)"/>
+  <path d="M1435 700C1455 660 1500 634 1560 630" stroke="#f3b27e" stroke-width="3" fill="none" opacity=".5"/>
+
+  <g fill="#141a2b">
+    <ellipse cx="560" cy="796" rx="9" ry="3" opacity=".35"/>
+    <path d="M553 792h14l-2-44 5-40-3-22h-4l-3-9a8 8 0 1 0-6 0l-2 9h-4l-3 22 5 40Z"/>
+  </g>
+
+  <rect width="1600" height="900" fill="url(#vignette)"/>
+</svg>

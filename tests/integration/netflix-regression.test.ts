@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   settings: {
     enabled: true, autoTranslate: true, preferredTargetLanguage: 'fr', translationEngine: 'chrome-local' as const,
     displayMode: 'bilingual' as const, translatedFontScale: 1, verticalPosition: .13, showPlayerStatus: true,
-    onboardingComplete: true, debugMode: false,
+    onboardingComplete: true, theme: 'system', debugMode: false,
   },
   cache: new Map<string, unknown>(),
   pageSubtitle: vi.fn(),

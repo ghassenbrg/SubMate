@@ -137,7 +137,7 @@ receives it.
 
 Three surfaces render SubMate's UI, and all three draw from one palette sampled
 from the extension mark (`docs/icon.png`): a deep navy ground, the cyan-to-blue
-play gradient, and the gold sync badge.
+play gradient, and the paper-white and slate subtitle bars.
 
 | Surface | Markup | Styles |
 | --- | --- | --- |
@@ -145,14 +145,24 @@ play gradient, and the gold sync badge.
 | Options | `src/ui/options/options.ts` | `public/ui/options.css` |
 | In-player overlay | `src/renderer/subtitle-overlay.ts` | inline, in its shadow root |
 
-`public/ui/theme.css` holds the tokens (`--cyan`, `--blue`, `--gold`, surfaces,
-text, status colours) plus the shared control primitives — selects, switches,
-ranges, buttons, focus rings. Both extension pages `@import` it; the overlay
-cannot, because a shadow root does not inherit page stylesheets, so it carries
-its own copy of the same values.
+`public/ui/theme.css` holds the tokens (`--brand-*`, `--accent` for filled
+controls, `--accent-text` for accent-coloured text, surfaces, text and status
+colours) plus the shared control primitives — selects, switches, ranges,
+buttons, focus rings. The overlay cannot use that file, because a shadow root
+does not inherit page stylesheets, so it carries the same values as `--sm-*`
+tokens for light and dark.
 
-Status colour is consistent across surfaces: gold while work is in progress
-(matching the badge on the mark), green when ready, red on failure.
+Light, dark or system is the `theme` setting, so all three surfaces follow one
+choice: the extension pages set `data-theme` on their root (caching the choice
+in `localStorage` only to paint correctly before settings load), and the overlay
+sets it on its host. With no attribute, each follows `prefers-color-scheme`.
+
+Status colour is consistent across surfaces: amber while work is in progress,
+green when ready, red on failure.
+
+The in-player button hides after three seconds without pointer activity, or as
+soon as the pointer leaves the page, in step with the players' own controls. It
+stays while its panel is open or the pointer rests on it.
 
 The overlay's logo mark is inline SVG rather than a reference to `icons/`.
 Loading a packaged image from a page would require a `web_accessible_resources`

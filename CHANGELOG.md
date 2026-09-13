@@ -16,8 +16,10 @@ All notable changes to SubMate are documented here. This project follows [Semant
 
 ### Changed
 
-- **Renamed from FlixTranslate to SubMate**, with new artwork. `docs/icon.svg` is the master; the PNGs and the in-player mark derive from it.
-- Redesigned the popup, options page, and in-player controls around one palette sampled from the icon, with shared tokens in `public/ui/theme.css`.
+- **Renamed from FlixTranslate to SubMate**, with new artwork. `docs/icon.png` is the master; the PNG icons are resized from it and the in-player mark follows its vector redraw.
+- Redesigned the popup, options page, and in-player controls around one navy, cyan and blue palette sampled from the icon, with shared tokens in `public/ui/theme.css`. The light/dark/system theme is a setting, so the in-player controls follow it too.
+- The appearance preview renders cues over a stand-in video frame with bright and dark areas instead of a flat dark box.
+- The in-player button hides along with the player's own controls when the pointer is idle.
 - Subtitle import tolerates partially-translated files rather than rejecting the whole import.
 
 ### Fixed

@@ -23,6 +23,8 @@ export interface SubMateSettings {
   subtitleOpacity: number;
   subtitleLineHeight: number;
   showPlayerStatus: boolean;
+  /** Light or dark UI, or follow the OS. Shared by the popup, options page and in-player controls. */
+  theme: 'system' | 'light' | 'dark';
   onboardingComplete: boolean;
   debugMode: boolean;
 }
@@ -103,6 +105,7 @@ export const validateSettings = (value: unknown): SubMateSettings => {
     subtitleOpacity: Number.isFinite(opacity) ? Math.min(1, Math.max(0.5, opacity)) : 1,
     subtitleLineHeight: Number.isFinite(lineHeight) ? Math.min(1.6, Math.max(1, lineHeight)) : 1.22,
     showPlayerStatus: v.showPlayerStatus !== false,
+    theme: v.theme === 'light' || v.theme === 'dark' ? v.theme : 'system',
     onboardingComplete: v.onboardingComplete === true,
     debugMode: v.debugMode === true,
   };

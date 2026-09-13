@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SubMate is a private Chrome extension for synchronized subtitle translation on Netflix, TVer, and Prime Video.">
+  <title>SubMate — Private subtitle translation for Chrome</title>
+  <link rel="icon" href="assets/icon-128.png">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell nav">
+      <a class="brand" href="index.html"><img src="assets/icon-128.png" alt=""><span>SubMate</span></a>
+      <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="features.html">Features</a>
+        <a href="installation.html">Install</a>
+        <a href="configuration.html">Configure</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/ghassenbrg/SubMate">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="shell">
+        <div class="eyebrow">Subtitle translation, on your terms</div>
+        <h1>Stay with the story. Read it in your language.</h1>
+        <p class="lead">SubMate translates text subtitles in sync with Netflix, TVer, and Prime Video. Its default engine works on-device, with no account, analytics, or SubMate server.</p>
+        <div class="actions">
+          <a class="button" href="installation.html">Install SubMate</a>
+          <a class="button secondary" href="https://github.com/ghassenbrg/SubMate/releases">Browse releases</a>
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="shell">
+        <div class="eyebrow">Built for watching</div>
+        <h2>Translation that follows the subtitle, not the other way around.</h2>
+        <p class="section-intro">SubMate reads supported text tracks, keeps original cue timing, and draws a fullscreen-aware overlay above the player. Choose bilingual, translation-only, or off whenever you need it.</p>
+        <div class="cards">
+          <article class="card"><div class="icon-label">Private by default</div><h3>On-device translation</h3><p>Chrome's built-in Translator API keeps subtitle text in your browser when the language pair is supported.</p></article>
+          <article class="card"><div class="icon-label">In sync</div><h3>Made for playback</h3><p>Timing, caching, fullscreen behavior, language direction, and player controls are handled as one experience.</p></article>
+          <article class="card"><div class="icon-label">Your choice</div><h3>Optional cloud AI</h3><p>Bring your own provider key for context-aware cloud translation. It is off until you explicitly enable it.</p></article>
+        </div>
+      </div>
+    </section>
+    <section class="section alt">
+      <div class="shell">
+        <div class="eyebrow">Supported platforms</div>
+        <h2>Where SubMate works today</h2>
+        <p class="section-intro">You need an active service subscription and a title with a text subtitle track. Image-based subtitles cannot be translated.</p>
+        <div class="platforms">
+          <div class="platform"><strong>Netflix</strong><span>TTML and WebVTT text tracks</span></div>
+          <div class="platform"><strong>TVer</strong><span>Segmented HLS WebVTT captions</span></div>
+          <div class="platform"><strong>Prime Video</strong><span>PrimeVideo and supported Amazon Video pages</span></div>
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="shell">
+        <div class="eyebrow">Open source</div>
+        <h2>Understand it. Improve it. Ship it yourself.</h2>
+        <p class="section-intro">SubMate is a Manifest V3 extension released under the MIT License. Read the implementation notes, report issues, or help make subtitles more accessible across languages.</p>
+        <div class="actions"><a class="button" href="development.html">Developer guide</a><a class="button secondary" href="contributing.html">Contributing</a></div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer"><div class="shell footer-row"><span>SubMate is independent and is not affiliated with Netflix, TVer, or Amazon.</span><span><a href="privacy.html">Privacy</a> · <a href="publishing.html">Publishing</a></span></div></footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>
