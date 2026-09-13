@@ -8,7 +8,7 @@
 
 SubMate is an independent Manifest V3 browser extension that translates streaming text subtitles on-device, caches the result locally, and renders it against the original cue timing.
 
-**Website:** [ghassenbrg.github.io/SubMate](https://ghassenbrg.github.io/SubMate/) · **Documentation:** [installation](https://ghassenbrg.github.io/SubMate/installation.html), [features](https://ghassenbrg.github.io/SubMate/features.html), [configuration](https://ghassenbrg.github.io/SubMate/configuration.html), [privacy](https://ghassenbrg.github.io/SubMate/privacy.html) · **Releases:** [GitHub Releases](https://github.com/ghassenbrg/SubMate/releases) · **Chrome Web Store:** [listing coming soon](https://chromewebstore.google.com/)
+**Website:** [submate.ghassen.io](https://submate.ghassen.io/) · **Documentation:** [installation](https://ghassenbrg.github.io/SubMate/installation.html), [features](https://ghassenbrg.github.io/SubMate/features.html), [configuration](https://ghassenbrg.github.io/SubMate/configuration.html), [privacy](https://ghassenbrg.github.io/SubMate/privacy.html) · **Releases:** [GitHub Releases](https://github.com/ghassenbrg/SubMate/releases) · **Chrome Web Store:** [listing coming soon](https://chromewebstore.google.com/)
 
 It has no SubMate account, no backend, no analytics, and no bundled API key. With the default on-device engine, subtitle text never leaves your browser.
 
