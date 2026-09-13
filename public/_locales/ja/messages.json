@@ -59,11 +59,11 @@
   "getStarted": {
     "message": "始める"
   },
+  "next": {
+    "message": "次へ"
+  },
   "translation": {
     "message": "翻訳"
-  },
-  "onDevicePrivateFree": {
-    "message": "端末上 · プライベート · 無料"
   },
   "onDevice": {
     "message": "端末上"
@@ -73,9 +73,6 @@
   },
   "display": {
     "message": "表示"
-  },
-  "currentEpisode": {
-    "message": "現在のエピソード"
   },
   "sourceSubtitleToTarget": {
     "message": "元の字幕 → $1"
@@ -94,9 +91,6 @@
   },
   "exportFormat": {
     "message": "エクスポート形式"
-  },
-  "subMateJson": {
-    "message": "SubMate JSON"
   },
   "exportSubtitles": {
     "message": "字幕をエクスポート"
@@ -157,6 +151,9 @@
   },
   "statusTargetAvailable": {
     "message": "このサービスは選択した言語をすでに提供しています。"
+  },
+  "chooseAnotherLanguage": {
+    "message": "別の言語を選択"
   },
   "statusNeedsActivation": {
     "message": "ローカル翻訳を開始するにはChrome上で操作が必要です。"
@@ -318,10 +315,10 @@
     "message": "使用中のストレージ：$1"
   },
   "clearCache": {
-    "message": "翻訳キャッシュを消去"
+    "message": "ダウンロード済み字幕データを消去"
   },
   "clearCacheConfirm": {
-    "message": "$1 件の翻訳キャッシュを消去しますか？設定は保持されます。"
+    "message": "$1 件の翻訳キャッシュとダウンロード済み字幕トラックを消去しますか？設定は保持されます。"
   },
   "about": {
     "message": "この拡張機能について"
@@ -381,10 +378,10 @@
     "message": "字幕の表示モード"
   },
   "turnOff": {
-    "message": "オフにする"
+    "message": "SubMateを一時停止"
   },
   "turnOn": {
-    "message": "オンにする"
+    "message": "SubMateを再開"
   },
   "openSettings": {
     "message": "設定を開く"
@@ -479,7 +476,88 @@
   "cloudPrivacyWarning": {
     "message": "クラウド翻訳では字幕テキストが選択したプロバイダーに送信されます。データはこのデバイスから送信され、プロバイダーの利用規約と料金が適用されます。オンデバイス翻訳はローカルのままです。"
   },
+  "errorCloudAuth": {
+    "message": "API キーが拒否されました。設定で確認してください。"
+  },
+  "errorCloudModel": {
+    "message": "モデルまたはエンドポイントが見つかりませんでした。設定で確認してください。"
+  },
+  "errorCloudQuota": {
+    "message": "クラウドプロバイダーのレート制限または割り当て上限に達しました。しばらくしてから再試行してください。"
+  },
+  "cloudProviderCustom": {
+    "message": "カスタム（OpenAI 互換）"
+  },
+  "cloudBaseUrl": {
+    "message": "ベース URL"
+  },
+  "cloudBaseUrlHelp": {
+    "message": "Ollama、LM Studio、vLLM、LiteLLM など、OpenAI 互換のエンドポイント。HTTPS、またはこのコンピューター上の HTTP。"
+  },
+  "cloudBaseUrlInvalid": {
+    "message": "HTTPS の URL、または localhost の HTTP URL を入力してください。"
+  },
+  "cloudApiKeyOptional": {
+    "message": "ローカルサーバーでは省略可能です。この端末にのみ保存され、同期されません。"
+  },
+  "cloudGetKey": {
+    "message": "$1 の API キーを取得"
+  },
+  "cloudKeyDetected": {
+    "message": "$1 のキーを認識し、プロバイダーを切り替えました。"
+  },
+  "cloudModelRequired": {
+    "message": "サーバーで使用するモデル名を入力してください。"
+  },
+  "cloudPermissionNeeded": {
+    "message": "SubMate が $1 に接続するには許可が必要です。"
+  },
+  "cloudPermissionGrant": {
+    "message": "アクセスを許可"
+  },
+  "errorCloudPermission": {
+    "message": "SubMate がクラウドプロバイダーに接続するには許可が必要です。設定で許可してください。"
+  },
+  "errorCloudUnreachable": {
+    "message": "クラウドプロバイダーに接続できませんでした。接続またはベース URL を確認してください。"
+  },
+  "errorCloudUntranslated": {
+    "message": "モデルが字幕を翻訳せずにそのまま返しました。設定で別のモデルを試してください。"
+  },
   "statusCloudNotConfigured": {
-    "message": "クラウド翻訳を使用するには、設定で API キーを追加してください。"
+    "message": "設定でクラウド翻訳のセットアップを完了してください。"
+  },
+  "themeToggleAria": {
+    "message": "外観: $1。クリックして変更します。"
+  },
+  "themeSystem": {
+    "message": "システムに合わせる"
+  },
+  "themeLight": {
+    "message": "ライト"
+  },
+  "themeDark": {
+    "message": "ダーク"
+  },
+  "displayModeBoth": {
+    "message": "両方"
+  },
+  "displayModeTranslation": {
+    "message": "翻訳"
+  },
+  "subtitleFiles": {
+    "message": "字幕ファイル"
+  },
+  "decreaseSetting": {
+    "message": "$1 を小さく"
+  },
+  "increaseSetting": {
+    "message": "$1 を大きく"
+  },
+  "exportAction": {
+    "message": "書き出し"
+  },
+  "importAction": {
+    "message": "読み込み"
   }
 }

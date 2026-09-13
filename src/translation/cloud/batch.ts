@@ -27,27 +27,77 @@ export interface BatchOutcome {
   missing: string[];
 }
 
+/**
+ * Bumped whenever the prompt changes in a way that changes output, so cached
+ * translations from an older prompt are not served as if they were current.
+ */
+export const CLOUD_PROMPT_REVISION = 2;
+
+export interface BatchPrompt {
+  /** Standing instructions, sent as the system message. */
+  system: string;
+  /** The subtitles to translate, sent as the user message. */
+  user: string;
+}
+
+/**
+ * "Japanese (ja)" rather than "ja". Bare codes are ambiguous to a model, and a
+ * model unsure of the target language tends to hand the input straight back.
+ */
+export function languageLabel(tag: string): string {
+  try {
+    const name = new Intl.DisplayNames(['en'], { type: 'language' }).of(tag);
+    return name && name !== tag ? `${name} (${tag})` : tag;
+  } catch {
+    return tag;
+  }
+}
+
 /** Cues are sent as an id-keyed object so ordering cannot carry meaning. */
-export function buildPrompt(request: BatchRequest): string {
+export function buildPrompt(request: BatchRequest): BatchPrompt {
+  const source = languageLabel(request.sourceLanguage);
+  const target = languageLabel(request.targetLanguage);
   const payload = Object.fromEntries(request.cues.map((cue) => [cue.id, cue.text]));
-  const context = request.previousContext
-    ? `\nPreceding dialogue, for continuity of names and tone (do not translate or return it):\n${request.previousContext}\n`
-    : '';
-  return [
-    `You are translating subtitles from ${request.sourceLanguage} to ${request.targetLanguage}.`,
+  const system = [
+    `You translate ${source} subtitles into ${target}.`,
     '',
-    'Rules:',
-    `- Return a JSON object mapping every input key to its ${request.targetLanguage} translation.`,
-    '- Return every key you were given, exactly as written. Do not add, drop, merge, split or renumber keys.',
-    '- Translate each entry independently. One subtitle in, one subtitle out.',
-    '- Keep it short enough to read on screen, and preserve line breaks within an entry.',
-    '- Preserve speaker labels, sound effects and musical notation as they appear.',
-    '- If an entry has nothing translatable (music or a sound effect), return it unchanged.',
-    '- Return only the JSON object, with no commentary and no markdown fences.',
-    context,
-    'Input:',
-    JSON.stringify(payload, null, 0),
+    `Every value you return must be written in ${target}. Never copy the ${source} text back;`,
+    'the only exception is a line that is purely a name, a number or a symbol.',
+    '',
+    `Reply with a JSON object that has exactly the same keys as the input, each mapped to its ${target} translation.`,
+    '- One subtitle in, one subtitle out. Do not add, drop, merge, split or renumber keys.',
+    '- Keep each line short enough to read on screen, and preserve line breaks within an entry.',
+    '- Keep speaker labels, sound-effect brackets and music symbols, translating any words inside them.',
+    '- Reply with the JSON object only: no commentary and no markdown fences.',
   ].join('\n');
+  const context = request.previousContext
+    ? `Preceding dialogue, for continuity of names and tone only (do not return it):\n${request.previousContext}\n\n`
+    : '';
+  const user = `${context}Translate into ${target}:\n${JSON.stringify(payload)}`;
+  return { system, user };
+}
+
+const letters = /\p{L}{2,}/u;
+const baseLanguage = (tag: string) => tag.split('-')[0]?.toLowerCase() ?? tag;
+
+/**
+ * Ids whose "translation" is just the source text handed back.
+ *
+ * A model that misreads the task can return well-formed JSON that is entirely
+ * untranslated; without this check it would pass every structural test and be
+ * cached as a finished translation. Lines with no letters (music notes,
+ * numbers) are legitimately unchanged and are never counted.
+ */
+export function echoedIds(
+  cues: BatchCue[],
+  translations: Map<string, string>,
+  sourceLanguage: string,
+  targetLanguage: string,
+): string[] {
+  if (baseLanguage(sourceLanguage) === baseLanguage(targetLanguage)) return [];
+  return cues
+    .filter((cue) => letters.test(cue.text) && translations.get(cue.id)?.trim() === cue.text.trim())
+    .map((cue) => cue.id);
 }
 
 /**

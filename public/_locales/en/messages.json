@@ -59,11 +59,11 @@
   "getStarted": {
     "message": "Get started"
   },
+  "next": {
+    "message": "Next"
+  },
   "translation": {
     "message": "Translation"
-  },
-  "onDevicePrivateFree": {
-    "message": "On-device · Private · Free"
   },
   "onDevice": {
     "message": "On-device"
@@ -73,9 +73,6 @@
   },
   "display": {
     "message": "Display"
-  },
-  "currentEpisode": {
-    "message": "Current episode"
   },
   "sourceSubtitleToTarget": {
     "message": "Source subtitle → $1"
@@ -94,9 +91,6 @@
   },
   "exportFormat": {
     "message": "Export format"
-  },
-  "subMateJson": {
-    "message": "SubMate JSON"
   },
   "exportSubtitles": {
     "message": "Export subtitles"
@@ -157,6 +151,9 @@
   },
   "statusTargetAvailable": {
     "message": "This service already provides your selected target language."
+  },
+  "chooseAnotherLanguage": {
+    "message": "Choose another language"
   },
   "statusNeedsActivation": {
     "message": "Chrome needs a user action before starting the local translator."
@@ -318,10 +315,10 @@
     "message": "Extension storage used: $1"
   },
   "clearCache": {
-    "message": "Clear translation cache"
+    "message": "Clear downloaded subtitle data"
   },
   "clearCacheConfirm": {
-    "message": "Clear $1 cached translations? Your settings will not change."
+    "message": "Clear $1 cached translations and downloaded subtitle tracks? Your settings will not change."
   },
   "about": {
     "message": "About"
@@ -381,10 +378,10 @@
     "message": "Subtitle display mode"
   },
   "turnOff": {
-    "message": "Turn off"
+    "message": "Pause SubMate"
   },
   "turnOn": {
-    "message": "Turn on"
+    "message": "Resume SubMate"
   },
   "openSettings": {
     "message": "Open settings"
@@ -479,7 +476,88 @@
   "cloudPrivacyWarning": {
     "message": "Cloud translation sends subtitle text to your chosen provider. It leaves this device and is subject to that provider’s terms and pricing. On-device translation stays local."
   },
+  "errorCloudAuth": {
+    "message": "Your API key was rejected. Check it in settings."
+  },
+  "errorCloudModel": {
+    "message": "The model or endpoint wasn't found. Check them in settings."
+  },
+  "errorCloudQuota": {
+    "message": "Your cloud provider's rate limit or quota was reached. Try again later."
+  },
+  "cloudProviderCustom": {
+    "message": "Custom (OpenAI-compatible)"
+  },
+  "cloudBaseUrl": {
+    "message": "Base URL"
+  },
+  "cloudBaseUrlHelp": {
+    "message": "Any OpenAI-compatible endpoint, such as Ollama, LM Studio, vLLM or LiteLLM. HTTPS, or HTTP on this computer."
+  },
+  "cloudBaseUrlInvalid": {
+    "message": "Enter an HTTPS URL, or an HTTP URL on localhost."
+  },
+  "cloudApiKeyOptional": {
+    "message": "Optional for local servers. Stored on this device only and never synced."
+  },
+  "cloudGetKey": {
+    "message": "Get an API key from $1"
+  },
+  "cloudKeyDetected": {
+    "message": "Key recognized as $1, so the provider was switched."
+  },
+  "cloudModelRequired": {
+    "message": "Enter the model name your server uses."
+  },
+  "cloudPermissionNeeded": {
+    "message": "SubMate needs permission to reach $1."
+  },
+  "cloudPermissionGrant": {
+    "message": "Allow access"
+  },
+  "errorCloudPermission": {
+    "message": "SubMate needs permission to reach your cloud provider. Allow it in settings."
+  },
+  "errorCloudUnreachable": {
+    "message": "Couldn't reach the cloud provider. Check your connection or the base URL."
+  },
+  "errorCloudUntranslated": {
+    "message": "The model sent the subtitles back untranslated. Try a different model in settings."
+  },
   "statusCloudNotConfigured": {
-    "message": "Add an API key in settings to use cloud translation."
+    "message": "Finish setting up cloud translation in settings."
+  },
+  "themeToggleAria": {
+    "message": "Appearance: $1. Click to change."
+  },
+  "themeSystem": {
+    "message": "Match system"
+  },
+  "themeLight": {
+    "message": "Light"
+  },
+  "themeDark": {
+    "message": "Dark"
+  },
+  "displayModeBoth": {
+    "message": "Both"
+  },
+  "displayModeTranslation": {
+    "message": "Translation"
+  },
+  "subtitleFiles": {
+    "message": "Subtitle files"
+  },
+  "decreaseSetting": {
+    "message": "Decrease $1"
+  },
+  "increaseSetting": {
+    "message": "Increase $1"
+  },
+  "exportAction": {
+    "message": "Export"
+  },
+  "importAction": {
+    "message": "Import"
   }
 }

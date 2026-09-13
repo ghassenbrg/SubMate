@@ -2,28 +2,38 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   apiKey: 'test-key-1234567890',
+  issue: undefined as undefined | 'endpoint' | 'key' | 'permission',
   sends: [] as string[],
   responder: (() => '{}') as (prompt: string, attempt: number) => string,
 }));
 
-vi.mock('../../src/translation/cloud/credentials', () => ({
-  loadCloudApiKey: async () => mocks.apiKey,
+vi.mock('../../src/settings/store', () => ({
+  loadSettings: async () => ({ cloudVendor: 'gemini', cloudModel: '', cloudBaseUrl: '' }),
 }));
 
-vi.mock('../../src/translation/cloud/gemini', () => ({
-  cloudVendor: () => ({
-    id: 'gemini',
-    label: 'Google Gemini',
-    defaultModel: 'test-model',
-    apiHost: 'https://example.test/*',
-    send: async ({ prompt }: { prompt: string }) => {
-      mocks.sends.push(prompt);
-      return mocks.responder(prompt, mocks.sends.length);
-    },
-  }),
+vi.mock('../../src/translation/cloud/readiness', () => ({
+  cloudSetup: async () => (mocks.issue
+    ? { issue: mocks.issue, apiKey: '' }
+    : {
+      apiKey: mocks.apiKey,
+      endpoint: {
+        provider: { id: 'gemini', label: 'Google Gemini', keyRequired: true, jsonMode: true },
+        baseUrl: 'https://example.test/v1',
+        model: 'test-model',
+      },
+    }),
+}));
+
+vi.mock('../../src/translation/cloud/openai-compatible', () => ({
+  sendChat: async ({ prompt }: { prompt: { system: string; user: string } }) => {
+    mocks.sends.push(prompt.user);
+    return mocks.responder(prompt.user, mocks.sends.length);
+  },
+  listModels: async () => [],
 }));
 
 import { translateBatch } from '../../src/background/translate-batch';
+import { CloudVendorError } from '../../src/translation/cloud/vendor';
 
 const cues = [
   { id: 'c1', text: 'どうしたの？' },
@@ -33,8 +43,6 @@ const cues = [
 
 const request = (overrides = {}) => ({
   type: 'TRANSLATE_BATCH' as const,
-  vendor: 'gemini',
-  model: 'test-model',
   sourceLanguage: 'ja',
   targetLanguage: 'en',
   cues,
@@ -43,6 +51,7 @@ const request = (overrides = {}) => ({
 
 beforeEach(() => {
   mocks.apiKey = 'test-key-1234567890';
+  mocks.issue = undefined;
   mocks.sends = [];
   mocks.responder = () => JSON.stringify({ c1: 'A', c2: 'B', c3: 'C' });
 });
@@ -80,6 +89,32 @@ describe('background batch translation', () => {
     expect(result.translations).toHaveLength(3);
   });
 
+  it('asks again for lines handed back untranslated', async () => {
+    mocks.responder = (_prompt, attempt) =>
+      attempt === 1
+        ? JSON.stringify({ c1: 'A', c2: '何でもない。', c3: 'C' })
+        : JSON.stringify({ c2: 'B' });
+    const result = await translateBatch(request());
+    expect(mocks.sends).toHaveLength(2);
+    expect(mocks.sends[1]).toContain('c2');
+    expect(mocks.sends[1]).not.toContain('c1');
+    expect(result.translations.find((t) => t.id === 'c2')?.text).toBe('B');
+  });
+
+  it('fails a batch the model keeps returning untranslated, instead of caching it', async () => {
+    mocks.responder = (prompt) => JSON.stringify(JSON.parse(prompt.slice(prompt.indexOf('{'))));
+    const error = await translateBatch(request()).catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(CloudVendorError);
+    expect((error as CloudVendorError).reason).toBe('untranslated');
+  });
+
+  it('blanks a lone untranslated line so it is not shown twice', async () => {
+    mocks.responder = () => JSON.stringify({ c1: 'A', c2: '何でもない。', c3: 'C' });
+    const result = await translateBatch(request());
+    expect(result.translations.find((t) => t.id === 'c2')?.text).toBe('');
+    expect(result.unresolved).toEqual(['c2']);
+  });
+
   it('never lets a hallucinated id into the result', async () => {
     mocks.responder = () => JSON.stringify({ c1: 'A', c2: 'B', c3: 'C', c999: 'ghost' });
     const result = await translateBatch(request());
@@ -103,9 +138,27 @@ describe('background batch translation', () => {
   });
 
   it('refuses to run without a configured key', async () => {
-    mocks.apiKey = '';
+    mocks.issue = 'key';
     await expect(translateBatch(request())).rejects.toThrow(/API key/);
     expect(mocks.sends).toHaveLength(0);
+  });
+
+  it('reports a missing host permission as fixable', async () => {
+    mocks.issue = 'permission';
+    const error = await translateBatch(request()).catch((caught: unknown) => caught);
+    expect((error as CloudVendorError).reason).toBe('permission');
+    expect(mocks.sends).toHaveLength(0);
+  });
+
+  it('fails at once on an error retrying cannot fix, keeping the reason', async () => {
+    mocks.responder = () => {
+      throw new CloudVendorError(`Translation service returned 404: ${mocks.apiKey}`, 404, false, 'model');
+    };
+    const error = await translateBatch(request()).catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(CloudVendorError);
+    expect((error as CloudVendorError).reason).toBe('model');
+    expect((error as CloudVendorError).message).not.toContain(mocks.apiKey);
+    expect(mocks.sends).toHaveLength(1);
   });
 
   it('returns nothing for an empty batch without calling the provider', async () => {

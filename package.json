@@ -33,6 +33,7 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "smoke:cloud": "node scripts/cloud-smoke.mjs",
     "coverage": "vitest run --coverage",
     "validate:chrome": "node scripts/validate-chrome-build.mjs",
     "validate": "npm run check && npm run test && npm run build:chrome && npm run validate:chrome",

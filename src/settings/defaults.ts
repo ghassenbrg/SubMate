@@ -15,6 +15,7 @@ export const defaultSettings = (): SubMateSettings => {
     translationEngine: 'chrome-local',
     cloudVendor: 'gemini',
     cloudModel: '',
+    cloudBaseUrl: '',
     displayMode: 'bilingual',
     translatedFontScale: 1,
     verticalPosition: 0.13,

@@ -49,10 +49,10 @@ afterEach(() => {
 });
 
 describe('subtitle appearance settings', () => {
-  it('offers clear presets and all practical custom controls with a preview', async () => {
+  it('offers visual presets and all practical custom controls with a preview', async () => {
     await renderOptions();
-    const preset = rowControl('Subtitle style').querySelector('select');
-    expect([...preset!.options].map((option) => option.text)).toEqual([
+    const presets = [...rowControl('Subtitle style').querySelectorAll('.style-tile')];
+    expect(presets.map((preset) => preset.querySelector('.style-tile-name')?.textContent)).toEqual([
       'Netflix-like', 'Soft background', 'Solid black background', 'Outline', 'Minimal', 'Custom',
     ]);
     for (const label of ['Subtitle background', 'Text outline', 'Text color', 'Text weight', 'Font size', 'Opacity', 'Line spacing', 'Vertical position']) {
@@ -63,9 +63,8 @@ describe('subtitle appearance settings', () => {
 
   it('applies a preset and marks an individual background adjustment as custom', async () => {
     await renderOptions();
-    const preset = rowControl('Subtitle style').querySelector('select')!;
-    preset.value = 'netflix';
-    preset.dispatchEvent(new Event('change', { bubbles: true }));
+    const preset = rowControl('Subtitle style').querySelector<HTMLButtonElement>('[data-preset="netflix"]')!;
+    preset.click();
     await vi.waitFor(() => expect(storedSettings.subtitleStylePreset).toBe('netflix'));
     expect(storedSettings.subtitleBackground).toBe('none');
     expect(document.querySelector<HTMLElement>('.subtitle-preview')?.style.getPropertyValue('--ft-background')).toBe('transparent');
@@ -74,7 +73,7 @@ describe('subtitle appearance settings', () => {
     opacity.value = '.8';
     opacity.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.waitFor(() => expect(storedSettings.subtitleStylePreset).toBe('custom'));
-    expect(rowControl('Subtitle style').querySelector<HTMLSelectElement>('select')?.value).toBe('custom');
+    expect(rowControl('Subtitle style').querySelector<HTMLButtonElement>('[data-preset="custom"]')?.getAttribute('aria-pressed')).toBe('true');
     expect(document.querySelector<HTMLElement>('.subtitle-preview')?.style.getPropertyValue('--ft-opacity')).toBe('0.8');
 
     const background = rowControl('Subtitle background').querySelector('select')!;

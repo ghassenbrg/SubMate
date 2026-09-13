@@ -4,40 +4,47 @@ import { defaultSettings } from '../settings/defaults';
 import {
   translateAvailability,
   translateBatch,
+  translateModels,
   type TranslateBatchRequest,
 } from './translate-batch';
 import { SETTINGS_KEY } from '../settings/schema';
+import { CloudVendorError } from '../translation/cloud/vendor';
 
 chrome.runtime.onInstalled.addListener(async () => {
   const stored = await chrome.storage.local.get(SETTINGS_KEY);
   if (!stored[SETTINGS_KEY]) await chrome.storage.local.set({ [SETTINGS_KEY]: defaultSettings() });
 });
 
-chrome.runtime.onMessage.addListener((raw: unknown, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((raw: unknown, sender, sendResponse) => {
   const request = raw as
     | CacheRequest
     | { type: 'OPEN_OPTIONS' }
     | { type: 'TRANSLATE_AVAILABILITY' }
+    | { type: 'TRANSLATE_MODELS' }
     | TranslateBatchRequest;
   if (!request || typeof request.type !== 'string') return false;
   if (request.type === 'OPEN_OPTIONS') {
     void chrome.runtime.openOptionsPage();
     return false;
   }
-  if (request.type === 'TRANSLATE_AVAILABILITY' || request.type === 'TRANSLATE_BATCH') {
-    const wantsAvailability = request.type === 'TRANSLATE_AVAILABILITY';
-    const message = raw as TranslateBatchRequest;
+  if (request.type === 'TRANSLATE_AVAILABILITY' || request.type === 'TRANSLATE_BATCH' || request.type === 'TRANSLATE_MODELS') {
+    // Model listing is an options-page concern; content scripts have no use for it.
+    const fromExtensionPage = sender.url?.startsWith(chrome.runtime.getURL('')) ?? false;
     void (async () => {
-      if (wantsAvailability) {
-        return translateAvailability(String(message.vendor ?? ''), String(message.model ?? ''));
+      switch (request.type) {
+        case 'TRANSLATE_AVAILABILITY': return translateAvailability();
+        case 'TRANSLATE_MODELS':
+          if (!fromExtensionPage) throw new Error('Not allowed');
+          return translateModels();
+        default: return translateBatch(request);
       }
-      return translateBatch(message);
     })().then(
       (value) => sendResponse({ ok: true, value }),
       // Vendor errors are already redacted; this is the last line of defence.
       (error: unknown) => sendResponse({
         ok: false,
         error: (error instanceof Error ? error.message : String(error)).slice(0, 300),
+        ...(error instanceof CloudVendorError ? { reason: error.reason } : {}),
       }),
     );
     return true;

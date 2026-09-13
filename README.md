@@ -16,7 +16,7 @@ Supported platforms are **Netflix**, **TVer** and **Amazon Prime Video**, each i
 ## Highlights
 
 - Translates with Chrome's built-in on-device Translator API; subtitle text stays in the browser.
-- Optionally translates through a cloud model with your own API key (Google Gemini), for higher-quality, context-aware output. Opt-in, never the default, and it sends subtitle text to the provider you choose — see [Cloud translation](docs/CLOUD_TRANSLATION.md).
+- Optionally translates through a cloud model with your own API key — Gemini, ChatGPT, Claude, Mistral, DeepSeek, Grok, Groq, OpenRouter, or any OpenAI-compatible server including self-hosted ones — for higher-quality, context-aware output. Opt-in, never the default, and it sends subtitle text to the provider you choose — see [Cloud translation](docs/CLOUD_TRANSLATION.md).
 - Reads TTML/DFXP and WebVTT tracks, preserves cue timing, and offers bilingual, translation-only, and off display modes.
 - Caches source subtitles and translations in IndexedDB, so reloads and episode changes recover instantly.
 - Renders a synchronized, fullscreen-aware, direction-aware overlay with adjustable appearance controls.

@@ -1,13 +1,17 @@
+import { DEFAULT_CLOUD_PROVIDER, isCloudProviderId, normalizeBaseUrl } from '../translation/cloud/providers';
+
 export interface SubMateSettings {
   enabled: boolean;
   autoTranslate: boolean;
   preferredTargetLanguage: string;
   preferredSourceLanguage?: string | undefined;
   translationEngine: 'chrome-local' | 'manual' | 'cloud-api';
-  /** Cloud vendor id; only meaningful when the engine is 'cloud-api'. */
+  /** Cloud provider id; only meaningful when the engine is 'cloud-api'. */
   cloudVendor: string;
-  /** Empty means the vendor's own default model. */
+  /** Empty means the provider's own default model. */
   cloudModel: string;
+  /** Endpoint for the custom provider; presets ignore it. */
+  cloudBaseUrl: string;
   displayMode: 'bilingual' | 'translation-only' | 'off';
   translatedFontScale: number;
   verticalPosition: number;
@@ -49,12 +53,12 @@ export const validateSettings = (value: unknown): SubMateSettings => {
     ? (v.translationEngine as SubMateSettings['translationEngine'])
     : 'chrome-local';
   // The API key deliberately lives outside settings; see cloud/credentials.ts.
-  const cloudVendor = typeof v.cloudVendor === 'string' && /^[a-z0-9-]{1,32}$/.test(v.cloudVendor)
-    ? v.cloudVendor
-    : 'gemini';
-  const cloudModel = typeof v.cloudModel === 'string' && /^[A-Za-z0-9._-]{0,64}$/.test(v.cloudModel)
-    ? v.cloudModel
+  const cloudVendor = isCloudProviderId(v.cloudVendor) ? v.cloudVendor : DEFAULT_CLOUD_PROVIDER;
+  // Slashes and colons appear in real ids: openai/gpt-oss-20b, llama3.3:70b.
+  const cloudModel = typeof v.cloudModel === 'string' && /^[\w.:/@-]{0,128}$/.test(v.cloudModel.trim())
+    ? v.cloudModel.trim()
     : '';
+  const cloudBaseUrl = typeof v.cloudBaseUrl === 'string' ? normalizeBaseUrl(v.cloudBaseUrl) ?? '' : '';
   const modes = ['bilingual', 'translation-only', 'off'] as const;
   const displayMode = modes.includes(v.displayMode as (typeof modes)[number])
     ? (v.displayMode as SubMateSettings['displayMode'])
@@ -87,6 +91,7 @@ export const validateSettings = (value: unknown): SubMateSettings => {
     translationEngine: engine,
     cloudVendor,
     cloudModel,
+    cloudBaseUrl,
     displayMode,
     translatedFontScale: Number.isFinite(scale) ? Math.min(1.8, Math.max(0.7, scale)) : 1,
     verticalPosition: Number.isFinite(position) ? Math.min(0.42, Math.max(0.04, position)) : 0.13,

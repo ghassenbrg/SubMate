@@ -3,6 +3,7 @@ import { subtitleAppearanceVariables } from '../settings/appearance';
 import { isRtlLocale, t, uiLocale } from '../i18n';
 import type { SubtitleTrack, TranslationStatus } from '../subtitles/models';
 import { CueIndex } from './cue-index';
+import { createDisplayModeTiles } from '../ui/shared/display-mode';
 
 /**
  * Platform-supplied playback facts the renderer needs but must not discover
@@ -52,7 +53,7 @@ const STATUS_LABELS: Record<TranslationStatus['state'], string> = {
 const markSvg = (gradientId?: string): string => {
   const fill = gradientId ? `url(#${gradientId})` : '#fff';
   const defs = gradientId
-    ? `<defs><linearGradient id="${gradientId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0cd0fc"/><stop offset="1" stop-color="#1374f9"/></linearGradient></defs>`
+    ? `<defs><linearGradient id="${gradientId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e50914"/><stop offset="1" stop-color="#e50914"/></linearGradient></defs>`
     : '';
   return `<svg class="mark" viewBox="0 0 24 24" aria-hidden="true">${defs}`
     + `<path d="M9.1 3.3 18.3 8a1.05 1.05 0 0 1 0 1.86l-9.2 4.72A1.05 1.05 0 0 1 7.6 13.64V4.24a1.05 1.05 0 0 1 1.5-.94z" fill="${fill}"/>`
@@ -122,38 +123,47 @@ export class SubtitleOverlay {
         .cue{display:table;margin:.12em auto;padding:var(--ft-cue-padding,.1em .36em);border-radius:var(--ft-radius,.18em);background:var(--ft-background,rgba(0,0,0,.68));color:var(--ft-color,#fff);text-shadow:var(--ft-text-shadow,0 2px 3px #000);max-width:min(86%,62rem);white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext}
         .source{font-size:calc(clamp(18px,2.1vw,32px)*var(--ft-scale,1));font-weight:500;opacity:.88}
         .translation{font-size:calc(clamp(20px,2.4vw,38px)*var(--ft-scale,1));font-weight:var(--ft-weight,650)}
-        .indicator{position:absolute;inset-inline-end:22px;bottom:20px;display:grid;place-items:center;box-sizing:border-box;width:42px;height:42px;padding:0;pointer-events:auto;border:1px solid rgba(120,170,240,.34);border-radius:12px;background:rgba(4,12,28,.94);color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);opacity:1;transition:opacity .18s ease,transform .18s ease,background .16s ease,border-color .16s ease}
-        .indicator:hover,.indicator[aria-expanded="true"]{background:rgba(12,34,70,.98);border-color:rgba(12,208,252,.62);transform:scale(1.08);box-shadow:0 6px 20px rgba(12,208,252,.26)}
-        .mark{display:block;width:22px;height:22px}.panel-mark .mark{width:21px;height:21px}
-        .indicator-state{position:absolute;inset-inline-end:2px;top:2px;display:grid;place-items:center;min-width:13px;height:13px;padding:0 1px;border-radius:999px;background:#2fd6a3;color:#04231a;font:900 9px/1 Arial,sans-serif;box-shadow:0 0 0 2px rgba(4,12,28,.92)}
-        .indicator-state:empty{display:none}.indicator[data-state="failed"] .indicator-state{background:#ff6b7d;color:#2a0810}
-        .indicator.quiet:not(:hover){opacity:0;pointer-events:none;transform:translateY(4px)}
-        .indicator:focus-visible,.panel button:focus-visible{outline:2px solid #0cd0fc;outline-offset:2px;box-shadow:0 0 0 4px rgba(12,208,252,.22)}
-        .panel{position:absolute;inset-inline-end:22px;bottom:70px;width:min(300px,calc(100vw - 28px));max-height:min(74vh,570px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(120,170,240,.16);border-radius:18px;background:linear-gradient(155deg,rgba(0,28,77,.98),rgba(3,10,25,.98) 55%);backdrop-filter:blur(20px);color:#e9f1fc;padding:0;box-shadow:0 22px 58px rgba(0,4,16,.66);font:13px/1.4 Inter,Arial,sans-serif}
-        .panel::before{content:"";position:absolute;inset:0 18px auto;height:2px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,#0cd0fc,#1374f9)}
-        .panel.open{display:block}.panel-head{display:grid;grid-template-columns:36px minmax(0,1fr);gap:11px;align-items:center;padding:16px 16px 13px}.panel-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,#0cd0fc,#1374f9);box-shadow:0 7px 18px rgba(19,116,249,.36)}.title{font-weight:780;font-size:16px;letter-spacing:-.015em}.pair{color:#9fb4d4;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.panel-body{padding:0 16px 15px}.status-card{border:1px solid rgba(120,170,240,.14);border-radius:11px;background:rgba(255,255,255,.045);padding:10px 11px}.status{display:flex;align-items:center;gap:8px;font-weight:650}.status::before{content:"";width:7px;height:7px;flex:0 0 auto;border-radius:999px;background:#7d93b5}.panel[data-state="translating"] .status::before,.panel[data-state="downloading_model"] .status::before{background:#fcd808;box-shadow:0 0 0 3px rgba(252,216,8,.14)}.panel[data-state="ready"] .status::before{background:#2fd6a3;box-shadow:0 0 0 3px rgba(47,214,163,.14)}.panel[data-state="failed"] .status::before{background:#ff6b7d;box-shadow:0 0 0 3px rgba(255,107,125,.16)}.progress{width:100%;accent-color:#1374f9;height:6px;margin-top:8px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
-        .section-label{margin:14px 2px 7px;color:#8ba3c7;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.panel button{border:1px solid rgba(120,170,240,.18);border-radius:9px;background:rgba(255,255,255,.06);color:#e9f1fc;padding:8px 10px;cursor:pointer;font:inherit;font-weight:650;transition:border-color .15s ease,background .15s ease,transform .15s ease}.panel button:hover{background:rgba(255,255,255,.11);border-color:rgba(120,170,240,.36)}.panel button.primary{background:linear-gradient(135deg,#0cd0fc,#1374f9);border-color:transparent;color:#041024;font-weight:750}
-        .modes{display:grid;gap:6px}.modes button{position:relative;text-align:left;padding:10px 36px 10px 11px}.modes button[aria-pressed="true"]{border-color:rgba(12,208,252,.6);background:linear-gradient(105deg,rgba(12,208,252,.17),rgba(19,116,249,.17));box-shadow:inset 3px 0 0 #0cd0fc}.modes button[aria-pressed="true"]::after{content:"✓";position:absolute;inset-inline-end:12px;color:#2fd6a3;font-weight:900}.footer{border-top:1px solid rgba(120,170,240,.14);margin-top:13px;padding-top:11px;display:flex;justify-content:space-between;gap:8px}.footer button:last-child{margin-inline-start:auto}
-        :host([dir="rtl"]) .modes button{text-align:right;padding:10px 11px 10px 36px}:host([dir="rtl"]) .modes button[aria-pressed="true"]{box-shadow:inset -3px 0 0 #0cd0fc}
+        .indicator{position:absolute;inset-inline-end:22px;bottom:20px;display:grid;place-items:center;box-sizing:border-box;width:38px;height:38px;padding:0;pointer-events:auto;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:rgba(18,23,32,.96);color:#fff;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.42);opacity:1;transition:opacity .18s ease,background .16s ease,border-color .16s ease}
+        .indicator:hover,.indicator[aria-expanded="true"]{background:rgba(37,43,53,.98);border-color:#e50914}.mark{display:block;width:20px;height:20px}.panel-mark .mark{width:18px;height:18px}
+        .indicator-state{position:absolute;inset-inline-end:-3px;top:-3px;display:grid;place-items:center;min-width:12px;height:12px;padding:0 1px;border-radius:999px;background:#2fd6a3;color:#04231a;font:900 8px/1 Arial,sans-serif;box-shadow:0 0 0 2px #121720}.indicator-state:empty{display:none}.indicator[data-state="failed"] .indicator-state{background:#ff6b7d;color:#2a0810}
+        .indicator.quiet:not(:hover){opacity:.34;pointer-events:auto}.indicator:focus-visible,.panel button:focus-visible{outline:2px solid #ff9a9f;outline-offset:2px}
+        .panel{position:absolute;inset-inline-end:22px;bottom:68px;width:min(286px,calc(100vw - 28px));max-height:min(74vh,570px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(207,220,240,.14);border-radius:18px;background:#161b24;color:#f4f7fb;padding:0;box-shadow:0 28px 64px rgba(0,0,0,.55);font:13px/1.4 Inter,Arial,sans-serif}
+        .panel.open{display:block}.panel-head{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:center;padding:13px 14px 12px}.panel-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#e50914}.title{font-weight:780;font-size:14px;letter-spacing:-.015em}.pair{color:#a4adbc;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .status-card{padding:0 14px 13px}.status{display:flex;align-items:center;gap:8px;color:#c3cbd7;font-size:12px;font-weight:650;line-height:1.4}.status::before{content:"";width:7px;height:7px;flex:0 0 auto;border-radius:999px;background:#757e8d}.panel[data-state="translating"] .status::before,.panel[data-state="downloading_model"] .status::before{background:#f2c76e}.panel[data-state="ready"] .status::before{background:#57d9a3}.panel[data-state="failed"] .status::before{background:#ff6b7d}.progress{width:100%;height:4px;margin-top:9px;accent-color:#e50914}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.actions button{flex:1 1 auto}
+        .panel button{border:1px solid rgba(207,220,240,.12);border-radius:8px;background:#1e2530;color:#edf0f4;padding:9px;cursor:pointer;font:inherit;font-size:12px;font-weight:650;transition:border-color .15s ease,background .15s ease,color .15s ease}.panel button:hover{background:#273040;border-color:rgba(207,220,240,.28)}.panel button.primary{border-color:#e50914;background:#e50914;color:#fff;font-weight:750}.panel button.primary:hover{filter:brightness(1.08)}
+        /* Same labelled band as the popup and options page, so the three
+           surfaces read as one product rather than three control sets. */
+        .group-band{display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 14px;border-block:1px solid rgba(207,220,240,.11);background:#1a202a;color:#a4adbc;font-size:12px;font-weight:750}.band-icon{width:14px;height:14px;opacity:.8}
+        .group-body{padding:11px 14px 13px}
+        .mode-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+        .panel button.mode-tile{display:grid;gap:5px;justify-items:center;padding:0;border:0;border-radius:0;background:transparent;color:#a4adbc}
+        .mode-tile-frame{display:grid;place-items:center;width:100%;height:42px;box-sizing:border-box;border:1.5px solid rgba(207,220,240,.12);border-radius:11px;background:#12171f;transition:border-color .15s ease,background .15s ease}
+        .mode-tile-art{width:40px;height:25px}.mode-tile-label{font-size:11px;font-weight:650;line-height:1.2}
+        .panel button.mode-tile:hover{background:transparent;border-color:transparent;color:#f4f7fb}.mode-tile:hover .mode-tile-frame{border-color:rgba(207,220,240,.3);background:#12171f}
+        .panel button.mode-tile[aria-pressed="true"]{background:transparent;color:#ff5a63}.mode-tile[aria-pressed="true"] .mode-tile-frame{border-color:#e50914;background:rgba(229,9,20,.16)}
+        .mode-tile:focus-visible{outline:none}.mode-tile:focus-visible .mode-tile-frame{outline:2px solid #ff9a9f;outline-offset:2px}
+        .panel-actions{padding:12px 14px}.panel-actions button{width:100%}
+        .panel button.link-row{display:block;width:100%;padding:12px;border:0;border-top:1px solid rgba(207,220,240,.11);border-radius:0;background:transparent;color:#ff5a63;font:inherit;font-size:13px;font-weight:750;text-align:center;cursor:pointer}
+        .panel button.link-row:hover{background:rgba(229,9,20,.12);border-color:rgba(207,220,240,.11);color:#ff7a81}
         @media (max-width:700px){.indicator{inset-inline-end:12px;bottom:12px}.panel{inset-inline-end:12px;bottom:60px}.cue{max-width:94%}.translation{font-size:calc(clamp(18px,5vw,30px)*var(--ft-scale,1))}.source{font-size:calc(clamp(16px,4.3vw,25px)*var(--ft-scale,1))}}
         @media (prefers-reduced-motion:no-preference){.panel{animation:ft-in .12s ease-out}@keyframes ft-in{from{opacity:0;transform:translateY(4px)}}}
-        @media (prefers-reduced-motion:reduce){.indicator{transition:none}}
       </style>
       <div class="subtitle" aria-live="off"><div class="cue source" dir="auto"></div><div class="cue translation" dir="auto"></div></div>
       <button class="indicator" type="button" aria-label="${t('openQuickControls')}" aria-controls="submate-quick-controls" aria-expanded="false">${markSvg('submate-mark')}<span class="indicator-state" aria-hidden="true"></span></button>
       <section class="panel" id="submate-quick-controls" aria-label="${t('quickControls')}">
         <div class="panel-head"><div class="panel-mark" aria-hidden="true">${markSvg()}</div><div><div class="title">SubMate</div><div class="pair" dir="auto"></div></div></div>
-        <div class="panel-body">
-          <div class="status-card"><div class="status" role="status" aria-live="polite"></div><progress class="progress" max="1"></progress><div class="actions"></div></div>
-          <div class="section-label">${t('display')}</div>
-          <div class="modes" aria-label="${t('subtitleDisplayMode')}">
-            <button type="button" data-mode="bilingual" aria-pressed="false">${t('originalAndTranslation')}</button>
-            <button type="button" data-mode="translation-only" aria-pressed="false">${t('translationOnly')}</button>
-            <button type="button" data-mode="off" aria-pressed="false">${t('off')}</button>
-          </div>
-          <div class="footer"><button type="button" data-toggle>${t('turnOff')}</button><button type="button" data-settings>${t('openSettings')}</button></div>
-        </div>
+        <div class="status-card"><div class="status" role="status" aria-live="polite"></div><progress class="progress" max="1"></progress><div class="actions"></div></div>
+        <div class="group-band"><svg class="band-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm3 5h3m3 0h4M7 14h4m3 0h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${t('subtitleDisplay')}</span></div>
+        <div class="group-body"></div>
+        <div class="panel-actions"><button type="button" data-toggle>${t('turnOff')}</button></div>
+        <button type="button" class="link-row" data-settings>${t('openSettings')}</button>
       </section>`;
+    // The same picture tiles the popup and options page use, so the mode a
+    // viewer picks in-player looks identical to the one in the extension UI.
+    this.shadow.querySelector('.group-body')?.append(createDisplayModeTiles(settings.displayMode, (mode) => {
+      this.updateModeSelection(mode);
+      this.actions.onDisplayMode(mode);
+    }));
     this.subtitle = this.shadow.querySelector('.subtitle') as HTMLDivElement;
     this.sourceLine = this.shadow.querySelector('.source') as HTMLDivElement;
     this.translationLine = this.shadow.querySelector('.translation') as HTMLDivElement;
@@ -174,13 +184,6 @@ export class SubtitleOverlay {
     this.indicator.addEventListener('pointerenter', () => this.clearQuietTimer());
     this.indicator.addEventListener('pointerleave', () => {
       if (this.status.state === 'ready') this.scheduleQuietIndicator();
-    });
-    this.shadow.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const mode = button.dataset.mode as SubMateSettings['displayMode'];
-        this.updateModeSelection(mode);
-        this.actions.onDisplayMode(mode);
-      });
     });
     this.shadow.querySelector<HTMLButtonElement>('[data-toggle]')?.addEventListener('click', () => this.actions.onToggleEnabled());
     this.shadow.querySelector<HTMLButtonElement>('[data-settings]')?.addEventListener('click', () => this.actions.onOpenSettings());

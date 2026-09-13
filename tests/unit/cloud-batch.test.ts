@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   buildPrompt,
   contextFrom,
+  echoedIds,
   extractJsonObject,
+  languageLabel,
   reconcileBatch,
   type BatchCue,
 } from '../../src/translation/cloud/batch';
@@ -16,19 +18,41 @@ const cues: BatchCue[] = [
 
 describe('prompt construction', () => {
   it('sends cues keyed by id so ordering carries no meaning', () => {
-    const prompt = buildPrompt({ sourceLanguage: 'ja', targetLanguage: 'en', cues });
-    for (const cue of cues) expect(prompt).toContain(cue.id);
-    expect(prompt).toContain('ja');
-    expect(prompt).toContain('en');
+    const { user } = buildPrompt({ sourceLanguage: 'ja', targetLanguage: 'ar', cues });
+    for (const cue of cues) expect(user).toContain(cue.id);
+  });
+
+  it('names languages in full, since a bare code invites the input straight back', () => {
+    const { system, user } = buildPrompt({ sourceLanguage: 'ja', targetLanguage: 'ar', cues });
+    expect(system).toContain('Japanese (ja)');
+    expect(system).toContain('Arabic (ar)');
+    expect(user).toContain('Arabic (ar)');
+    expect(system).not.toMatch(/return it unchanged/i);
   });
 
   it('includes continuity context only when supplied', () => {
-    expect(buildPrompt({ sourceLanguage: 'ja', targetLanguage: 'en', cues })).not.toContain('Preceding dialogue');
+    expect(buildPrompt({ sourceLanguage: 'ja', targetLanguage: 'en', cues }).user).not.toContain('Preceding dialogue');
     const withContext = buildPrompt({
       sourceLanguage: 'ja', targetLanguage: 'en', cues, previousContext: 'あ -> Ah',
     });
-    expect(withContext).toContain('Preceding dialogue');
-    expect(withContext).toContain('あ -> Ah');
+    expect(withContext.user).toContain('Preceding dialogue');
+    expect(withContext.user).toContain('あ -> Ah');
+  });
+
+  it('falls back to the bare tag for a code it cannot name', () => {
+    expect(languageLabel('not a tag!')).toBe('not a tag!');
+  });
+});
+
+describe('untranslated output', () => {
+  it('flags lines handed back unchanged, but not symbols or numbers', () => {
+    const map = new Map([['c000001', 'どうしたの？'], ['c000002', 'Nothing.'], ['c000003', '♪～']]);
+    expect(echoedIds(cues, map, 'ja', 'ar')).toEqual(['c000001']);
+  });
+
+  it('ignores a same-language pair, where unchanged text is expected', () => {
+    const map = new Map(cues.map((cue) => [cue.id, cue.text]));
+    expect(echoedIds(cues, map, 'ja', 'ja-JP')).toEqual([]);
   });
 });
 

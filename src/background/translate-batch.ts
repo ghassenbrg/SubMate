@@ -1,18 +1,18 @@
 import { withRetry } from '../core/retry';
+import { loadSettings } from '../settings/store';
 import {
   buildPrompt,
   contextFrom,
+  echoedIds,
   reconcileBatch,
   type BatchCue,
 } from '../translation/cloud/batch';
-import { cloudVendor } from '../translation/cloud/gemini';
-import { loadCloudApiKey } from '../translation/cloud/credentials';
+import { listModels, sendChat } from '../translation/cloud/openai-compatible';
+import { cloudSetup, type CloudSetupIssue } from '../translation/cloud/readiness';
 import { CloudVendorError, redact } from '../translation/cloud/vendor';
 
 export interface TranslateBatchRequest {
   type: 'TRANSLATE_BATCH';
-  vendor: string;
-  model: string;
   sourceLanguage: string;
   targetLanguage: string;
   cues: BatchCue[];
@@ -29,19 +29,39 @@ export interface TranslateBatchResult {
 
 export interface TranslateAvailabilityResult {
   configured: boolean;
-  vendor: string;
-  model: string;
+  issue?: CloudSetupIssue;
 }
 
 const MAX_CUES_PER_BATCH = 200;
 
-export async function translateAvailability(vendor: string, model: string): Promise<TranslateAvailabilityResult> {
-  const chosen = cloudVendor(vendor);
-  return {
-    configured: (await loadCloudApiKey()).length > 0,
-    vendor: chosen.id,
-    model: model || chosen.defaultModel,
-  };
+const SETUP_ERRORS: Record<CloudSetupIssue, CloudVendorError> = {
+  endpoint: new CloudVendorError('Cloud translation is not fully configured', undefined, false, 'other'),
+  key: new CloudVendorError('No API key is configured for cloud translation', undefined, false, 'other'),
+  permission: new CloudVendorError('SubMate has no permission to reach this provider', undefined, false, 'permission'),
+};
+
+/**
+ * The provider, endpoint and key always come from storage, never from the
+ * message: a content script runs beside a streaming page, and must not be able
+ * to point a saved key at a host of its choosing.
+ */
+async function configured() {
+  const setup = await cloudSetup(await loadSettings());
+  if (setup.issue || !setup.endpoint) throw SETUP_ERRORS[setup.issue ?? 'endpoint'];
+  return { endpoint: setup.endpoint, apiKey: setup.apiKey };
+}
+
+export async function translateAvailability(): Promise<TranslateAvailabilityResult> {
+  const { issue } = await cloudSetup(await loadSettings());
+  return issue ? { configured: false, issue } : { configured: true };
+}
+
+/** Model suggestions for the options page. */
+export async function translateModels(): Promise<string[]> {
+  const { endpoint, apiKey } = await configured();
+  return listModels(endpoint, apiKey).catch((error: unknown) => {
+    throw new Error(redact(error instanceof Error ? error.message : 'Could not list models', apiKey));
+  });
 }
 
 /**
@@ -56,16 +76,13 @@ export async function translateBatch(request: TranslateBatchRequest): Promise<Tr
     return { translations: [], unresolved: [], context: '' };
   }
   const cues = request.cues.slice(0, MAX_CUES_PER_BATCH);
-  const apiKey = await loadCloudApiKey();
-  if (!apiKey) throw new Error('No API key is configured for cloud translation');
-  const vendor = cloudVendor(request.vendor);
-  const model = request.model || vendor.defaultModel;
+  const { endpoint, apiKey } = await configured();
 
   const send = async (batch: BatchCue[], context?: string): Promise<string> =>
     withRetry(
-      () => vendor.send({
+      () => sendChat({
+        endpoint,
         apiKey,
-        model,
         prompt: buildPrompt({
           sourceLanguage: request.sourceLanguage,
           targetLanguage: request.targetLanguage,
@@ -76,21 +93,29 @@ export async function translateBatch(request: TranslateBatchRequest): Promise<Tr
       {
         // Only rate limits and server faults are worth waiting out; a bad key
         // or model fails the same way however many times it is asked.
-        onRetry: () => undefined,
+        shouldRetry: (error) => !(error instanceof CloudVendorError) || error.retryable,
       },
     ).catch((error: unknown) => {
-      if (error instanceof CloudVendorError && !error.retryable) throw new Error(redact(error.message, apiKey));
-      throw new Error(redact(error instanceof Error ? error.message : 'Translation request failed', apiKey));
+      const message = redact(error instanceof Error ? error.message : 'Translation request failed', apiKey);
+      // The reason survives redaction so the UI can say what to fix.
+      if (error instanceof CloudVendorError) {
+        throw new CloudVendorError(message, error.status, error.retryable, error.reason);
+      }
+      throw new Error(message);
     });
+
+  const echoed = (map: Map<string, string>, batch: BatchCue[]) =>
+    echoedIds(batch, map, request.sourceLanguage, request.targetLanguage);
 
   const first = reconcileBatch(await send(cues, request.previousContext), cues);
   let { translations } = first;
 
-  // One targeted repair pass for whatever the model dropped or merged. Asking
-  // only for the missing lines is both cheaper and markedly more reliable than
-  // repeating the whole batch.
-  if (first.missing.length) {
-    const retryCues = cues.filter((cue) => first.missing.includes(cue.id));
+  // One targeted repair pass for whatever the model dropped, merged or handed
+  // back untranslated. Asking only for those lines is both cheaper and
+  // markedly more reliable than repeating the whole batch.
+  const retryIds = new Set([...first.missing, ...echoed(translations, cues)]);
+  if (retryIds.size) {
+    const retryCues = cues.filter((cue) => retryIds.has(cue.id));
     try {
       const repaired = reconcileBatch(await send(retryCues, request.previousContext), retryCues);
       translations = new Map([...translations, ...repaired.translations]);
@@ -99,6 +124,23 @@ export async function translateBatch(request: TranslateBatchRequest): Promise<Tr
       // their original text at render time.
     }
   }
+
+  // Still untranslated after the repair: a model that returns most of a batch
+  // unchanged is not translating, and caching its output would pin the
+  // original text on screen for this episode. Fail so the user can switch.
+  const stillEchoed = echoed(translations, cues);
+  const translatable = cues.filter((cue) => /\p{L}{2,}/u.test(cue.text)).length;
+  if (translatable && stillEchoed.length > translatable / 2) {
+    throw new CloudVendorError(
+      `The model returned ${stillEchoed.length} of ${translatable} lines untranslated`,
+      undefined,
+      false,
+      'untranslated',
+    );
+  }
+  // The odd leftover is blanked, so the renderer shows the original once
+  // rather than the same line twice.
+  for (const id of stillEchoed) translations.set(id, '');
 
   const unresolved = cues
     .filter((cue) => cue.text.trim() && !(translations.get(cue.id) ?? '').trim())

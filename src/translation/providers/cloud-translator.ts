@@ -1,7 +1,11 @@
-import { SubMateError } from '../../shared-errors';
+import { SubMateError, type SubMateErrorCode } from '../../shared-errors';
 import type { TranslationRequest, TranslationResult } from '../../subtitles/models';
 import { chunkCues } from '../chunker';
+import { CLOUD_PROMPT_REVISION } from '../cloud/batch';
+import { resolveEndpoint } from '../cloud/providers';
+import type { CloudFailureReason } from '../cloud/vendor';
 import type { TranslationProgress, TranslationProvider } from '../provider';
+import type { SubMateSettings } from '../../settings/schema';
 import type {
   TranslateAvailabilityResult,
   TranslateBatchResult,
@@ -17,31 +21,48 @@ import type {
  */
 const BATCH = { maxCues: 60, maxCharacters: 6_000 } as const;
 
+/** Failures the user can act on get their own code, and so their own message. */
+const REASON_CODES: Partial<Record<CloudFailureReason, SubMateErrorCode>> = {
+  auth: 'CLOUD_AUTH_FAILED',
+  model: 'CLOUD_MODEL_UNAVAILABLE',
+  quota: 'CLOUD_QUOTA_EXCEEDED',
+  permission: 'CLOUD_PERMISSION_MISSING',
+  network: 'CLOUD_UNREACHABLE',
+  untranslated: 'CLOUD_UNTRANSLATED',
+};
+
 async function send<T>(message: Record<string, unknown>): Promise<T> {
   const response = await chrome.runtime.sendMessage(message);
-  if (!response?.ok) throw new Error(response?.error ?? 'Cloud translation request failed');
+  if (!response?.ok) {
+    const detail = response?.error ?? 'Cloud translation request failed';
+    const code = REASON_CODES[response?.reason as CloudFailureReason];
+    throw code ? new SubMateError(code, detail) : new Error(detail);
+  }
   return response.value as T;
 }
 
 export class CloudTranslatorProvider implements TranslationProvider {
-  /** Vendor is part of the id, so switching vendors correctly misses cache. */
+  /** Provider is part of the id, so switching providers correctly misses cache. */
   readonly id: string;
   /** Model is the version, so changing model re-translates rather than
    *  serving output from a different model. */
   readonly version: string;
 
-  constructor(private readonly vendor: string, private readonly model: string) {
-    this.id = `cloud-${vendor}`;
-    this.version = model || 'default';
+  constructor(settings: Pick<SubMateSettings, 'cloudVendor' | 'cloudModel' | 'cloudBaseUrl'>) {
+    this.id = `cloud-${settings.cloudVendor}`;
+    const endpoint = resolveEndpoint(settings);
+    // Resolved rather than 'default', so a future change of default model
+    // re-translates. A custom model name only means something on its own
+    // server, so the host is part of the version too.
+    // The prompt revision is part of it too: a prompt change changes output.
+    this.version = !endpoint
+      ? 'unconfigured'
+      : `${endpoint.provider.baseUrl ? endpoint.model : `${endpoint.model}@${new URL(endpoint.baseUrl).host}`}#p${CLOUD_PROMPT_REVISION}`;
   }
 
   async availability(): Promise<'available' | 'downloadable' | 'unavailable'> {
     try {
-      const result = await send<TranslateAvailabilityResult>({
-        type: 'TRANSLATE_AVAILABILITY',
-        vendor: this.vendor,
-        model: this.model,
-      });
+      const result = await send<TranslateAvailabilityResult>({ type: 'TRANSLATE_AVAILABILITY' });
       return result.configured ? 'available' : 'unavailable';
     } catch {
       return 'unavailable';
@@ -77,8 +98,6 @@ export class CloudTranslatorProvider implements TranslationProvider {
       try {
         result = await send<TranslateBatchResult>({
           type: 'TRANSLATE_BATCH',
-          vendor: this.vendor,
-          model: this.model,
           sourceLanguage: input.sourceLanguage,
           targetLanguage: input.targetLanguage,
           cues: chunk.map((cue) => ({ id: cue.id, text: cue.text })),
@@ -86,6 +105,7 @@ export class CloudTranslatorProvider implements TranslationProvider {
         });
       } catch (error) {
         if (signal?.aborted) throw signal.reason ?? new DOMException('Aborted', 'AbortError');
+        if (error instanceof SubMateError) throw error;
         throw new SubMateError(
           'TRANSLATION_FAILED',
           error instanceof Error ? error.message : 'Cloud translation failed',

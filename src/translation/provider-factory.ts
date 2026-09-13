@@ -12,7 +12,7 @@ import { CloudTranslatorProvider } from './providers/cloud-translator';
  */
 export function createProvider(settings: SubMateSettings): TranslationProvider {
   if (settings.translationEngine === 'cloud-api') {
-    return new CloudTranslatorProvider(settings.cloudVendor, settings.cloudModel);
+    return new CloudTranslatorProvider(settings);
   }
   return new ChromeTranslatorProvider();
 }
@@ -21,4 +21,5 @@ export function createProvider(settings: SubMateSettings): TranslationProvider {
 export const providerChanged = (a: SubMateSettings, b: SubMateSettings): boolean =>
   a.translationEngine !== b.translationEngine ||
   a.cloudVendor !== b.cloudVendor ||
-  a.cloudModel !== b.cloudModel;
+  a.cloudModel !== b.cloudModel ||
+  a.cloudBaseUrl !== b.cloudBaseUrl;

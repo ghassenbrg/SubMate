@@ -19,19 +19,63 @@ carries subtitle text and language tags — nothing that identifies the title.
 There is still no SubMate backend. Your key talks to your provider
 directly; nothing is proxied through a server we operate.
 
+## Providers
+
+Every provider is reached through the OpenAI-compatible Chat Completions API,
+so one client covers all of them:
+
+| Provider | Default model | Key |
+| --- | --- | --- |
+| Google Gemini | `gemini-3.5-flash-lite` | [AI Studio](https://aistudio.google.com/apikey) |
+| OpenAI (ChatGPT) | `gpt-5.6-luna` | [OpenAI platform](https://platform.openai.com/api-keys) |
+| Anthropic (Claude) | `claude-haiku-4-5` | [Claude console](https://platform.claude.com/settings/keys) |
+| Mistral AI | `mistral-small-latest` | [Mistral console](https://console.mistral.ai/api-keys) |
+| DeepSeek | `deepseek-flash` | [DeepSeek platform](https://platform.deepseek.com/api_keys) |
+| xAI (Grok) | `grok-4.6` | [xAI console](https://console.x.ai) |
+| Groq | `openai/gpt-oss-20b` | [Groq console](https://console.groq.com/keys) |
+| OpenRouter | `openrouter/auto` | [OpenRouter](https://openrouter.ai/settings/keys) |
+| **Custom** | you name it | optional |
+
+**Custom** is for anything else that speaks the protocol: Ollama, LM Studio,
+vLLM, LiteLLM, a company gateway. Give it a base URL (for example
+`http://localhost:11434/v1`) and a model name. HTTPS is required, except for a
+server on `localhost` / `127.0.0.1`, so a key is never sent in the clear.
+
+Ollama rejects requests from browser extensions unless it is told to accept
+them: start it with `OLLAMA_ORIGINS=chrome-extension://*`.
+
+Default models go stale — `gemini-2.0-flash` was shut down in June 2026 — so the
+model field also suggests whatever the provider's `/models` endpoint currently
+lists.
+
 ## Setting it up
 
 1. Options → Translation → Engine → **Cloud API**
-2. Paste your API key and, optionally, a model name.
+2. Pick a provider, or paste a key: keys with a recognizable prefix (`AIza`,
+   `sk-ant-`, `sk-or-`, `sk-proj-`, `gsk_`, `xai-`) select their provider.
+3. Allow access when Chrome asks. SubMate requests access to that one host only.
+4. Optionally name a model; blank uses the provider's default.
 
-The key is stored with `chrome.storage.local` on this device only. It is
-deliberately **not** part of the settings object and **not** stored in
-`chrome.storage.sync`, so it is never replicated to your other devices.
+### Keys
 
-Only the background service worker ever reads it. The content script — the part
-that runs alongside Netflix, TVer and Prime Video — never receives it, and the
-options page never renders a saved key back into the DOM; it only reports
-whether one exists.
+Keys are stored with `chrome.storage.local` on this device only, one per
+provider, so switching providers never sends one provider's key to another. They
+are deliberately **not** part of the settings object and **not** stored in
+`chrome.storage.sync`, so they are never replicated to your other devices.
+
+Only the background service worker ever reads them to make requests. The content
+script — the part that runs alongside Netflix, TVer and Prime Video — never
+receives a key, and cannot choose where one is sent: the worker takes the
+provider, endpoint and model from storage, never from the content script's
+message. The options page never renders a saved key back into the DOM; it only
+reports whether one exists.
+
+### Host permissions
+
+No provider host is granted at install. The manifest declares HTTPS and
+localhost as `optional_host_permissions`, and the options page asks for the
+chosen provider's host at the moment you pick it. Without that grant the worker
+refuses to send anything and the player says so.
 
 ## How translation is batched
 
@@ -60,24 +104,46 @@ JSON in markdown fences. The pipeline assumes all of it:
 * anything still missing is returned blank, and the renderer falls back to the
   original text for blank lines, so a gap never appears on screen.
 
+A model can also return well-formed JSON that is simply the input handed back.
+Lines whose "translation" equals the source (ignoring lines with no letters, such
+as music notes) are retried with the dropped ones; if most of a batch is still
+untranslated, the batch fails with a "try a different model" message instead of
+being cached, and any leftover echo is blanked so it is not shown twice. The
+prompt names both languages in full ("Japanese (ja)" → "Arabic (ar)"), since a
+bare code is the most common reason a model hands the input back.
+
 Because every requested id is always present in the result, the existing
 validation stays exact rather than being loosened for the cloud path.
+
+## Checking a provider against the live API
+
+```bash
+SUBMATE_API_KEY=... npm run smoke:cloud -- gemini '' ja ar
+```
+
+Arguments are provider, model (blank for the default), source, target and — for
+`custom` — the base URL. It sends one small batch and prints the raw response and
+how each line was reconciled.
 
 ## Cost and caching
 
 Translations are cached per episode, keyed by
-`sourceHash | targetLanguage | engineId | engineVersion`. The vendor is part of
-the engine id and the model is the engine version, so:
+`sourceHash | targetLanguage | engineId | engineVersion`. The provider is part of
+the engine id, and the model plus the prompt revision is the engine version
+(with the host, for a custom endpoint), so:
 
 * re-watching an episode costs nothing;
-* switching vendor or model correctly re-translates instead of serving output
+* switching provider or model correctly re-translates instead of serving output
   from a different model;
 * on-device and cloud translations of the same episode coexist.
 
 ## Errors
 
-Failures surface with the provider's status code. A missing key reports a setup
-problem rather than an unsupported language pair. Rate limits (429) and server
+Incomplete setup (no key, no base URL, no host permission) reports a setup
+problem rather than an unsupported language pair. A rejected key, an unknown
+model or endpoint (404), an exhausted quota (429), a missing permission and an
+unreachable server each get their own message telling the user what to fix; the provider's status and body
+are kept, redacted, for the debug log. Rate limits (429) and server
 faults are retried with backoff; a bad key or model is not, because it will fail
 identically every time.
 
@@ -87,7 +153,7 @@ diagnostics panel or the UI.
 
 ## Adding another provider
 
-`src/translation/cloud/vendor.ts` defines the interface; `gemini.ts` implements
-it. A new provider is a new file plus a registry entry, exactly as a new
-streaming service is a new platform adapter. The batching, reconciliation,
-caching and error handling are shared.
+If it speaks the OpenAI-compatible API, a provider is one entry in
+`src/translation/cloud/providers.ts`: base URL, default model, key prefix and any
+request quirks (`jsonMode`, extra headers or body fields). The client, batching,
+reconciliation, caching and error handling are shared.

@@ -20,8 +20,12 @@
     "https://*.tver.jp/*",
     "https://*.primevideo.com/*",
     "https://www.amazon.co.jp/gp/video/*",
-    "https://www.amazon.com/gp/video/*",
-    "https://generativelanguage.googleapis.com/*"
+    "https://www.amazon.com/gp/video/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js",
