@@ -43,6 +43,14 @@ h3 { margin: 0 0 8px; font-size: 1.15rem; }
 .section { padding: 74px 0; }
 .section.alt { border-block: 1px solid var(--line); background: #0a1c2d; }
 .section-intro { max-width: 700px; color: var(--muted); margin-bottom: 30px; }
+.product-tour { overflow: hidden; }
+.product-shots { display: grid; grid-template-columns: minmax(280px, .62fr) minmax(0, 1.38fr); align-items: center; gap: 28px; }
+.product-shot { margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: 0 20px 50px rgba(0, 0, 0, .22); }
+.product-shot img { display: block; width: 100%; height: auto; }
+.popup-shot { max-width: 396px; justify-self: center; }
+.settings-shot { align-self: center; }
+.product-shot figcaption { display: grid; gap: 3px; padding: 16px 18px 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; line-height: 1.5; }
+.product-shot figcaption strong { color: var(--ink); font-size: 1rem; }
 .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .card { padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 .card p { margin: 0; color: var(--muted); }
@@ -76,7 +84,8 @@ h3 { margin: 0 0 8px; font-size: 1.15rem; }
   .nav-links { display: none; width: 100%; padding-bottom: 14px; flex-direction: column; align-items: flex-start; }
   .nav-links.is-open { display: flex; }
   .hero { padding: 70px 0 56px; }
-  .cards, .platforms { grid-template-columns: 1fr; }
+  .cards, .platforms, .product-shots { grid-template-columns: 1fr; }
+  .product-shots { gap: 20px; }
   .section { padding: 56px 0; }
   .doc-layout { display: block; padding-top: 32px; }
   .doc-nav { position: static; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--line); columns: 2; }

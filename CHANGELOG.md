@@ -4,6 +4,8 @@ All notable changes to SubMate are documented here. This project follows [Semant
 
 ## [Unreleased]
 
+## [0.2.0]
+
 ### Added
 
 - **TVer support.** Japanese captions are assembled from the segmented HLS WebVTT the authorized player already exposes, merged and de-duplicated across segments into one episode track.

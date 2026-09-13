@@ -37,7 +37,16 @@ Supported platforms are **Netflix**, **TVer** and **Amazon Prime Video**, each i
 
 For a live testing checklist and the expected state for each step, see [Manual testing](docs/MANUAL_TESTING.md).
 
-Screenshots of live playback are intentionally not committed, because they can expose account, title, and regional catalog information. Contributions may include sanitized UI screenshots that follow the [contribution guide](CONTRIBUTING.md).
+## Screenshots
+
+Sanitized UI previews from the local extension harness. They do not include streaming-account, title, or regional catalog information.
+
+<p align="center">
+  <img src="website/assets/screenshots/popup.jpg" alt="SubMate popup showing Korean to Arabic translation controls" width="300">
+  <img src="website/assets/screenshots/settings.jpg" alt="SubMate settings showing language and on-device translation preferences" width="600">
+</p>
+
+Contributions may include sanitized UI screenshots that follow the [contribution guide](CONTRIBUTING.md).
 
 ## Install
 
