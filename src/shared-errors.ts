@@ -16,6 +16,12 @@ export type SubMateErrorCode =
   | 'TRANSLATION_FAILED'
   | 'TRANSLATION_ID_MISMATCH'
   | 'TRANSLATION_INCOMPLETE'
+  | 'CLOUD_AUTH_FAILED'
+  | 'CLOUD_MODEL_UNAVAILABLE'
+  | 'CLOUD_QUOTA_EXCEEDED'
+  | 'CLOUD_PERMISSION_MISSING'
+  | 'CLOUD_UNREACHABLE'
+  | 'CLOUD_UNTRANSLATED'
   | 'IMPORT_HASH_MISMATCH'
   | 'IMPORT_INVALID_SCHEMA'
   | 'IMPORT_AMBIGUOUS_ALIGNMENT'
@@ -63,6 +69,18 @@ export const friendlyError = (code?: string): string => {
       return t('errorIncompleteTranslation');
     case 'TRANSLATION_ID_MISMATCH':
       return t('errorTranslationMismatch');
+    case 'CLOUD_AUTH_FAILED':
+      return t('errorCloudAuth');
+    case 'CLOUD_MODEL_UNAVAILABLE':
+      return t('errorCloudModel');
+    case 'CLOUD_QUOTA_EXCEEDED':
+      return t('errorCloudQuota');
+    case 'CLOUD_PERMISSION_MISSING':
+      return t('errorCloudPermission');
+    case 'CLOUD_UNREACHABLE':
+      return t('errorCloudUnreachable');
+    case 'CLOUD_UNTRANSLATED':
+      return t('errorCloudUntranslated');
     default:
       return t('statusFailed');
   }

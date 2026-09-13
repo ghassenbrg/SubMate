@@ -198,65 +198,110 @@ describe('synthetic episode translation and rendering', () => {
     video.remove();
   });
 
-  it('fades the ready indicator until player pointer activity resumes', () => {
-    vi.useFakeTimers();
-    const overlay = new SubtitleOverlay({ ...defaultSettings(), onboardingComplete: true }, { onActivate() {}, onRetry() {}, onDisplayMode() {}, onToggleEnabled() {}, onOpenSettings() {} });
+  const actions = { onActivate() {}, onRetry() {}, onDisplayMode() {}, onToggleEnabled() {}, onOpenSettings() {} };
+  const withPlayer = (settings = {}) => {
+    const overlay = new SubtitleOverlay({ ...defaultSettings(), onboardingComplete: true, ...settings }, actions);
     const video = document.createElement('video');
     Object.defineProperty(video, 'paused', { value: true });
     document.body.append(video);
     overlay.setPlayer(video);
+    const internals = overlay as unknown as { indicator: HTMLButtonElement; shadow: ShadowRoot };
+    return {
+      overlay,
+      indicator: internals.indicator,
+      shadow: internals.shadow,
+      cleanup: () => { overlay.destroy(); video.remove(); },
+    };
+  };
+
+  it('hides the indicator with the player controls and brings it back on activity', () => {
+    vi.useFakeTimers();
+    const { overlay, indicator, cleanup } = withPlayer();
     overlay.setStatus({ state: 'ready' });
-    const indicator = (overlay as unknown as { indicator: HTMLButtonElement }).indicator;
-    expect(indicator.classList.contains('quiet')).toBe(false);
-    vi.advanceTimersByTime(2_500);
-    expect(indicator.classList.contains('quiet')).toBe(true);
+    expect(indicator.classList.contains('idle')).toBe(false);
+    vi.advanceTimersByTime(3_000);
+    expect(indicator.classList.contains('idle')).toBe(true);
     document.dispatchEvent(new Event('pointermove'));
-    expect(indicator.classList.contains('quiet')).toBe(false);
-    overlay.destroy();
-    video.remove();
+    expect(indicator.classList.contains('idle')).toBe(false);
+    cleanup();
     vi.useRealTimers();
   });
 
-  it('keeps the ready indicator visible while the pointer rests on it', () => {
+  it('hides the indicator as soon as the pointer leaves the page', () => {
+    const { indicator, cleanup } = withPlayer();
+    document.documentElement.dispatchEvent(new Event('mouseleave'));
+    expect(indicator.classList.contains('idle')).toBe(true);
+    cleanup();
+  });
+
+  it('hides in every state, not only when translation is ready', () => {
     vi.useFakeTimers();
-    const overlay = new SubtitleOverlay({ ...defaultSettings(), onboardingComplete: true }, { onActivate() {}, onRetry() {}, onDisplayMode() {}, onToggleEnabled() {}, onOpenSettings() {} });
-    const video = document.createElement('video');
-    Object.defineProperty(video, 'paused', { value: true });
-    document.body.append(video);
-    overlay.setPlayer(video);
+    const { overlay, indicator, cleanup } = withPlayer();
+    overlay.setStatus({ state: 'translating', progress: .2 });
+    vi.advanceTimersByTime(3_000);
+    expect(indicator.classList.contains('idle')).toBe(true);
+    // Progress ticks are not a reason to show the control again.
+    overlay.setStatus({ state: 'translating', progress: .4 });
+    expect(indicator.classList.contains('idle')).toBe(true);
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('never hides the indicator while its panel is open', () => {
+    vi.useFakeTimers();
+    const { overlay, indicator, cleanup } = withPlayer();
+    overlay.setStatus({ state: 'failed' });
+    vi.advanceTimersByTime(10_000);
+    document.documentElement.dispatchEvent(new Event('mouseleave'));
+    expect(indicator.classList.contains('idle')).toBe(false);
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('keeps the indicator visible while the pointer rests on it', () => {
+    vi.useFakeTimers();
+    const { overlay, indicator, cleanup } = withPlayer();
     overlay.setStatus({ state: 'ready' });
-    const indicator = (overlay as unknown as { indicator: HTMLButtonElement }).indicator;
 
     // A stationary pointer emits no further pointermove events, so the control
-    // must not fade out from under the cursor the user is aiming with.
+    // must not hide from under the cursor the user is aiming with.
     indicator.dispatchEvent(new Event('pointerenter'));
     vi.advanceTimersByTime(5_000);
-    expect(indicator.classList.contains('quiet')).toBe(false);
+    expect(indicator.classList.contains('idle')).toBe(false);
 
-    // Leaving restarts the fade so the control still gets out of the way.
+    // Leaving restarts the countdown so the control still gets out of the way.
     indicator.dispatchEvent(new Event('pointerleave'));
-    vi.advanceTimersByTime(2_500);
-    expect(indicator.classList.contains('quiet')).toBe(true);
-    overlay.destroy();
-    video.remove();
+    vi.advanceTimersByTime(3_000);
+    expect(indicator.classList.contains('idle')).toBe(true);
+    cleanup();
     vi.useRealTimers();
   });
 
-  it('keeps the indicator readable against a light page background', () => {
-    const overlay = new SubtitleOverlay({ ...defaultSettings(), onboardingComplete: true }, { onActivate() {}, onRetry() {}, onDisplayMode() {}, onToggleEnabled() {}, onOpenSettings() {} });
-    const styles = (overlay as unknown as { shadow: ShadowRoot }).shadow.querySelector('style')?.textContent ?? '';
+  it('follows the theme setting, and the OS when set to system', () => {
+    const { overlay, cleanup } = withPlayer({ theme: 'light' });
+    expect(overlay.host.dataset.theme).toBe('light');
+    overlay.applySettings({ ...defaultSettings(), theme: 'dark' });
+    expect(overlay.host.dataset.theme).toBe('dark');
+    overlay.applySettings({ ...defaultSettings(), theme: 'system' });
+    expect(overlay.host.dataset.theme).toBeUndefined();
+    cleanup();
+  });
+
+  it('keeps the indicator readable against a light page background, in both themes', () => {
+    const { shadow, cleanup } = withPlayer();
+    const styles = shadow.querySelector('style')?.textContent ?? '';
     const base = /\.indicator\{[^}]*\}/.exec(styles)?.[0] ?? '';
-    const hover = /\.indicator:hover,[^{]*\{[^}]*\}/.exec(styles)?.[0] ?? '';
 
     // TVer renders a light page and our host spans the viewport, so a mostly
-    // transparent chip washed out to invisible. Both states must carry their
-    // own opaque ground plus an edge rather than borrowing the page's.
-    expect(base).toMatch(/background:rgba\(\d+,\d+,\d+,\.9\d?\)/);
+    // transparent chip washed out to invisible. Each theme must give the chip
+    // its own near-opaque ground plus an edge rather than borrowing the page's.
+    expect(base).toContain('background:var(--sm-indicator)');
     expect(base).toContain('border:1px solid');
     expect(base).not.toContain('box-shadow:none');
-    expect(hover).not.toContain('rgba(255,255,255,.16)');
-    expect(hover).toMatch(/background:rgba\(\d+,\d+,\d+,\.9\d?\)/);
-    overlay.destroy();
+    const grounds = [...styles.matchAll(/--sm-indicator:rgba\(\d+,\d+,\d+,(\.\d+)\)/g)].map((match) => Number(match[1]));
+    expect(grounds).toHaveLength(3);
+    for (const alpha of grounds) expect(alpha).toBeGreaterThanOrEqual(.9);
+    cleanup();
   });
 
   it('marks the active quick-control display mode and updates selection immediately', () => {

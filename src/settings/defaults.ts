@@ -13,6 +13,9 @@ export const defaultSettings = (): SubMateSettings => {
     autoTranslate: true,
     preferredTargetLanguage: locale,
     translationEngine: 'chrome-local',
+    cloudVendor: 'gemini',
+    cloudModel: '',
+    cloudBaseUrl: '',
     displayMode: 'bilingual',
     translatedFontScale: 1,
     verticalPosition: 0.13,
@@ -24,6 +27,7 @@ export const defaultSettings = (): SubMateSettings => {
     subtitleOpacity: 1,
     subtitleLineHeight: 1.22,
     showPlayerStatus: true,
+    theme: 'system',
     onboardingComplete: false,
     debugMode: false,
   };

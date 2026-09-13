@@ -8,6 +8,9 @@ const settings = (): SubMateSettings => ({
   autoTranslate: true,
   preferredTargetLanguage: 'fr',
   translationEngine: 'chrome-local',
+  cloudVendor: 'gemini',
+  cloudModel: '',
+  cloudBaseUrl: '',
   displayMode: 'bilingual',
   translatedFontScale: 1,
   verticalPosition: .13,
@@ -20,6 +23,7 @@ const settings = (): SubMateSettings => ({
   subtitleLineHeight: 1.22,
   showPlayerStatus: true,
   onboardingComplete: true,
+  theme: 'system',
   debugMode: false,
 });
 
@@ -87,14 +91,19 @@ afterEach(() => {
 });
 
 describe('popup acceptance states', () => {
-  it('offers a concise first-run setup with full language names', async () => {
+  it('offers a concise first-run setup with a searchable full-language picker', async () => {
     await renderPopup(undefined, { onboarding: false, netflixTab: false });
     const text = document.querySelector('#app')?.textContent ?? '';
     expect(text).toContain("Translate subtitles your streaming service doesn't provide.");
-    expect(text).toContain('Japanese (ja)');
-    expect(text).toContain('Arabic (ar)');
-    expect(text).toContain('French (fr)');
-    expect(text).toContain('Get started');
+    const picker = document.querySelector<HTMLButtonElement>('.language-trigger');
+    picker?.click();
+    await vi.waitFor(() => expect(document.querySelector('.language-options')?.textContent).toContain('Japanese (ja)'));
+    const expanded = document.querySelector('#app')?.textContent ?? '';
+    expect(expanded).toContain('Arabic (ar)');
+    expect(expanded).toContain('French (fr)');
+    expect(expanded).toContain('Next');
+    [...document.querySelectorAll('button')].find((button) => button.textContent === 'Next')?.click();
+    await vi.waitFor(() => expect(document.querySelector('#app')?.textContent).toContain('Get started'));
   });
 
   it('shows a useful non-Netflix state without a broken episode card', async () => {

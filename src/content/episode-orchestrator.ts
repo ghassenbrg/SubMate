@@ -10,7 +10,8 @@ import type { SubMateSettings } from '../settings/schema';
 import { hashSubtitle } from '../subtitles/hashing';
 import type { SubMateViewState, SubtitleTrack, TranslationStatus } from '../subtitles/models';
 import { countUntranslated, mergeTranslation, validateTranslationResult } from '../subtitles/validation';
-import { ChromeTranslatorProvider } from '../translation/providers/chrome-translator';
+import { createProvider, providerChanged } from '../translation/provider-factory';
+import type { TranslationProvider } from '../translation/provider';
 import { TranslationManager } from '../translation/translation-manager';
 
 export type EpisodeEventListener = (state: SubMateViewState) => void;
@@ -25,7 +26,7 @@ export type EpisodeEventListener = (state: SubMateViewState) => void;
 export class EpisodeOrchestrator implements AdapterHost {
   private settings!: SubMateSettings;
   private overlay!: SubtitleOverlay;
-  private readonly provider = new ChromeTranslatorProvider();
+  private provider!: TranslationProvider;
   private readonly manager = new TranslationManager();
   private readonly listeners = new Set<EpisodeEventListener>();
   private source: SubtitleTrack | undefined;
@@ -41,6 +42,7 @@ export class EpisodeOrchestrator implements AdapterHost {
 
   async initialize(): Promise<void> {
     this.settings = await loadSettings();
+    this.provider = createProvider(this.settings);
     this.overlay = new SubtitleOverlay(this.settings, {
       onActivate: () => void this.activate(),
       onRetry: () => void this.retry(),
@@ -292,6 +294,17 @@ export class EpisodeOrchestrator implements AdapterHost {
       const availability = await this.provider.availability(source.sourceLanguage, target);
       this.assertCurrent(generation);
       if (availability === 'unavailable') {
+        // An unconfigured cloud engine is a setup problem, not an unsupported
+        // language pair; saying so is the difference between a fixable message
+        // and a dead end.
+        if (this.settings.translationEngine === 'cloud-api') {
+          this.setStatus({
+            state: 'failed',
+            errorCode: 'TRANSLATOR_UNAVAILABLE',
+            message: t('statusCloudNotConfigured'),
+          });
+          return;
+        }
         throw new SubMateError('LANGUAGE_PAIR_UNSUPPORTED', 'Chrome does not support this language pair');
       }
       if (this.provider.needsActivation(source.sourceLanguage, target)) {
@@ -395,6 +408,11 @@ export class EpisodeOrchestrator implements AdapterHost {
     const old = this.settings;
     this.settings = settings;
     this.overlay.applySettings(settings);
+    if (providerChanged(old, settings)) {
+      // Swapping engines must not leave the previous one holding resources.
+      this.provider.destroy();
+      this.provider = createProvider(settings);
+    }
     if (!settings.enabled) {
       this.cancel();
       this.overlay.setTrack(undefined);
@@ -405,7 +423,7 @@ export class EpisodeOrchestrator implements AdapterHost {
       !old.enabled ||
       old.preferredTargetLanguage !== settings.preferredTargetLanguage ||
       old.preferredSourceLanguage !== settings.preferredSourceLanguage ||
-      old.translationEngine !== settings.translationEngine ||
+      providerChanged(old, settings) ||
       (!old.autoTranslate && settings.autoTranslate);
     if (!pipelineChanged) {
       this.emit();

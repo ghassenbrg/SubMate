@@ -59,11 +59,11 @@
   "getStarted": {
     "message": "البدء"
   },
+  "next": {
+    "message": "التالي"
+  },
   "translation": {
     "message": "الترجمة"
-  },
-  "onDevicePrivateFree": {
-    "message": "على الجهاز · خاص · مجاني"
   },
   "onDevice": {
     "message": "على الجهاز"
@@ -73,9 +73,6 @@
   },
   "display": {
     "message": "العرض"
-  },
-  "currentEpisode": {
-    "message": "الحلقة الحالية"
   },
   "sourceSubtitleToTarget": {
     "message": "الترجمة المصدر ← $1"
@@ -94,9 +91,6 @@
   },
   "exportFormat": {
     "message": "صيغة التصدير"
-  },
-  "subMateJson": {
-    "message": "SubMate JSON"
   },
   "exportSubtitles": {
     "message": "تصدير الترجمات"
@@ -157,6 +151,9 @@
   },
   "statusTargetAvailable": {
     "message": "توفّر هذه الخدمة بالفعل اللغة التي اخترتها."
+  },
+  "chooseAnotherLanguage": {
+    "message": "اختر لغة أخرى"
   },
   "statusNeedsActivation": {
     "message": "يحتاج Chrome إلى إجراء منك قبل بدء المترجم المحلي."
@@ -318,10 +315,10 @@
     "message": "مساحة التخزين المستخدمة: $1"
   },
   "clearCache": {
-    "message": "مسح ذاكرة الترجمة المؤقتة"
+    "message": "مسح بيانات الترجمات التي تم تنزيلها"
   },
   "clearCacheConfirm": {
-    "message": "هل تريد مسح $1 ترجمة مخزنة؟ لن تتغير إعداداتك."
+    "message": "هل تريد مسح $1 ترجمة مخزنة ومسارات الترجمات التي تم تنزيلها؟ لن تتغير إعداداتك."
   },
   "about": {
     "message": "حول"
@@ -381,10 +378,10 @@
     "message": "وضع عرض الترجمات"
   },
   "turnOff": {
-    "message": "إيقاف"
+    "message": "إيقاف SubMate مؤقتًا"
   },
   "turnOn": {
-    "message": "تشغيل"
+    "message": "استئناف SubMate"
   },
   "openSettings": {
     "message": "فتح الإعدادات"
@@ -442,5 +439,125 @@
   },
   "importUntranslated": {
     "message": "$1 سطرًا بدون ترجمة وستبقى فارغة."
+  },
+  "cloudTranslation": {
+    "message": "واجهة سحابية"
+  },
+  "cloudSection": {
+    "message": "الترجمة السحابية"
+  },
+  "cloudVendorLabel": {
+    "message": "المزوّد"
+  },
+  "cloudApiKey": {
+    "message": "مفتاح API"
+  },
+  "cloudApiKeyHelp": {
+    "message": "يُحفظ على هذا الجهاز فقط ولا تتم مزامنته. اتركه فارغًا واحفظ لإزالته."
+  },
+  "cloudApiKeyPlaceholder": {
+    "message": "الصق مفتاح API"
+  },
+  "cloudApiKeySaved": {
+    "message": "تم حفظ مفتاح على هذا الجهاز."
+  },
+  "cloudApiKeyMissing": {
+    "message": "لم يتم حفظ أي مفتاح بعد."
+  },
+  "cloudApiKeyClear": {
+    "message": "إزالة المفتاح"
+  },
+  "cloudModel": {
+    "message": "النموذج"
+  },
+  "cloudModelHelp": {
+    "message": "اتركه فارغًا لاستخدام النموذج الافتراضي للمزوّد."
+  },
+  "cloudPrivacyWarning": {
+    "message": "ترسل الترجمة السحابية نص الترجمة إلى المزوّد الذي تختاره. تغادر البيانات هذا الجهاز وتخضع لشروط المزوّد وأسعاره. أما الترجمة على الجهاز فتبقى محلية."
+  },
+  "errorCloudAuth": {
+    "message": "تم رفض مفتاح API. تحقق منه في الإعدادات."
+  },
+  "errorCloudModel": {
+    "message": "لم يتم العثور على النموذج أو نقطة النهاية. تحقق منهما في الإعدادات."
+  },
+  "errorCloudQuota": {
+    "message": "تم بلوغ حد الطلبات أو الحصة لدى مزود الخدمة السحابية. حاول مرة أخرى لاحقًا."
+  },
+  "cloudProviderCustom": {
+    "message": "مخصص (متوافق مع OpenAI)"
+  },
+  "cloudBaseUrl": {
+    "message": "عنوان URL الأساسي"
+  },
+  "cloudBaseUrlHelp": {
+    "message": "أي نقطة نهاية متوافقة مع OpenAI، مثل Ollama أو LM Studio أو vLLM أو LiteLLM. ‏HTTPS، أو HTTP على هذا الكمبيوتر."
+  },
+  "cloudBaseUrlInvalid": {
+    "message": "أدخل عنوان URL يبدأ بـ HTTPS، أو عنوان HTTP على localhost."
+  },
+  "cloudApiKeyOptional": {
+    "message": "اختياري للخوادم المحلية. يُخزَّن على هذا الجهاز فقط ولا تتم مزامنته أبدًا."
+  },
+  "cloudGetKey": {
+    "message": "احصل على مفتاح API من $1"
+  },
+  "cloudKeyDetected": {
+    "message": "تم التعرّف على مفتاح $1 وتبديل المزوّد."
+  },
+  "cloudModelRequired": {
+    "message": "أدخل اسم النموذج الذي يستخدمه الخادم."
+  },
+  "cloudPermissionNeeded": {
+    "message": "يحتاج SubMate إلى إذن للوصول إلى $1."
+  },
+  "cloudPermissionGrant": {
+    "message": "السماح بالوصول"
+  },
+  "errorCloudPermission": {
+    "message": "يحتاج SubMate إلى إذن للوصول إلى مزود الخدمة السحابية. اسمح بذلك في الإعدادات."
+  },
+  "errorCloudUnreachable": {
+    "message": "تعذّر الوصول إلى مزود الخدمة السحابية. تحقق من اتصالك أو من عنوان URL الأساسي."
+  },
+  "errorCloudUntranslated": {
+    "message": "أعاد النموذج الترجمات دون ترجمتها. جرّب نموذجًا آخر في الإعدادات."
+  },
+  "statusCloudNotConfigured": {
+    "message": "أكمل إعداد الترجمة السحابية في الإعدادات."
+  },
+  "themeToggleAria": {
+    "message": "المظهر: $1. انقر للتغيير."
+  },
+  "themeSystem": {
+    "message": "حسب النظام"
+  },
+  "themeLight": {
+    "message": "فاتح"
+  },
+  "themeDark": {
+    "message": "داكن"
+  },
+  "displayModeBoth": {
+    "message": "كلاهما"
+  },
+  "displayModeTranslation": {
+    "message": "الترجمة"
+  },
+  "subtitleFiles": {
+    "message": "ملفات الترجمة"
+  },
+  "decreaseSetting": {
+    "message": "تقليل: $1"
+  },
+  "increaseSetting": {
+    "message": "زيادة: $1"
+  },
+  "exportAction": {
+    "message": "تصدير"
+  },
+  "importAction": {
+    "message": "استيراد"
   }
 }

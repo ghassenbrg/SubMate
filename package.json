@@ -12,7 +12,7 @@
   "bugs": {
     "url": "https://github.com/ghassenbrg/SubMate/issues"
   },
-  "homepage": "https://github.com/ghassenbrg/SubMate#readme",
+  "homepage": "https://ghassenbrg.github.io/SubMate/",
   "engines": {
     "node": ">=20"
   },
@@ -33,8 +33,10 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "smoke:cloud": "node scripts/cloud-smoke.mjs",
     "coverage": "vitest run --coverage",
     "validate:chrome": "node scripts/validate-chrome-build.mjs",
+    "validate:website": "node scripts/validate-website.mjs",
     "validate": "npm run check && npm run test && npm run build:chrome && npm run validate:chrome",
     "pack:chrome": "npm run build:chrome && npm run validate:chrome && node scripts/package-chrome.mjs",
     "release:verify": "node scripts/verify-release-tag.mjs"

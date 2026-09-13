@@ -3,6 +3,7 @@ import { subtitleAppearanceVariables } from '../settings/appearance';
 import { isRtlLocale, t, uiLocale } from '../i18n';
 import type { SubtitleTrack, TranslationStatus } from '../subtitles/models';
 import { CueIndex } from './cue-index';
+import { createDisplayModeTiles } from '../ui/shared/display-mode';
 
 /**
  * Platform-supplied playback facts the renderer needs but must not discover
@@ -43,22 +44,47 @@ const STATUS_LABELS: Record<TranslationStatus['state'], string> = {
 };
 
 /**
- * Simplified SubMate mark: the play triangle over two subtitle bars.
+ * The SubMate glyph: the gradient play triangle over two subtitle bars, the
+ * same geometry as public/icons/icon.svg without its tile.
  *
  * Drawn inline rather than loaded from icons/. Referencing a packaged image
  * from a page would require a web_accessible_resources entry, which makes the
  * extension trivially detectable by any site the user visits.
+ *
+ * Bar colours come from CSS so the mark stays legible on a light or dark
+ * button; the gradient id must be unique within the shadow root.
  */
-const markSvg = (gradientId?: string): string => {
-  const fill = gradientId ? `url(#${gradientId})` : '#fff';
-  const defs = gradientId
-    ? `<defs><linearGradient id="${gradientId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0cd0fc"/><stop offset="1" stop-color="#1374f9"/></linearGradient></defs>`
-    : '';
-  return `<svg class="mark" viewBox="0 0 24 24" aria-hidden="true">${defs}`
-    + `<path d="M9.1 3.3 18.3 8a1.05 1.05 0 0 1 0 1.86l-9.2 4.72A1.05 1.05 0 0 1 7.6 13.64V4.24a1.05 1.05 0 0 1 1.5-.94z" fill="${fill}"/>`
-    + '<rect x="3.4" y="17.1" width="17.2" height="2.5" rx="1.25" fill="#fff" opacity=".92"/>'
-    + '<rect x="6.6" y="20.9" width="10.8" height="2.5" rx="1.25" fill="#fff" opacity=".55"/></svg>';
-};
+const markSvg = (gradientId: string): string =>
+  `<svg class="mark" viewBox="14 13 72 74" aria-hidden="true"><defs><linearGradient id="${gradientId}" x1="33" y1="16" x2="70" y2="58" gradientUnits="userSpaceOnUse">`
+  + '<stop offset="0" stop-color="#38f7ee"/><stop offset=".5" stop-color="#19b9fb"/><stop offset="1" stop-color="#1f66f5"/></linearGradient></defs>'
+  + `<path d="M37.5 21.5v31.8l29-15.9z" fill="url(#${gradientId})" stroke="url(#${gradientId})" stroke-width="10" stroke-linejoin="round"/>`
+  + '<rect class="mark-bar" x="19" y="63.8" width="62.6" height="8.4" rx="4.2"/>'
+  + '<rect class="mark-bar-soft" x="30.1" y="77.5" width="40.4" height="6.7" rx="3.35"/></svg>';
+
+/**
+ * Colours for the in-player controls. The shadow root cannot inherit the
+ * extension pages' theme tokens, so the values that matter here are repeated,
+ * in the same palette, for light and dark. `data-theme` on the host carries
+ * the user's choice; without it the controls follow the OS.
+ */
+const DARK_TOKENS = '--sm-surface:#111826;--sm-raised:#18212f;--sm-raised-hover:#212c3d;--sm-band:#121a27;--sm-sunken:#0c121d;'
+  + '--sm-text:#f2f6fb;--sm-muted:#9aa8bf;--sm-status:#c6d0df;--sm-border:rgba(170,195,235,.12);--sm-border-hover:rgba(170,195,235,.3);'
+  + '--sm-accent:#2a6ff2;--sm-accent-text:#6aaeff;--sm-accent-soft:rgba(42,111,242,.2);--sm-focus:#6aaeff;'
+  + '--sm-indicator:rgba(13,19,31,.94);--sm-indicator-hover:rgba(24,33,47,.98);--sm-indicator-border:rgba(242,246,251,.18);'
+  + '--sm-bar:#f2f6fb;--sm-bar-soft:#6f83a4;--sm-shadow:0 28px 64px rgba(0,0,0,.58);--sm-dot:#6f83a4;--sm-ok:#4fd8a4;--sm-warn:#f2c76e;--sm-danger:#ff6b7d';
+const LIGHT_TOKENS = '--sm-surface:#ffffff;--sm-raised:#eef2f8;--sm-raised-hover:#e3e9f2;--sm-band:#f2f5fa;--sm-sunken:#f5f7fb;'
+  + '--sm-text:#0d131f;--sm-muted:#56657d;--sm-status:#2b3548;--sm-border:rgba(13,19,31,.1);--sm-border-hover:rgba(13,19,31,.24);'
+  + '--sm-accent:#1a62e8;--sm-accent-text:#1a62e8;--sm-accent-soft:rgba(31,108,251,.12);--sm-focus:#1a62e8;'
+  + '--sm-indicator:rgba(255,255,255,.95);--sm-indicator-hover:#ffffff;--sm-indicator-border:rgba(13,19,31,.12);'
+  + '--sm-bar:#0d131f;--sm-bar-soft:#6f83a4;--sm-shadow:0 24px 56px rgba(0,0,0,.35);--sm-dot:#8391a8;--sm-ok:#0f7f57;--sm-warn:#8a5b06;--sm-danger:#c3202f';
+
+/**
+ * How long the pointer may rest before the control hides, in step with the
+ * streaming players' own controls (Netflix, Prime Video and TVer all hide
+ * theirs after roughly three seconds).
+ */
+const INDICATOR_IDLE_MS = 3_000;
+const IDLE_WAKE_EVENTS = ['pointermove', 'pointerdown', 'touchstart', 'wheel'] as const;
 
 export class SubtitleOverlay {
   readonly host: HTMLDivElement;
@@ -84,7 +110,8 @@ export class SubtitleOverlay {
   private lastNativeText = '';
   private lastNativeSampleAt = Number.NEGATIVE_INFINITY;
   private lastRenderSignature = '';
-  private quietTimer: number | undefined;
+  private idleTimer: number | undefined;
+  private pointerOnIndicator = false;
   private videoResize: ResizeObserver | undefined;
   private lastRectSyncAt = Number.NEGATIVE_INFINITY;
   private lastRectSignature = '';
@@ -94,17 +121,21 @@ export class SubtitleOverlay {
     if (this.video && !this.video.paused && !this.frame) this.startLoop();
   };
   private readonly onFullscreen = () => this.mount();
+  /** Any sign of a viewer brings the control back, as it does the player's. */
   private readonly onPointerActivity = () => {
-    if (!this.video || !this.settings.showPlayerStatus) return;
-    this.indicator.classList.remove('quiet');
-    if (this.status.state === 'ready') this.scheduleQuietIndicator();
+    if (this.video) this.wakeIndicator();
+  };
+  /** Players hide their controls as soon as the pointer leaves the window. */
+  private readonly onPointerLeavePage = () => {
+    this.pointerOnIndicator = false;
+    this.idleIndicator();
   };
   private readonly onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && this.panel.classList.contains('open')) {
       this.setPanelOpen(false);
       this.indicator.focus();
-      if (this.status.state === 'ready') this.scheduleQuietIndicator();
     }
+    if (this.video) this.wakeIndicator();
   };
 
   constructor(settings: SubMateSettings, private readonly actions: OverlayActions) {
@@ -122,38 +153,53 @@ export class SubtitleOverlay {
         .cue{display:table;margin:.12em auto;padding:var(--ft-cue-padding,.1em .36em);border-radius:var(--ft-radius,.18em);background:var(--ft-background,rgba(0,0,0,.68));color:var(--ft-color,#fff);text-shadow:var(--ft-text-shadow,0 2px 3px #000);max-width:min(86%,62rem);white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext}
         .source{font-size:calc(clamp(18px,2.1vw,32px)*var(--ft-scale,1));font-weight:500;opacity:.88}
         .translation{font-size:calc(clamp(20px,2.4vw,38px)*var(--ft-scale,1));font-weight:var(--ft-weight,650)}
-        .indicator{position:absolute;inset-inline-end:22px;bottom:20px;display:grid;place-items:center;box-sizing:border-box;width:42px;height:42px;padding:0;pointer-events:auto;border:1px solid rgba(120,170,240,.34);border-radius:12px;background:rgba(4,12,28,.94);color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);opacity:1;transition:opacity .18s ease,transform .18s ease,background .16s ease,border-color .16s ease}
-        .indicator:hover,.indicator[aria-expanded="true"]{background:rgba(12,34,70,.98);border-color:rgba(12,208,252,.62);transform:scale(1.08);box-shadow:0 6px 20px rgba(12,208,252,.26)}
-        .mark{display:block;width:22px;height:22px}.panel-mark .mark{width:21px;height:21px}
-        .indicator-state{position:absolute;inset-inline-end:2px;top:2px;display:grid;place-items:center;min-width:13px;height:13px;padding:0 1px;border-radius:999px;background:#2fd6a3;color:#04231a;font:900 9px/1 Arial,sans-serif;box-shadow:0 0 0 2px rgba(4,12,28,.92)}
-        .indicator-state:empty{display:none}.indicator[data-state="failed"] .indicator-state{background:#ff6b7d;color:#2a0810}
-        .indicator.quiet:not(:hover){opacity:0;pointer-events:none;transform:translateY(4px)}
-        .indicator:focus-visible,.panel button:focus-visible{outline:2px solid #0cd0fc;outline-offset:2px;box-shadow:0 0 0 4px rgba(12,208,252,.22)}
-        .panel{position:absolute;inset-inline-end:22px;bottom:70px;width:min(300px,calc(100vw - 28px));max-height:min(74vh,570px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid rgba(120,170,240,.16);border-radius:18px;background:linear-gradient(155deg,rgba(0,28,77,.98),rgba(3,10,25,.98) 55%);backdrop-filter:blur(20px);color:#e9f1fc;padding:0;box-shadow:0 22px 58px rgba(0,4,16,.66);font:13px/1.4 Inter,Arial,sans-serif}
-        .panel::before{content:"";position:absolute;inset:0 18px auto;height:2px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,#0cd0fc,#1374f9)}
-        .panel.open{display:block}.panel-head{display:grid;grid-template-columns:36px minmax(0,1fr);gap:11px;align-items:center;padding:16px 16px 13px}.panel-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,#0cd0fc,#1374f9);box-shadow:0 7px 18px rgba(19,116,249,.36)}.title{font-weight:780;font-size:16px;letter-spacing:-.015em}.pair{color:#9fb4d4;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.panel-body{padding:0 16px 15px}.status-card{border:1px solid rgba(120,170,240,.14);border-radius:11px;background:rgba(255,255,255,.045);padding:10px 11px}.status{display:flex;align-items:center;gap:8px;font-weight:650}.status::before{content:"";width:7px;height:7px;flex:0 0 auto;border-radius:999px;background:#7d93b5}.panel[data-state="translating"] .status::before,.panel[data-state="downloading_model"] .status::before{background:#fcd808;box-shadow:0 0 0 3px rgba(252,216,8,.14)}.panel[data-state="ready"] .status::before{background:#2fd6a3;box-shadow:0 0 0 3px rgba(47,214,163,.14)}.panel[data-state="failed"] .status::before{background:#ff6b7d;box-shadow:0 0 0 3px rgba(255,107,125,.16)}.progress{width:100%;accent-color:#1374f9;height:6px;margin-top:8px}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
-        .section-label{margin:14px 2px 7px;color:#8ba3c7;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.panel button{border:1px solid rgba(120,170,240,.18);border-radius:9px;background:rgba(255,255,255,.06);color:#e9f1fc;padding:8px 10px;cursor:pointer;font:inherit;font-weight:650;transition:border-color .15s ease,background .15s ease,transform .15s ease}.panel button:hover{background:rgba(255,255,255,.11);border-color:rgba(120,170,240,.36)}.panel button.primary{background:linear-gradient(135deg,#0cd0fc,#1374f9);border-color:transparent;color:#041024;font-weight:750}
-        .modes{display:grid;gap:6px}.modes button{position:relative;text-align:left;padding:10px 36px 10px 11px}.modes button[aria-pressed="true"]{border-color:rgba(12,208,252,.6);background:linear-gradient(105deg,rgba(12,208,252,.17),rgba(19,116,249,.17));box-shadow:inset 3px 0 0 #0cd0fc}.modes button[aria-pressed="true"]::after{content:"✓";position:absolute;inset-inline-end:12px;color:#2fd6a3;font-weight:900}.footer{border-top:1px solid rgba(120,170,240,.14);margin-top:13px;padding-top:11px;display:flex;justify-content:space-between;gap:8px}.footer button:last-child{margin-inline-start:auto}
-        :host([dir="rtl"]) .modes button{text-align:right;padding:10px 11px 10px 36px}:host([dir="rtl"]) .modes button[aria-pressed="true"]{box-shadow:inset -3px 0 0 #0cd0fc}
+        :host{${DARK_TOKENS}}
+        @media (prefers-color-scheme:light){:host(:not([data-theme="dark"])){${LIGHT_TOKENS}}}
+        :host([data-theme="light"]){${LIGHT_TOKENS}}
+        .indicator{position:absolute;inset-inline-end:22px;bottom:20px;display:grid;place-items:center;box-sizing:border-box;width:38px;height:38px;padding:0;pointer-events:auto;border:1px solid var(--sm-indicator-border);border-radius:10px;background:var(--sm-indicator);color:var(--sm-text);cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.38);opacity:1;transition:opacity .25s ease,background .16s ease,border-color .16s ease}
+        .indicator:hover,.indicator[aria-expanded="true"]{background:var(--sm-indicator-hover);border-color:var(--sm-accent)}.mark{display:block;width:22px;height:22px}.mark-bar{fill:var(--sm-bar)}.mark-bar-soft{fill:var(--sm-bar-soft)}
+        .panel-mark .mark{width:20px;height:20px}.panel-mark .mark-bar{fill:#f2f6fb}.panel-mark .mark-bar-soft{fill:#6f83a4}
+        .indicator-state{position:absolute;inset-inline-end:-3px;top:-3px;display:grid;place-items:center;min-width:12px;height:12px;padding:0 1px;border-radius:999px;background:var(--sm-ok);color:#fff;font:900 8px/1 Arial,sans-serif;box-shadow:0 0 0 2px var(--sm-surface)}.indicator-state:empty{display:none}.indicator[data-state="failed"] .indicator-state{background:var(--sm-danger)}
+        /* Hidden along with the player's own controls once the viewer stops
+           moving the pointer, and back the moment they do. */
+        .indicator.idle:not(:focus-visible){opacity:0;pointer-events:none}.indicator:focus-visible,.panel button:focus-visible{outline:2px solid var(--sm-focus);outline-offset:2px}
+        .panel{position:absolute;inset-inline-end:22px;bottom:68px;width:min(286px,calc(100vw - 28px));max-height:min(74vh,570px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;display:none;pointer-events:auto;border:1px solid var(--sm-border);border-radius:18px;background:var(--sm-surface);color:var(--sm-text);padding:0;box-shadow:var(--sm-shadow);font:13px/1.4 Inter,Arial,sans-serif}
+        .panel.open{display:block}.panel-head{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:center;padding:13px 14px 12px}.panel-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:radial-gradient(circle at 96% 4%,rgba(29,59,130,.75),transparent 78%),linear-gradient(160deg,#16202f,#0a0d15)}.title{font-weight:780;font-size:14px;letter-spacing:-.015em}.pair{color:var(--sm-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .status-card{padding:0 14px 13px}.status{display:flex;align-items:center;gap:8px;color:var(--sm-status);font-size:12px;font-weight:650;line-height:1.4}.status::before{content:"";width:7px;height:7px;flex:0 0 auto;border-radius:999px;background:var(--sm-dot)}.panel[data-state="translating"] .status::before,.panel[data-state="downloading_model"] .status::before{background:var(--sm-warn)}.panel[data-state="ready"] .status::before{background:var(--sm-ok)}.panel[data-state="failed"] .status::before{background:var(--sm-danger)}.progress{width:100%;height:4px;margin-top:9px;accent-color:var(--sm-accent)}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.actions button{flex:1 1 auto}
+        .panel button{border:1px solid var(--sm-border);border-radius:8px;background:var(--sm-raised);color:var(--sm-text);padding:9px;cursor:pointer;font:inherit;font-size:12px;font-weight:650;transition:border-color .15s ease,background .15s ease,color .15s ease}.panel button:hover{background:var(--sm-raised-hover);border-color:var(--sm-border-hover)}.panel button.primary{border-color:var(--sm-accent);background:var(--sm-accent);color:#fff;font-weight:750}.panel button.primary:hover{filter:brightness(1.08)}
+        /* Same labelled band as the popup and options page, so the three
+           surfaces read as one product rather than three control sets. */
+        .group-band{display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 14px;border-block:1px solid var(--sm-border);background:var(--sm-band);color:var(--sm-muted);font-size:12px;font-weight:750}.band-icon{width:14px;height:14px;opacity:.8}
+        .group-body{padding:11px 14px 13px}
+        .mode-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+        .panel button.mode-tile{display:grid;gap:5px;justify-items:center;padding:0;border:0;border-radius:0;background:transparent;color:var(--sm-muted)}
+        .mode-tile-frame{display:grid;place-items:center;width:100%;height:42px;box-sizing:border-box;border:1.5px solid var(--sm-border);border-radius:11px;background:var(--sm-sunken);transition:border-color .15s ease,background .15s ease}
+        .mode-tile-art{width:40px;height:25px}.mode-tile-label{font-size:11px;font-weight:650;line-height:1.2}
+        .panel button.mode-tile:hover{background:transparent;border-color:transparent;color:var(--sm-text)}.mode-tile:hover .mode-tile-frame{border-color:var(--sm-border-hover);background:var(--sm-sunken)}
+        .panel button.mode-tile[aria-pressed="true"]{background:transparent;color:var(--sm-accent-text)}.mode-tile[aria-pressed="true"] .mode-tile-frame{border-color:var(--sm-accent);background:var(--sm-accent-soft)}
+        .mode-tile:focus-visible{outline:none}.mode-tile:focus-visible .mode-tile-frame{outline:2px solid var(--sm-focus);outline-offset:2px}
+        .panel-actions{padding:12px 14px}.panel-actions button{width:100%}
+        .panel button.link-row{display:block;width:100%;padding:12px;border:0;border-top:1px solid var(--sm-border);border-radius:0;background:transparent;color:var(--sm-accent-text);font:inherit;font-size:13px;font-weight:750;text-align:center;cursor:pointer}
+        .panel button.link-row:hover{background:var(--sm-accent-soft);border-color:var(--sm-border);color:var(--sm-accent-text)}
         @media (max-width:700px){.indicator{inset-inline-end:12px;bottom:12px}.panel{inset-inline-end:12px;bottom:60px}.cue{max-width:94%}.translation{font-size:calc(clamp(18px,5vw,30px)*var(--ft-scale,1))}.source{font-size:calc(clamp(16px,4.3vw,25px)*var(--ft-scale,1))}}
         @media (prefers-reduced-motion:no-preference){.panel{animation:ft-in .12s ease-out}@keyframes ft-in{from{opacity:0;transform:translateY(4px)}}}
-        @media (prefers-reduced-motion:reduce){.indicator{transition:none}}
       </style>
       <div class="subtitle" aria-live="off"><div class="cue source" dir="auto"></div><div class="cue translation" dir="auto"></div></div>
-      <button class="indicator" type="button" aria-label="${t('openQuickControls')}" aria-controls="submate-quick-controls" aria-expanded="false">${markSvg('submate-mark')}<span class="indicator-state" aria-hidden="true"></span></button>
+      <button class="indicator" type="button" aria-label="${t('openQuickControls')}" aria-controls="submate-quick-controls" aria-expanded="false">${markSvg('submate-mark-indicator')}<span class="indicator-state" aria-hidden="true"></span></button>
       <section class="panel" id="submate-quick-controls" aria-label="${t('quickControls')}">
-        <div class="panel-head"><div class="panel-mark" aria-hidden="true">${markSvg()}</div><div><div class="title">SubMate</div><div class="pair" dir="auto"></div></div></div>
-        <div class="panel-body">
-          <div class="status-card"><div class="status" role="status" aria-live="polite"></div><progress class="progress" max="1"></progress><div class="actions"></div></div>
-          <div class="section-label">${t('display')}</div>
-          <div class="modes" aria-label="${t('subtitleDisplayMode')}">
-            <button type="button" data-mode="bilingual" aria-pressed="false">${t('originalAndTranslation')}</button>
-            <button type="button" data-mode="translation-only" aria-pressed="false">${t('translationOnly')}</button>
-            <button type="button" data-mode="off" aria-pressed="false">${t('off')}</button>
-          </div>
-          <div class="footer"><button type="button" data-toggle>${t('turnOff')}</button><button type="button" data-settings>${t('openSettings')}</button></div>
-        </div>
+        <div class="panel-head"><div class="panel-mark" aria-hidden="true">${markSvg('submate-mark-panel')}</div><div><div class="title">SubMate</div><div class="pair" dir="auto"></div></div></div>
+        <div class="status-card"><div class="status" role="status" aria-live="polite"></div><progress class="progress" max="1"></progress><div class="actions"></div></div>
+        <div class="group-band"><svg class="band-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm3 5h3m3 0h4M7 14h4m3 0h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${t('subtitleDisplay')}</span></div>
+        <div class="group-body"></div>
+        <div class="panel-actions"><button type="button" data-toggle>${t('turnOff')}</button></div>
+        <button type="button" class="link-row" data-settings>${t('openSettings')}</button>
       </section>`;
+    // The same picture tiles the popup and options page use, so the mode a
+    // viewer picks in-player looks identical to the one in the extension UI.
+    this.shadow.querySelector('.group-body')?.append(createDisplayModeTiles(settings.displayMode, (mode) => {
+      this.updateModeSelection(mode);
+      this.actions.onDisplayMode(mode);
+    }));
     this.subtitle = this.shadow.querySelector('.subtitle') as HTMLDivElement;
     this.sourceLine = this.shadow.querySelector('.source') as HTMLDivElement;
     this.translationLine = this.shadow.querySelector('.translation') as HTMLDivElement;
@@ -163,24 +209,17 @@ export class SubtitleOverlay {
     this.statusText = this.shadow.querySelector('.status') as HTMLDivElement;
     this.progress = this.shadow.querySelector('.progress') as HTMLProgressElement;
     this.actionRow = this.shadow.querySelector('.actions') as HTMLDivElement;
-    this.indicator.addEventListener('click', () => {
-      this.setPanelOpen(!this.panel.classList.contains('open'));
-      if (this.panel.classList.contains('open')) this.clearQuietTimer();
-      else if (this.status.state === 'ready') this.scheduleQuietIndicator();
-    });
+    this.indicator.addEventListener('click', () => this.setPanelOpen(!this.panel.classList.contains('open')));
     // Holding the pointer still over the control produces no further pointermove
-    // events, so without these the quiet timer would fade it out from under the
+    // events, so without these the idle timer would hide it from under the
     // cursor the user is aiming with.
-    this.indicator.addEventListener('pointerenter', () => this.clearQuietTimer());
-    this.indicator.addEventListener('pointerleave', () => {
-      if (this.status.state === 'ready') this.scheduleQuietIndicator();
+    this.indicator.addEventListener('pointerenter', () => {
+      this.pointerOnIndicator = true;
+      this.wakeIndicator();
     });
-    this.shadow.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const mode = button.dataset.mode as SubMateSettings['displayMode'];
-        this.updateModeSelection(mode);
-        this.actions.onDisplayMode(mode);
-      });
+    this.indicator.addEventListener('pointerleave', () => {
+      this.pointerOnIndicator = false;
+      this.scheduleIdleIndicator();
     });
     this.shadow.querySelector<HTMLButtonElement>('[data-toggle]')?.addEventListener('click', () => this.actions.onToggleEnabled());
     this.shadow.querySelector<HTMLButtonElement>('[data-settings]')?.addEventListener('click', () => this.actions.onOpenSettings());
@@ -190,7 +229,8 @@ export class SubtitleOverlay {
     // player often lives inside its own scrolling container.
     addEventListener('resize', this.onViewportChange, { passive: true });
     addEventListener('scroll', this.onViewportChange, { capture: true, passive: true });
-    document.addEventListener('pointermove', this.onPointerActivity, { passive: true });
+    for (const event of IDLE_WAKE_EVENTS) document.addEventListener(event, this.onPointerActivity, { passive: true });
+    document.documentElement.addEventListener('mouseleave', this.onPointerLeavePage);
     document.addEventListener('keydown', this.onKeyDown);
     this.mount();
     this.applySettings(settings);
@@ -247,6 +287,8 @@ export class SubtitleOverlay {
       this.host.style.setProperty(property, value);
     }
     this.updateModeSelection(settings.displayMode);
+    if (settings.theme === 'system') delete this.host.dataset.theme;
+    else this.host.dataset.theme = settings.theme;
     this.host.style.display = settings.enabled ? '' : 'none';
     const toggle = this.shadow.querySelector<HTMLButtonElement>('[data-toggle]');
     if (toggle) toggle.textContent = settings.enabled ? t('turnOff') : t('turnOn');
@@ -255,6 +297,7 @@ export class SubtitleOverlay {
   }
 
   setStatus(status: TranslationStatus): void {
+    const stateChanged = status.state !== this.status.state;
     this.status = status;
     this.host.dataset.status = status.state;
     this.statusText.textContent = status.message ?? STATUS_LABELS[status.state];
@@ -269,24 +312,22 @@ export class SubtitleOverlay {
     if (status.state === 'needs_user_activation') this.addAction(t('startTranslation'), 'primary', this.actions.onActivate);
     if (status.state === 'failed') this.addAction(t('retry'), 'primary', this.actions.onRetry);
     if (['needs_user_activation', 'failed', 'unsupported_image_track', 'no_text_track'].includes(status.state)) this.setPanelOpen(true);
-    if (status.state === 'ready') {
-      this.setPanelOpen(false);
-      this.scheduleQuietIndicator();
-    } else {
-      this.clearQuietTimer();
-      this.indicator.classList.remove('quiet');
-    }
+    if (status.state === 'ready') this.setPanelOpen(false);
+    // Surface a change of state briefly, but not every progress tick, or the
+    // control would never hide during a long translation.
+    if (stateChanged && this.video) this.wakeIndicator();
   }
 
   destroy(): void {
     if (this.frame) cancelAnimationFrame(this.frame);
-    this.clearQuietTimer();
+    this.clearIdleTimer();
     document.removeEventListener('fullscreenchange', this.onFullscreen);
     removeEventListener('resize', this.onViewportChange);
     removeEventListener('scroll', this.onViewportChange, { capture: true });
     this.videoResize?.disconnect();
     this.videoResize = undefined;
-    document.removeEventListener('pointermove', this.onPointerActivity);
+    for (const event of IDLE_WAKE_EVENTS) document.removeEventListener(event, this.onPointerActivity);
+    document.documentElement.removeEventListener('mouseleave', this.onPointerLeavePage);
     document.removeEventListener('keydown', this.onKeyDown);
     this.setPlayer(null);
     this.host.remove();
@@ -313,6 +354,8 @@ export class SubtitleOverlay {
   private setPanelOpen(open: boolean): void {
     this.panel.classList.toggle('open', open);
     this.indicator.setAttribute('aria-expanded', String(open));
+    if (open) this.wakeIndicator();
+    else this.scheduleIdleIndicator();
   }
 
   private updateModeSelection(mode: SubMateSettings['displayMode']): void {
@@ -324,27 +367,40 @@ export class SubtitleOverlay {
   private updateIndicatorVisibility(): void {
     const actionable = ['needs_user_activation', 'failed', 'unsupported_image_track', 'no_text_track'].includes(this.status.state);
     const visible = Boolean(this.video && (this.settings.showPlayerStatus || actionable));
+    const wasVisible = this.indicator.style.display !== 'none';
     this.indicator.style.display = visible ? '' : 'none';
-    if (!visible) this.clearQuietTimer();
-    else if (actionable) this.indicator.classList.remove('quiet');
-    else if (this.status.state === 'ready') {
-      this.indicator.classList.remove('quiet');
-      this.scheduleQuietIndicator();
-    }
+    if (!visible) this.clearIdleTimer();
+    else if (!wasVisible) this.wakeIndicator();
   }
 
-  private scheduleQuietIndicator(): void {
-    this.clearQuietTimer();
-    if (!this.video || !this.settings.showPlayerStatus || this.panel.classList.contains('open')) return;
-    this.quietTimer = window.setTimeout(() => {
-      this.quietTimer = undefined;
-      if (this.status.state === 'ready' && !this.panel.classList.contains('open')) this.indicator.classList.add('quiet');
-    }, 2_500);
+  /** Shows the control and restarts the countdown to hiding it again. */
+  private wakeIndicator(): void {
+    this.indicator.classList.remove('idle');
+    this.scheduleIdleIndicator();
   }
 
-  private clearQuietTimer(): void {
-    if (this.quietTimer !== undefined) window.clearTimeout(this.quietTimer);
-    this.quietTimer = undefined;
+  private scheduleIdleIndicator(): void {
+    this.clearIdleTimer();
+    if (!this.canIdle()) return;
+    this.idleTimer = window.setTimeout(() => {
+      this.idleTimer = undefined;
+      this.idleIndicator();
+    }, INDICATOR_IDLE_MS);
+  }
+
+  private idleIndicator(): void {
+    this.clearIdleTimer();
+    if (this.canIdle()) this.indicator.classList.add('idle');
+  }
+
+  /** Never hide an open panel's anchor, or a control under the cursor. */
+  private canIdle(): boolean {
+    return Boolean(this.video) && !this.panel.classList.contains('open') && !this.pointerOnIndicator;
+  }
+
+  private clearIdleTimer(): void {
+    if (this.idleTimer !== undefined) window.clearTimeout(this.idleTimer);
+    this.idleTimer = undefined;
   }
 
   private mount(): void {

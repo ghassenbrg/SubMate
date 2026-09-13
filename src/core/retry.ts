@@ -5,6 +5,8 @@ export interface RetryOptions {
   /** Delays between attempts. Attempt count is `delays.length + 1`. */
   delays?: readonly number[];
   signal?: AbortSignal;
+  /** Return false to fail immediately on an error that retrying cannot fix. */
+  shouldRetry?: (error: unknown) => boolean;
   onRetry?: (attempt: number, error: unknown) => void;
   sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
 }
@@ -44,7 +46,7 @@ export async function withRetry<T>(operation: () => Promise<T>, options: RetryOp
       if (error instanceof DOMException && error.name === 'AbortError') throw error;
       lastError = error;
       const delay = delays[attempt];
-      if (delay === undefined) break;
+      if (delay === undefined || options.shouldRetry?.(error) === false) break;
       options.onRetry?.(attempt + 1, error);
       await sleep(delay, options.signal);
     }

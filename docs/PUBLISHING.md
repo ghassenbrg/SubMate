@@ -1,8 +1,10 @@
 # Publishing SubMate
 
-This guide is the release runbook for SubMate. It covers the GitHub
+This guide is the concise release runbook for SubMate. It covers the GitHub
 release artifact and optional Chrome Web Store update path. Follow it from a
-clean, reviewed `main` branch.
+clean, reviewed `main` branch. For the complete first-time setup—including
+accounts, OAuth credentials, GitHub secrets, Pages, and the custom domain—read
+the repository [HOWTO](../HOWTO.md) first.
 
 ## Release model
 

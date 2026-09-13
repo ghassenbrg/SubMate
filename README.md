@@ -3,11 +3,14 @@
 **Private, synchronized subtitle translation for Netflix, TVer and Prime Video in Chrome.**
 
 [![Validate extension](https://github.com/ghassenbrg/SubMate/actions/workflows/ci.yml/badge.svg)](https://github.com/ghassenbrg/SubMate/actions/workflows/ci.yml)
+[![Deploy website](https://github.com/ghassenbrg/SubMate/actions/workflows/pages.yml/badge.svg)](https://github.com/ghassenbrg/SubMate/actions/workflows/pages.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 SubMate is an independent Manifest V3 browser extension that translates streaming text subtitles on-device, caches the result locally, and renders it against the original cue timing.
 
-It has no SubMate account, no backend, no analytics, and no bundled API key. Subtitle text never leaves your browser.
+**Website:** [ghassenbrg.github.io/SubMate](https://ghassenbrg.github.io/SubMate/) · **Documentation:** [installation](https://ghassenbrg.github.io/SubMate/installation.html), [features](https://ghassenbrg.github.io/SubMate/features.html), [configuration](https://ghassenbrg.github.io/SubMate/configuration.html), [privacy](https://ghassenbrg.github.io/SubMate/privacy.html) · **Releases:** [GitHub Releases](https://github.com/ghassenbrg/SubMate/releases) · **Chrome Web Store:** [listing coming soon](https://chromewebstore.google.com/)
+
+It has no SubMate account, no backend, no analytics, and no bundled API key. With the default on-device engine, subtitle text never leaves your browser.
 
 Supported platforms are **Netflix**, **TVer** and **Amazon Prime Video**, each implemented as a platform adapter over a shared translation, caching, synchronization and rendering core. See [Architecture](docs/ARCHITECTURE.md).
 
@@ -16,6 +19,7 @@ Supported platforms are **Netflix**, **TVer** and **Amazon Prime Video**, each i
 ## Highlights
 
 - Translates with Chrome's built-in on-device Translator API; subtitle text stays in the browser.
+- Optionally translates through a cloud model with your own API key — Gemini, ChatGPT, Claude, Mistral, DeepSeek, Grok, Groq, OpenRouter, or any OpenAI-compatible server including self-hosted ones — for higher-quality, context-aware output. Opt-in, never the default, and it sends subtitle text to the provider you choose — see [Cloud translation](docs/CLOUD_TRANSLATION.md).
 - Reads TTML/DFXP and WebVTT tracks, preserves cue timing, and offers bilingual, translation-only, and off display modes.
 - Caches source subtitles and translations in IndexedDB, so reloads and episode changes recover instantly.
 - Renders a synchronized, fullscreen-aware, direction-aware overlay with adjustable appearance controls.
@@ -36,6 +40,8 @@ For a live testing checklist and the expected state for each step, see [Manual t
 Screenshots of live playback are intentionally not committed, because they can expose account, title, and regional catalog information. Contributions may include sanitized UI screenshots that follow the [contribution guide](CONTRIBUTING.md).
 
 ## Install
+
+For the current installation flow, see the [website installation guide](https://ghassenbrg.github.io/SubMate/installation.html).
 
 ### Chrome (unpacked build)
 
@@ -115,15 +121,18 @@ scripts/      Build, validation, packaging, and tag checks
 tests/        Unit, integration, fixture, and UI-harness tests
 docs/         Technical, testing, and publishing documentation; icon artwork
 .github/      CI and release workflows, contribution templates
+website/      Official static documentation website deployed to GitHub Pages
 ```
 
-`docs/icon.svg` is the master artwork. The PNGs in `public/icons/` and `docs/icon.png` are rasterized from it, and the same glyph geometry is inlined by the in-player overlay.
+`docs/icon.png` is the master artwork; the PNGs in `public/icons/` are resized from it. `public/icons/icon.svg` is a vector redraw used where a crisp scalable mark matters, and its glyph geometry is inlined by the in-player overlay.
 
 ## Releases and publishing
 
 Releases carry matching `package.json` and manifest versions and are tagged `vX.Y.Z`. Pushing that tag runs type checks and tests, builds and validates `dist/chrome/`, creates a ZIP, uploads it to a GitHub Release, and can optionally upload it to the Chrome Web Store.
 
-Read the [publishing guide](docs/PUBLISHING.md) before cutting a release. The initial Chrome Web Store listing must be created manually; later updates can be automated once the required repository secrets and variables are configured.
+Read the complete [publishing HOWTO](HOWTO.md) before cutting a release, or use the shorter [publishing guide](docs/PUBLISHING.md) during routine work. The initial Chrome Web Store listing must be created manually; later updates can be automated once the required repository secrets and variables are configured.
+
+The official documentation site is deployed automatically to [GitHub Pages](https://ghassenbrg.github.io/SubMate/) whenever `website/` changes on `main`. It is ready to move to `submate.ghassen.io` once DNS is configured; see [HOWTO.md](HOWTO.md#5-configure-github-pages-and-the-future-custom-domain).
 
 ## Contributing, support, and security
 
@@ -134,4 +143,3 @@ Report suspected vulnerabilities privately as described in [SECURITY.md](SECURIT
 ## License
 
 SubMate is released under the [MIT License](LICENSE).
-

@@ -59,11 +59,11 @@
   "getStarted": {
     "message": "Commencer"
   },
+  "next": {
+    "message": "Suivant"
+  },
   "translation": {
     "message": "Traduction"
-  },
-  "onDevicePrivateFree": {
-    "message": "Sur l’appareil · Privé · Gratuit"
   },
   "onDevice": {
     "message": "Sur l’appareil"
@@ -73,9 +73,6 @@
   },
   "display": {
     "message": "Affichage"
-  },
-  "currentEpisode": {
-    "message": "Épisode actuel"
   },
   "sourceSubtitleToTarget": {
     "message": "Sous-titre source → $1"
@@ -94,9 +91,6 @@
   },
   "exportFormat": {
     "message": "Format d’exportation"
-  },
-  "subMateJson": {
-    "message": "JSON SubMate"
   },
   "exportSubtitles": {
     "message": "Exporter les sous-titres"
@@ -157,6 +151,9 @@
   },
   "statusTargetAvailable": {
     "message": "Ce service fournit déjà la langue que vous avez choisie."
+  },
+  "chooseAnotherLanguage": {
+    "message": "Choisir une autre langue"
   },
   "statusNeedsActivation": {
     "message": "Chrome attend une action de votre part pour lancer le traducteur local."
@@ -318,10 +315,10 @@
     "message": "Stockage utilisé : $1"
   },
   "clearCache": {
-    "message": "Vider le cache des traductions"
+    "message": "Effacer les sous-titres téléchargés"
   },
   "clearCacheConfirm": {
-    "message": "Supprimer $1 traductions en cache ? Vos paramètres seront conservés."
+    "message": "Supprimer $1 traductions en cache et les pistes de sous-titres téléchargées ? Vos paramètres seront conservés."
   },
   "about": {
     "message": "À propos"
@@ -381,10 +378,10 @@
     "message": "Mode d’affichage des sous-titres"
   },
   "turnOff": {
-    "message": "Désactiver"
+    "message": "Mettre SubMate en pause"
   },
   "turnOn": {
-    "message": "Activer"
+    "message": "Reprendre SubMate"
   },
   "openSettings": {
     "message": "Ouvrir les paramètres"
@@ -442,5 +439,125 @@
   },
   "importUntranslated": {
     "message": "$1 lignes sans traduction resteront vides."
+  },
+  "cloudTranslation": {
+    "message": "API cloud"
+  },
+  "cloudSection": {
+    "message": "Traduction cloud"
+  },
+  "cloudVendorLabel": {
+    "message": "Fournisseur"
+  },
+  "cloudApiKey": {
+    "message": "Clé API"
+  },
+  "cloudApiKeyHelp": {
+    "message": "Stockée uniquement sur cet appareil et jamais synchronisée. Laissez vide et enregistrez pour la supprimer."
+  },
+  "cloudApiKeyPlaceholder": {
+    "message": "Collez votre clé API"
+  },
+  "cloudApiKeySaved": {
+    "message": "Une clé est enregistrée sur cet appareil."
+  },
+  "cloudApiKeyMissing": {
+    "message": "Aucune clé enregistrée."
+  },
+  "cloudApiKeyClear": {
+    "message": "Supprimer la clé"
+  },
+  "cloudModel": {
+    "message": "Modèle"
+  },
+  "cloudModelHelp": {
+    "message": "Laissez vide pour utiliser le modèle par défaut du fournisseur."
+  },
+  "cloudPrivacyWarning": {
+    "message": "La traduction cloud envoie le texte des sous-titres au fournisseur choisi. Il quitte cet appareil et relève des conditions et tarifs de ce fournisseur. La traduction sur l'appareil reste locale."
+  },
+  "errorCloudAuth": {
+    "message": "Votre clé API a été refusée. Vérifiez-la dans les paramètres."
+  },
+  "errorCloudModel": {
+    "message": "Le modèle ou le point de terminaison est introuvable. Vérifiez-les dans les paramètres."
+  },
+  "errorCloudQuota": {
+    "message": "La limite de requêtes ou le quota de votre fournisseur cloud est atteint. Réessayez plus tard."
+  },
+  "cloudProviderCustom": {
+    "message": "Personnalisé (compatible OpenAI)"
+  },
+  "cloudBaseUrl": {
+    "message": "URL de base"
+  },
+  "cloudBaseUrlHelp": {
+    "message": "Tout point de terminaison compatible OpenAI, comme Ollama, LM Studio, vLLM ou LiteLLM. HTTPS, ou HTTP sur cet ordinateur."
+  },
+  "cloudBaseUrlInvalid": {
+    "message": "Saisissez une URL HTTPS, ou une URL HTTP sur localhost."
+  },
+  "cloudApiKeyOptional": {
+    "message": "Facultative pour les serveurs locaux. Stockée uniquement sur cet appareil et jamais synchronisée."
+  },
+  "cloudGetKey": {
+    "message": "Obtenir une clé API auprès de $1"
+  },
+  "cloudKeyDetected": {
+    "message": "Clé reconnue comme $1 : le fournisseur a été changé."
+  },
+  "cloudModelRequired": {
+    "message": "Saisissez le nom du modèle utilisé par votre serveur."
+  },
+  "cloudPermissionNeeded": {
+    "message": "SubMate a besoin d’une autorisation pour accéder à $1."
+  },
+  "cloudPermissionGrant": {
+    "message": "Autoriser l’accès"
+  },
+  "errorCloudPermission": {
+    "message": "SubMate a besoin d’une autorisation pour accéder à votre fournisseur cloud. Autorisez-la dans les paramètres."
+  },
+  "errorCloudUnreachable": {
+    "message": "Impossible de joindre le fournisseur cloud. Vérifiez votre connexion ou l'URL de base."
+  },
+  "errorCloudUntranslated": {
+    "message": "Le modèle a renvoyé les sous-titres sans les traduire. Essayez un autre modèle dans les paramètres."
+  },
+  "statusCloudNotConfigured": {
+    "message": "Terminez la configuration de la traduction cloud dans les paramètres."
+  },
+  "themeToggleAria": {
+    "message": "Apparence : $1. Cliquez pour changer."
+  },
+  "themeSystem": {
+    "message": "Système"
+  },
+  "themeLight": {
+    "message": "Clair"
+  },
+  "themeDark": {
+    "message": "Sombre"
+  },
+  "displayModeBoth": {
+    "message": "Les deux"
+  },
+  "displayModeTranslation": {
+    "message": "Traduction"
+  },
+  "subtitleFiles": {
+    "message": "Fichiers de sous-titres"
+  },
+  "decreaseSetting": {
+    "message": "Diminuer : $1"
+  },
+  "increaseSetting": {
+    "message": "Augmenter : $1"
+  },
+  "exportAction": {
+    "message": "Exporter"
+  },
+  "importAction": {
+    "message": "Importer"
   }
 }
