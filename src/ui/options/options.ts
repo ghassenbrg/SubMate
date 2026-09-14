@@ -1,10 +1,11 @@
 import { sendCacheMessage } from '../../cache/messages';
 import { applyDocumentLocale, t } from '../../i18n';
-import { loadSettings, saveSettings } from '../../settings/store';
+import { loadSettings } from '../../settings/store';
 import type { SubMateSettings } from '../../settings/schema';
 import { appearanceForPreset, subtitleAppearanceVariables } from '../../settings/appearance';
 import { createLanguagePicker } from '../shared/language-picker';
 import { sendContent } from '../shared/messages';
+import { saveSettingsForAllTabs } from '../shared/tab-settings';
 import { hasCloudApiKey, saveCloudApiKey } from '../../translation/cloud/credentials';
 import {
   CLOUD_PROVIDERS,
@@ -364,7 +365,7 @@ function render(): void {
  */
 async function refreshDiagnostics(rerender = true): Promise<void> {
   try {
-    debugInfo = await sendContent<Record<string, unknown>>({ type: 'CONTENT_GET_DEBUG' });
+    debugInfo = await sendContent<Record<string, unknown>>({ type: 'CONTENT_GET_DEBUG' }, { anyTab: true });
   } catch {
     debugInfo = undefined;
   }
@@ -543,7 +544,9 @@ function cloudSection(): HTMLElement {
 
 async function update(patch: Partial<SubMateSettings>, rerender = true): Promise<void> {
   const wasDebug = settings.debugMode;
-  settings = await saveSettings(patch);
+  // The options page speaks for every tab: a per-tab setting changed here
+  // replaces whatever each open tab had chosen for itself.
+  settings = await saveSettingsForAllTabs(patch);
   syncDiagnosticsPolling();
   if (!wasDebug && settings.debugMode) {
     await refreshDiagnostics();

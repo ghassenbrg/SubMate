@@ -113,6 +113,9 @@
   "advancedSettings": {
     "message": "詳細設定 →"
   },
+  "tabScopeHint": {
+    "message": "ここでの変更はこのタブと、次に開くタブに適用されます。"
+  },
   "starOnGitHub": {
     "message": "★で応援："
   },
@@ -163,6 +166,9 @@
   },
   "statusTranslating": {
     "message": "翻訳字幕を準備しています…"
+  },
+  "statusTranslatingInAnotherTab": {
+    "message": "別のタブで翻訳しています…"
   },
   "statusValidating": {
     "message": "翻訳結果を確認しています…"

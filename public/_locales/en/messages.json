@@ -113,6 +113,9 @@
   "advancedSettings": {
     "message": "Advanced settings →"
   },
+  "tabScopeHint": {
+    "message": "Changes here apply to this tab and to tabs you open next."
+  },
   "starOnGitHub": {
     "message": "Give us a ★ on "
   },
@@ -163,6 +166,9 @@
   },
   "statusTranslating": {
     "message": "Preparing translated subtitles…"
+  },
+  "statusTranslatingInAnotherTab": {
+    "message": "Translating in another tab…"
   },
   "statusValidating": {
     "message": "Checking the completed translation…"

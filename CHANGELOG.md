@@ -4,6 +4,20 @@ All notable changes to SubMate are documented here. This project follows [Semant
 
 ## [Unreleased]
 
+### Added
+
+- **Independent tabs.** Target language, engine, display mode and the on/off switch are now per tab, so episodes in different tabs can play in different languages side by side. Changes in the popup or the player apply to that tab and become the default for tabs opened later. Changes on the options page apply to every open tab. A tab keeps its own settings across a reload.
+- **Shared translation work.** When two tabs play the same episode, only one translates it. The other shows "Translating in another tab…" with live progress, then uses the cached result. It takes over if the first tab closes or fails.
+
+### Changed
+
+- Importing a translation file switches only its own tab to manual translation, instead of every tab.
+- Cloud translation runs at most three batches at a time across all tabs, which keeps parallel tabs within the provider's rate limits.
+
+### Fixed
+
+- A popup opened over an unrelated site no longer shows "episode detected" for a player in some other tab, or applies its changes to that tab.
+
 ## [0.2.0]
 
 ### Added

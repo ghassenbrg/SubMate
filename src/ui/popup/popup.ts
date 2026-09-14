@@ -1,6 +1,5 @@
 import { friendlyError } from '../../shared-errors';
 import { applyDocumentLocale, t } from '../../i18n';
-import { loadSettings, saveSettings } from '../../settings/store';
 import type { SubMateSettings } from '../../settings/schema';
 import type { SubMateViewState } from '../../subtitles/models';
 import { languageName } from '../shared/languages';
@@ -11,6 +10,7 @@ import { platformLabel } from '../../platforms';
 import { statusLabel, strings } from '../shared/strings';
 import { createThemeToggle, initTheme } from '../shared/theme';
 import { createDisplayModeTiles } from '../shared/display-mode';
+import { loadPlaybackSettings, savePlaybackSettings, saveSettingsForAllTabs } from '../shared/tab-settings';
 
 const appNode = document.querySelector<HTMLElement>('#app');
 if (!appNode) throw new Error('Popup root missing');
@@ -123,7 +123,8 @@ function renderOnboarding(): void {
   const privacy = element('p', 'privacy', t('privacySummary'));
   const start = element('button', 'primary wide', t('getStarted'));
   start.addEventListener('click', async () => {
-    settings = await saveSettings({ preferredTargetLanguage: onboardingLanguage ?? settings.preferredTargetLanguage, displayMode: settings.displayMode, onboardingComplete: true });
+    // First-run choices are the user's baseline, so every open tab adopts them.
+    settings = await saveSettingsForAllTabs({ preferredTargetLanguage: onboardingLanguage ?? settings.preferredTargetLanguage, displayMode: settings.displayMode, onboardingComplete: true });
     state = await getContentState();
     render();
   });
@@ -159,13 +160,13 @@ function render(): void {
   toggleLabel.append(element('strong', '', t('enableSubMate')));
   const toggle = element('input') as HTMLInputElement;
   toggle.type = 'checkbox'; toggle.role = 'switch'; toggle.checked = settings.enabled;
-  toggle.addEventListener('change', async () => { settings = await saveSettings({ enabled: toggle.checked }); state = await getContentState(); render(); });
+  toggle.addEventListener('change', async () => { settings = await savePlaybackSettings({ enabled: toggle.checked }); state = await getContentState(); render(); });
   toggleLabel.append(toggle);
   card.append(toggleLabel);
 
   const language = createLanguagePicker({ value: settings.preferredTargetLanguage, label: t('targetLanguage'), onCommit: async (value) => {
     if (!value) return;
-    settings = await saveSettings({ preferredTargetLanguage: value });
+    settings = await savePlaybackSettings({ preferredTargetLanguage: value });
     state = await getContentState(); render();
   }});
 
@@ -180,7 +181,7 @@ function render(): void {
   engine.value = settings.translationEngine;
   engine.setAttribute('aria-label', t('engine'));
   engine.addEventListener('change', async () => {
-    settings = await saveSettings({ translationEngine: engine.value as SubMateSettings['translationEngine'] });
+    settings = await savePlaybackSettings({ translationEngine: engine.value as SubMateSettings['translationEngine'] });
     if (settings.translationEngine === 'cloud-api') {
       cloudApiConfigured = !(await cloudSetup(settings)).issue;
       if (!cloudApiConfigured) { feedback = t('statusCloudNotConfigured'); feedbackError = false; }
@@ -188,7 +189,7 @@ function render(): void {
     state = await getContentState(); render();
   });
   const display = createDisplayModeTiles(settings.displayMode, async (mode) => {
-    settings = await saveSettings({ displayMode: mode });
+    settings = await savePlaybackSettings({ displayMode: mode });
     state = await getContentState(); render();
   });
   const pair = element('div', 'field-pair');
@@ -285,7 +286,7 @@ function render(): void {
             result.untranslated ? t('importUntranslated', String(result.untranslated)) : '',
           ].filter(Boolean).join(' ')
         : strings.importFailed;
-      feedbackError = !result; settings = await loadSettings(); state = await getContentState(); render();
+      feedbackError = !result; settings = await loadPlaybackSettings(); state = await getContentState(); render();
     } catch (error) {
       const code = (error as { code?: string })?.code;
       feedback = code ? friendlyError(code) : error instanceof Error ? error.message : strings.importFailed;
@@ -303,6 +304,11 @@ function render(): void {
     const alert = element('p', feedbackError ? 'feedback error' : 'feedback success', feedback);
     alert.role = feedbackError ? 'alert' : 'status';
     workspace.append(group(alert));
+  }
+  if (state) {
+    // Tabs are independent, so say where a change lands before it surprises.
+    const hint = element('p', 'muted tab-scope-hint', t('tabScopeHint'));
+    workspace.append(group(hint));
   }
   const openSettings = element('button', 'link-row', t('advancedSettings'));
   openSettings.type = 'button';
@@ -324,13 +330,17 @@ function render(): void {
 }
 
 void (async () => {
-  settings = await loadSettings();
+  settings = await loadPlaybackSettings();
   cloudApiConfigured = !(await cloudSetup(settings)).issue;
   state = await getContentState();
   render();
   const poll = setInterval(async () => {
     const next = await getContentState();
-    if (JSON.stringify(next) !== JSON.stringify(state)) { state = next; render(); }
+    if (JSON.stringify(next) === JSON.stringify(state)) return;
+    state = next;
+    // The player's own controls can change this tab's settings too.
+    settings = await loadPlaybackSettings();
+    render();
   }, 650);
   addEventListener('pagehide', () => clearInterval(poll), { once: true });
 })();

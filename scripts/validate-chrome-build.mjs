@@ -21,7 +21,7 @@ const requiredFiles = [
   'ui/theme.css',
   'ui/popup.css',
   'ui/options.css',
-  'ui/preview-scene.svg',
+  'ui/preview-scene.png',
   '_locales/en/messages.json',
   'icons/icon-128.png',
   'icons/icon.svg',

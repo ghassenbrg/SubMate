@@ -49,7 +49,7 @@ await build({
 for (const file of ['manifest.json', 'popup.html', 'options.html']) {
   await cp(resolve(root, 'public', file), resolve(outdir, file));
 }
-for (const file of ['ui/theme.css', 'ui/popup.css', 'ui/options.css', 'ui/preview-scene.svg']) {
+for (const file of ['ui/theme.css', 'ui/popup.css', 'ui/options.css', 'ui/preview-scene.png']) {
   await mkdir(dirname(resolve(outdir, file)), { recursive: true });
   await cp(resolve(root, 'public', file), resolve(outdir, file));
 }

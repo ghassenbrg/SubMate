@@ -35,17 +35,21 @@ export async function activeTab(): Promise<chrome.tabs.Tab | undefined> {
   return tab;
 }
 
-/**
- * Finds the tab to talk to.
- *
- * The popup leaves the player tab active, but the options page *is* a tab, so
- * asking for the active tab there returns the options page itself and every
- * request silently resolves to undefined. Falling back to a query across
- * supported tabs is what lets diagnostics work from the options page at all.
- */
-export async function supportedTab(): Promise<chrome.tabs.Tab | undefined> {
+export interface TabLookup {
+  /**
+   * Look beyond the active tab. Only for the options page: it *is* a tab, so
+   * the active tab there is the options page itself and diagnostics would
+   * never find a player. The popup must not use it, or a popup opened over an
+   * unrelated site would report, and change, an episode in some other tab.
+   */
+  anyTab?: boolean;
+}
+
+/** Finds the player tab to talk to: the active tab, unless `anyTab` is set. */
+export async function supportedTab({ anyTab = false }: TabLookup = {}): Promise<chrome.tabs.Tab | undefined> {
   const active = await activeTab();
   if (active?.id && isSupportedTabUrl(active.url)) return active;
+  if (!anyTab) return undefined;
   let candidates: chrome.tabs.Tab[] = [];
   try {
     candidates = await chrome.tabs.query({ url: SUPPORTED_TAB_PATTERNS });
@@ -59,8 +63,8 @@ export async function supportedTab(): Promise<chrome.tabs.Tab | undefined> {
     ?? usable.at(-1);
 }
 
-export async function sendContent<T>(message: Record<string, unknown>): Promise<T | undefined> {
-  const tab = await supportedTab();
+export async function sendContent<T>(message: Record<string, unknown>, lookup: TabLookup = {}): Promise<T | undefined> {
+  const tab = await supportedTab(lookup);
   if (!tab?.id) return undefined;
   try {
     const response = await chrome.tabs.sendMessage(tab.id, message);

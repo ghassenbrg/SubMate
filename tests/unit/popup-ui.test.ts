@@ -45,9 +45,24 @@ const activeState = (overrides: Partial<SubMateViewState> = {}): SubMateViewStat
 
 let sendMessage: ReturnType<typeof vi.fn>;
 let storedSettings: SubMateSettings;
+let workerMessages: ReturnType<typeof vi.fn>;
 
-async function renderPopup(state: SubMateViewState | undefined, options: { netflixTab?: boolean; onboarding?: boolean } = {}) {
+async function renderPopup(
+  state: SubMateViewState | undefined,
+  options: { netflixTab?: boolean; netflixInBackground?: boolean; onboarding?: boolean; tabSettings?: Partial<SubMateSettings> } = {},
+) {
   storedSettings = { ...settings(), onboardingComplete: options.onboarding ?? true };
+  let tabRecord = options.tabSettings
+    ? { revision: 1, settings: { enabled: true, preferredTargetLanguage: 'fr', translationEngine: 'chrome-local', displayMode: 'bilingual', ...options.tabSettings } }
+    : undefined;
+  workerMessages = vi.fn(async (message: { type: string; patch?: object }) => {
+    if (message.type === 'TAB_SETTINGS_GET') return { ok: true, value: tabRecord };
+    if (message.type === 'TAB_SETTINGS_UPDATE') {
+      tabRecord = { revision: (tabRecord?.revision ?? 1) + 1, settings: { ...(tabRecord?.settings ?? storedSettings), ...message.patch } as never };
+      return { ok: true, value: tabRecord };
+    }
+    return { ok: true, value: undefined };
+  });
   sendMessage = vi.fn(async (_tabId: number, message: { type: string }) => ({
     ok: true,
     value: message.type === 'CONTENT_GET_STATE' ? state : undefined,
@@ -65,10 +80,18 @@ async function renderPopup(state: SubMateViewState | undefined, options: { netfl
         onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
       },
       tabs: {
-        query: vi.fn(async () => options.netflixTab === false ? [] : [{ id: 1, url: 'https://www.netflix.com/watch/123' }]),
+        query: vi.fn(async (info: chrome.tabs.QueryInfo) => {
+          if (options.netflixInBackground) {
+            return info.active
+              ? [{ id: 2, url: 'https://example.com/', active: true }]
+              : [{ id: 1, url: 'https://www.netflix.com/watch/123', audible: true }];
+          }
+          return options.netflixTab === false ? [] : [{ id: 1, url: 'https://www.netflix.com/watch/123' }];
+        }),
         sendMessage,
       },
       runtime: {
+        sendMessage: workerMessages,
         getManifest: () => ({ version: '0.1.0' }),
         openOptionsPage: vi.fn(async () => undefined),
       },
@@ -140,5 +163,50 @@ describe('popup acceptance states', () => {
     const button = [...document.querySelectorAll('button')].find((candidate) => candidate.textContent === 'Retry');
     button?.click();
     await vi.waitFor(() => expect(sendMessage).toHaveBeenCalledWith(1, { type: 'CONTENT_RETRY' }));
+  });
+
+  it('ignores a player in another tab when the current tab is an unrelated site', async () => {
+    await renderPopup(activeState(), { netflixInBackground: true, tabSettings: { translationEngine: 'manual' } });
+    expect(document.querySelector('.detected')).toBeNull();
+    expect(document.querySelector('.episode')?.textContent).toContain('Open a supported video');
+    expect(document.querySelector('.tab-scope-hint')).toBeNull();
+    const engine = [...document.querySelectorAll<HTMLSelectElement>('select')].find((select) => select.getAttribute('aria-label') === 'Engine')!;
+    // Shows the defaults, not the background tab's own choice.
+    expect(engine.value).toBe('chrome-local');
+    engine.value = 'cloud-api';
+    engine.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect(storedSettings.translationEngine).toBe('cloud-api'));
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(workerMessages).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'TAB_SETTINGS_UPDATE' }));
+  });
+
+  it("shows the player tab's own settings rather than the defaults", async () => {
+    await renderPopup(activeState(), { tabSettings: { translationEngine: 'manual' } });
+    const engine = [...document.querySelectorAll<HTMLSelectElement>('select')].find((select) => select.getAttribute('aria-label') === 'Engine');
+    expect(engine?.value).toBe('manual');
+    expect(storedSettings.translationEngine).toBe('chrome-local');
+    expect(document.querySelector('.tab-scope-hint')?.textContent).toBe('Changes here apply to this tab and to tabs you open next.');
+  });
+
+  it('applies a change to the player tab and keeps it as the default for new tabs', async () => {
+    await renderPopup(activeState(), { tabSettings: {} });
+    const engine = [...document.querySelectorAll<HTMLSelectElement>('select')].find((select) => select.getAttribute('aria-label') === 'Engine')!;
+    engine.value = 'manual';
+    engine.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect(workerMessages).toHaveBeenCalledWith({
+      type: 'TAB_SETTINGS_UPDATE', tabId: 1, patch: { translationEngine: 'manual' },
+    }));
+    expect(storedSettings.translationEngine).toBe('manual');
+  });
+
+  it('gives every open tab the choices made during first-run setup', async () => {
+    await renderPopup(undefined, { onboarding: false });
+    [...document.querySelectorAll('button')].find((button) => button.textContent === 'Next')?.click();
+    await vi.waitFor(() => expect(document.querySelector('#app')?.textContent).toContain('Get started'));
+    [...document.querySelectorAll('button')].find((button) => button.textContent === 'Get started')?.click();
+    await vi.waitFor(() => expect(workerMessages).toHaveBeenCalledWith({
+      type: 'TAB_SETTINGS_APPLY_DEFAULTS', keys: ['preferredTargetLanguage', 'displayMode'],
+    }));
+    expect(storedSettings.onboardingComplete).toBe(true);
   });
 });

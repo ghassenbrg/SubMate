@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
     languages: Array<[string | undefined, string | undefined]>;
     settingsApplied: unknown[];
   }>,
+  overlayActions: [] as Array<Record<string, (...args: unknown[]) => void>>,
 }));
 
 vi.mock('../../src/cache/messages', () => ({
@@ -58,7 +59,10 @@ vi.mock('../../src/settings/store', () => ({
 vi.mock('../../src/renderer/subtitle-overlay', () => ({
   SubtitleOverlay: class {
     state = { track: undefined as SubtitleTrack | undefined, statuses: [] as unknown[], languages: [] as Array<[string | undefined, string | undefined]>, settingsApplied: [] as unknown[] };
-    constructor() { mocks.overlays.push(this.state); }
+    constructor(_settings: unknown, actions: Record<string, (...args: unknown[]) => void>) {
+      mocks.overlays.push(this.state);
+      mocks.overlayActions.push(actions);
+    }
     setPlayer() {}
     setPlaybackContext() {}
     setTrack(track?: SubtitleTrack) { this.state.track = track; }
@@ -94,6 +98,11 @@ vi.mock('../../src/translation/providers/chrome-translator', () => ({
 }));
 
 import { EpisodeOrchestrator } from '../../src/content/episode-orchestrator';
+import type { SettingsListener, SettingsScope } from '../../src/content/tab-settings';
+import type { SubMateSettings } from '../../src/settings/schema';
+import { pickTabSettings, type TabSettings } from '../../src/settings/tab-scope';
+import { TranslationManager } from '../../src/translation/translation-manager';
+import type { SharedProgress, TranslationCoordinator, TranslationLease } from '../../src/translation/translation-coordinator';
 import type { AdapterHost, ExtractedSource, PlatformAdapter, SourceSelection } from '../../src/platforms/types';
 import type { SubtitleCue } from '../../src/subtitles/models';
 
@@ -162,6 +171,7 @@ beforeEach(() => {
   mocks.cache.clear();
   mocks.translationCalls = 0;
   mocks.overlays.length = 0;
+  mocks.overlayActions.length = 0;
   mocks.holdNextTranslation = false;
   mocks.releaseTranslation = undefined;
   mocks.providerStartsActivated = true;
@@ -390,6 +400,114 @@ describe('episode orchestration', () => {
     adapter.adPlaying = true;
     adapter.host?.onAdStateChanged(true);
     expect(orchestrator.getState().adPlaying).toBe(true);
+    orchestrator.destroy();
+  });
+});
+
+/** One tab's settings: pinned at load, changed only through `update`. */
+class FakeTabScope implements SettingsScope {
+  tab: TabSettings | undefined;
+  readonly updates: Array<{ patch: Partial<TabSettings>; asDefault: boolean }> = [];
+  private readonly listeners = new Set<SettingsListener>();
+  async load() {
+    this.tab = pickTabSettings(mocks.settings as unknown as SubMateSettings);
+    return this.current();
+  }
+  watch(listener: SettingsListener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+  async update(patch: Partial<TabSettings>, { asDefault }: { asDefault: boolean }) {
+    this.updates.push({ patch, asDefault });
+    if (asDefault) Object.assign(mocks.settings, patch);
+    this.tab = { ...this.tab!, ...patch };
+    for (const listener of this.listeners) listener(this.current());
+  }
+  dispose() { this.listeners.clear(); }
+  private current() { return { ...mocks.settings, ...this.tab } as unknown as SubMateSettings; }
+}
+
+/** Leases shared by every tab in the test, standing in for the worker. */
+class SharedLeases {
+  private readonly held = new Map<string, SharedProgress>();
+  coordinator(): TranslationCoordinator {
+    return {
+      acquire: async (cacheKey: string): Promise<TranslationLease | undefined> => {
+        if (this.held.has(cacheKey)) return undefined;
+        this.held.set(cacheKey, {});
+        return {
+          report: (progress) => { this.held.set(cacheKey, progress); },
+          release: async () => { this.held.delete(cacheKey); },
+        };
+      },
+      status: async (cacheKey: string) => this.held.get(cacheKey),
+    };
+  }
+}
+
+describe('independent tabs', () => {
+  async function startTab(adapter: FakeAdapter, leases: SharedLeases) {
+    const scope = new FakeTabScope();
+    const orchestrator = new EpisodeOrchestrator(adapter, scope, new TranslationManager(leases.coordinator()));
+    await orchestrator.initialize();
+    adapter.attachVideo();
+    return { orchestrator, scope };
+  }
+
+  it('lets two tabs translate the same episode into different languages', async () => {
+    const leases = new SharedLeases();
+    const a = await startTab(new FakeAdapter(), leases);
+    const b = await startTab(new FakeAdapter(), leases);
+    await vi.waitFor(() => expect(a.orchestrator.getState().status.state).toBe('ready'));
+    await vi.waitFor(() => expect(b.orchestrator.getState().status.state).toBe('ready'));
+
+    await b.scope.update({ preferredTargetLanguage: 'ja' }, { asDefault: true });
+    await vi.waitFor(() => expect(mocks.overlays[1]?.track?.cues[0]?.translatedText).toBe('ja→ Hallo'));
+    // The default moved for future tabs, but tab A was never restarted.
+    expect(mocks.settings.preferredTargetLanguage).toBe('ja');
+    expect(a.orchestrator.getState().targetLanguage).toBe('fr');
+    expect(mocks.overlays[0]?.track?.cues[0]?.translatedText).toBe('fr→ Hallo');
+    expect(a.orchestrator.getState().status.cacheHit).toBeUndefined();
+    a.orchestrator.destroy();
+    b.orchestrator.destroy();
+  });
+
+  it('translates once and shows progress in the second tab playing the same episode', async () => {
+    const leases = new SharedLeases();
+    mocks.holdNextTranslation = true;
+    const a = await startTab(new FakeAdapter(), leases);
+    await vi.waitFor(() => expect(mocks.translationCalls).toBe(1));
+    await vi.waitFor(() => expect(mocks.releaseTranslation).toBeDefined());
+
+    const b = await startTab(new FakeAdapter(), leases);
+    await vi.waitFor(() => expect(b.orchestrator.getState().status).toMatchObject({
+      state: 'translating',
+      message: 'Translating in another tab…',
+    }));
+
+    mocks.releaseTranslation?.();
+    await vi.waitFor(() => expect(a.orchestrator.getState().status.state).toBe('ready'));
+    await vi.waitFor(() => expect(b.orchestrator.getState().status).toMatchObject({ state: 'ready', cacheHit: true }), { timeout: 3_000 });
+    expect(mocks.overlays[1]?.track?.cues[0]?.translatedText).toBe('fr→ Hallo');
+    expect(mocks.translationCalls).toBe(1);
+    a.orchestrator.destroy();
+    b.orchestrator.destroy();
+  });
+
+  it('keeps player controls and imports scoped to their own tab', async () => {
+    const leases = new SharedLeases();
+    const { orchestrator, scope } = await startTab(new FakeAdapter(), leases);
+    await vi.waitFor(() => expect(orchestrator.getState().status.state).toBe('ready'));
+
+    mocks.overlayActions[0]?.onDisplayMode?.('translation-only');
+    await vi.waitFor(() => expect(orchestrator.getState().displayMode).toBe('translation-only'));
+    expect(scope.updates.at(-1)).toEqual({ patch: { displayMode: 'translation-only' }, asDefault: true });
+
+    await orchestrator.importFile('1\n00:00:01,000 --> 00:00:02,000\nBonjour\n', 'episode.srt');
+    expect(scope.updates.at(-1)).toMatchObject({ patch: { translationEngine: 'manual' }, asDefault: false });
+    expect(orchestrator.getState().engine).toBe('manual');
+    // Other tabs, and tabs opened later, keep their engine.
+    expect(mocks.settings.translationEngine).toBe('chrome-local');
     orchestrator.destroy();
   });
 });

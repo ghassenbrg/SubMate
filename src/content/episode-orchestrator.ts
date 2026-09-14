@@ -5,14 +5,15 @@ import { platformLabel } from '../platforms';
 import type { AdapterHost, PlatformAdapter, SourceSelection } from '../platforms/types';
 import { SubtitleOverlay } from '../renderer/subtitle-overlay';
 import { SubMateError, friendlyError } from '../shared-errors';
-import { loadSettings, saveSettings, watchSettings } from '../settings/store';
 import type { SubMateSettings } from '../settings/schema';
 import { hashSubtitle } from '../subtitles/hashing';
-import type { SubMateViewState, SubtitleTrack, TranslationStatus } from '../subtitles/models';
+import type { CachedTranslation, SubMateViewState, SubtitleTrack, TranslationStatus } from '../subtitles/models';
 import { countUntranslated, mergeTranslation, validateTranslationResult } from '../subtitles/validation';
 import { createProvider, providerChanged } from '../translation/provider-factory';
 import type { TranslationProvider } from '../translation/provider';
+import type { SharedProgress } from '../translation/translation-coordinator';
 import { TranslationManager } from '../translation/translation-manager';
+import { TabSettingsScope, type SettingsScope } from './tab-settings';
 
 export type EpisodeEventListener = (state: SubMateViewState) => void;
 
@@ -27,7 +28,6 @@ export class EpisodeOrchestrator implements AdapterHost {
   private settings!: SubMateSettings;
   private overlay!: SubtitleOverlay;
   private provider!: TranslationProvider;
-  private readonly manager = new TranslationManager();
   private readonly listeners = new Set<EpisodeEventListener>();
   private source: SubtitleTrack | undefined;
   private rendered: SubtitleTrack | undefined;
@@ -38,23 +38,29 @@ export class EpisodeOrchestrator implements AdapterHost {
   private stopWatchingSettings: (() => void) | undefined;
   private contentId: string | undefined;
 
-  constructor(private readonly adapter: PlatformAdapter) {}
+  constructor(
+    private readonly adapter: PlatformAdapter,
+    private readonly scope: SettingsScope = new TabSettingsScope(),
+    private readonly manager: TranslationManager = new TranslationManager(),
+  ) {}
 
   async initialize(): Promise<void> {
-    this.settings = await loadSettings();
+    this.settings = await this.scope.load();
     this.provider = createProvider(this.settings);
     this.overlay = new SubtitleOverlay(this.settings, {
       onActivate: () => void this.activate(),
       onRetry: () => void this.retry(),
-      onDisplayMode: (displayMode) => void saveSettings({ displayMode }),
-      onToggleEnabled: () => void saveSettings({ enabled: !this.settings.enabled }),
+      // Controls in the player act on this tab, and become the default for tabs
+      // opened later; episodes already playing in other tabs are left alone.
+      onDisplayMode: (displayMode) => void this.scope.update({ displayMode }, { asDefault: true }),
+      onToggleEnabled: () => void this.scope.update({ enabled: !this.settings.enabled }, { asDefault: true }),
       onOpenSettings: () => void chrome.runtime.sendMessage({ type: 'OPEN_OPTIONS' }),
     });
     this.overlay.setPlaybackContext({
       isAdPlaying: () => this.adapter.isAdPlaying(),
       getNativeSubtitleText: () => this.adapter.getNativeSubtitleText?.() ?? '',
     });
-    this.stopWatchingSettings = watchSettings((settings) => void this.applySettings(settings));
+    this.stopWatchingSettings = this.scope.watch((settings) => void this.applySettings(settings));
     this.setStatus(this.settings.enabled ? { state: 'idle' } : { state: 'disabled' });
     this.adapter.start(this);
     this.contentId = this.adapter.getContentId();
@@ -169,7 +175,11 @@ export class EpisodeOrchestrator implements AdapterHost {
     this.overlay.setLanguages(source.sourceLanguage, result.targetLanguage);
     this.setStatus({ state: 'ready', imported: true, progress: 1, completedCues: result.translations.length, totalCues: source.cues.length });
     if (result.targetLanguage !== this.settings.preferredTargetLanguage || this.settings.translationEngine !== 'manual') {
-      await saveSettings({ preferredTargetLanguage: result.targetLanguage, translationEngine: 'manual' });
+      // An imported file belongs to this episode, so it switches only this tab.
+      await this.scope.update(
+        { preferredTargetLanguage: result.targetLanguage, translationEngine: 'manual' },
+        { asDefault: false },
+      );
     }
     return {
       matched: result.translations.length,
@@ -193,6 +203,7 @@ export class EpisodeOrchestrator implements AdapterHost {
     this.cancel();
     this.adapter.stop();
     this.stopWatchingSettings?.();
+    this.scope.dispose();
     this.provider.destroy();
     this.overlay.destroy();
   }
@@ -277,14 +288,27 @@ export class EpisodeOrchestrator implements AdapterHost {
         this.assertCurrent(generation);
         if (cached) {
           this.debug('translation cache hit', { target });
-          this.rendered = mergeTranslation(source, cached);
-          this.overlay.setTrack(this.rendered);
-          this.setStatus({ state: 'ready', cacheHit: true, progress: 1, completedCues: source.cues.length, totalCues: source.cues.length, imported: cached.engine.id === 'manual' });
+          this.showCached(source, cached);
           return;
         }
       }
       if (this.settings.translationEngine === 'manual') {
         this.setStatus({ state: 'idle', message: t('statusReady'), totalCues: source.cues.length });
+        return;
+      }
+      // Another tab playing this episode may already be translating it; its
+      // result needs no activation, model download or API spend here.
+      const shared = await this.manager.awaitShared(
+        source,
+        target,
+        this.provider,
+        (progress) => this.showSharedProgress(source, progress, generation),
+        controller.signal,
+      );
+      this.assertCurrent(generation);
+      if (shared) {
+        this.debug('reused translation from another tab', { target });
+        this.showCached(source, shared);
         return;
       }
       if (!this.settings.autoTranslate) {
@@ -311,10 +335,34 @@ export class EpisodeOrchestrator implements AdapterHost {
         this.setStatus({ state: 'needs_user_activation', totalCues: source.cues.length });
         return;
       }
-      await this.translatePreparedSource(source, target, generation);
+      await this.translatePreparedSource(source, target, generation, !force);
     } catch (error) {
       this.fail(error, generation);
     }
+  }
+
+  private showCached(source: SubtitleTrack, cached: CachedTranslation): void {
+    this.rendered = mergeTranslation(source, cached);
+    this.overlay.setTrack(this.rendered);
+    this.setStatus({
+      state: 'ready',
+      cacheHit: true,
+      progress: 1,
+      completedCues: source.cues.length,
+      totalCues: source.cues.length,
+      imported: cached.engine.id === 'manual',
+    });
+  }
+
+  private showSharedProgress(source: SubtitleTrack, progress: SharedProgress, generation: number): void {
+    if (generation !== this.generation) return;
+    this.setStatus({
+      state: 'translating',
+      progress: progress.progress ?? 0,
+      completedCues: progress.completedCues ?? 0,
+      totalCues: progress.totalCues ?? source.cues.length,
+      message: t('statusTranslatingInAnotherTab'),
+    });
   }
 
   /** Maps a non-`ready` selection onto a status. Returns true to continue. */
@@ -385,7 +433,12 @@ export class EpisodeOrchestrator implements AdapterHost {
     }
   }
 
-  private async translatePreparedSource(source: SubtitleTrack, target: string, generation: number): Promise<void> {
+  private async translatePreparedSource(
+    source: SubtitleTrack,
+    target: string,
+    generation: number,
+    reuseCached = true,
+  ): Promise<void> {
     const signal = this.controller?.signal ?? new AbortController().signal;
     const cached = await this.manager.translate(source, target, this.provider, (progress) => {
       if (generation !== this.generation) return;
@@ -395,7 +448,10 @@ export class EpisodeOrchestrator implements AdapterHost {
         ...(progress.completedCues !== undefined ? { completedCues: progress.completedCues } : {}),
         ...(progress.totalCues !== undefined ? { totalCues: progress.totalCues } : {}),
       });
-    }, signal);
+    }, signal, {
+      reuseCached,
+      onWaiting: (progress) => this.showSharedProgress(source, progress, generation),
+    });
     this.assertCurrent(generation);
     this.setStatus({ state: 'validating', totalCues: source.cues.length });
     validateTranslationResult(source, cached);

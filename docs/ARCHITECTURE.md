@@ -133,6 +133,45 @@ The API key lives outside `SubMateSettings`, in its own `storage.local` entry
 that only the background worker and options page read — the content script never
 receives it.
 
+## Tabs are independent
+
+Every player tab has its own content script and `EpisodeOrchestrator`, so
+episodes in different tabs play and translate in parallel. Two things are shared
+between tabs, and both are coordinated by the background worker.
+
+**Settings.** `enabled`, `preferredTargetLanguage`, `translationEngine` and
+`displayMode` are per tab (`src/settings/tab-scope.ts`). When a tab's player
+first attaches it pins the current defaults in `storage.session`
+(`src/background/tab-settings.ts`). The pinned values survive a reload and are
+the same in every frame of the tab. Everything else, such as appearance and the
+cloud provider, stays global.
+
+| Change made in | Applies to |
+| --- | --- |
+| Popup, in-player controls | That tab, plus the default for tabs opened later |
+| Importing a translation file | That tab only |
+| Options page, first-run setup | Every open tab and the default |
+
+Each tab reads its settings through `TabSettingsScope`
+(`src/content/tab-settings.ts`). The worker broadcasts changes to the tab as
+`CONTENT_TAB_SETTINGS`, and each record carries a revision so a late delivery
+cannot undo a newer one. If the worker cannot be reached, the tab falls back to
+following the global settings.
+
+**Translation work.** Two tabs playing the same episode into the same language
+with the same engine produce the same cache entry. Before translating, a tab
+takes a lease on that cache key (`src/background/translation-leases.ts`). Other
+tabs see the lease, report "Translating in another tab…" with the holder's
+progress, and read the result from the cache when it is released. A lease
+expires 90 s after its last renewal, which outlasts Chrome's timer throttling
+of hidden tabs. It is dropped at once when its tab closes,
+or when the holding frame reloads. If the holder fails, a waiter takes the job
+over. Coordination fails open: if the worker is unreachable, the tab translates
+on its own.
+
+Cloud batches from all tabs share one API key, so the worker runs at most three
+at a time.
+
 ## Interface theme
 
 Three surfaces render SubMate's UI, and all three draw from one palette sampled

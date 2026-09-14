@@ -106,6 +106,20 @@ Use region/account-appropriate titles; do not rely on one fixed catalog item.
 - Import a wrong-hash JSON, duplicate/missing-ID JSON, mis-timed SRT/VTT, and
   markup/script strings. Each must fail safely or render literal text.
 
+## Parallel tabs
+
+- Play two different episodes in two tabs with different target languages.
+  Change the language in one tab's popup; the other tab must keep its language
+  and must not restart translation.
+- Open a third tab and confirm it starts with the language chosen last.
+- Change the target language on the options page and confirm every open tab
+  switches to it.
+- Reload a tab and confirm it keeps its own language.
+- Open the same untranslated episode in two tabs. The second must show
+  **Translating in another tab…** with progress, and must become ready without a
+  second Translator run or cloud request.
+- Close the translating tab mid-episode; the waiting tab must take over.
+
 ## Error states
 
 - Test no subtitle tracks, text unavailable/image-only, unsupported pair,
