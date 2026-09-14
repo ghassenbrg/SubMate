@@ -1,5 +1,6 @@
 import { EpisodeOrchestrator } from './episode-orchestrator';
 import { selectAdapter } from '../platforms';
+import { TabSettingsScope } from './tab-settings';
 
 void (async () => {
   const adapter = selectAdapter(new URL(location.href));
@@ -8,7 +9,16 @@ void (async () => {
   // interfering with the page.
   if (!adapter) return;
 
-  const orchestrator = new EpisodeOrchestrator(adapter);
+  const scope = new TabSettingsScope();
+  // Listening before initialization, so a change made while this tab attaches
+  // is not missed. Revisions make an early or repeated delivery harmless.
+  chrome.runtime.onMessage.addListener((message: unknown) => {
+    const request = message as { type?: unknown; record?: unknown } | null;
+    if (request?.type === 'CONTENT_TAB_SETTINGS') scope.receive(request.record);
+    return false;
+  });
+
+  const orchestrator = new EpisodeOrchestrator(adapter, scope);
   await orchestrator.initialize();
 
   chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {

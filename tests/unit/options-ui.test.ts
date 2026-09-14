@@ -9,6 +9,7 @@ vi.mock('../../src/ui/shared/messages', () => ({ sendContent: vi.fn(async () => 
 
 const originalChrome = globalThis.chrome;
 let storedSettings: SubMateSettings;
+let workerMessages: ReturnType<typeof vi.fn>;
 
 function rowControl(label: string): HTMLElement {
   const item = [...document.querySelectorAll<HTMLElement>('.row')].find((candidate) => candidate.querySelector('strong')?.textContent === label);
@@ -18,6 +19,7 @@ function rowControl(label: string): HTMLElement {
 
 async function renderOptions(): Promise<void> {
   storedSettings = { ...defaultSettings(), onboardingComplete: true };
+  workerMessages = vi.fn(async () => ({ ok: true }));
   Object.defineProperty(globalThis, 'chrome', {
     configurable: true,
     writable: true,
@@ -30,7 +32,7 @@ async function renderOptions(): Promise<void> {
         },
         onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
       },
-      runtime: { getManifest: () => ({ version: '0.1.0' }) },
+      runtime: { getManifest: () => ({ version: '0.1.0' }), sendMessage: workerMessages },
     },
   });
   vi.resetModules();
@@ -82,5 +84,22 @@ describe('subtitle appearance settings', () => {
     await vi.waitFor(() => expect(storedSettings.subtitleBackground).toBe('solid'));
     expect(storedSettings.subtitleStylePreset).toBe('custom');
     expect(document.querySelector<HTMLElement>('.subtitle-preview')?.style.getPropertyValue('--ft-background')).toBe('rgba(0,0,0,.94)');
+  });
+});
+
+describe('defaults for open tabs', () => {
+  it('pushes a per-tab setting changed here into every open tab, but not appearance', async () => {
+    await renderOptions();
+    rowControl('Subtitle style').querySelector<HTMLButtonElement>('[data-preset="netflix"]')!.click();
+    await vi.waitFor(() => expect(storedSettings.subtitleStylePreset).toBe('netflix'));
+    expect(workerMessages).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'TAB_SETTINGS_APPLY_DEFAULTS' }));
+
+    const engine = rowControl('Engine').querySelector('select')!;
+    engine.value = 'manual';
+    engine.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect(workerMessages).toHaveBeenCalledWith({
+      type: 'TAB_SETTINGS_APPLY_DEFAULTS', keys: ['translationEngine'],
+    }));
+    expect(storedSettings.translationEngine).toBe('manual');
   });
 });

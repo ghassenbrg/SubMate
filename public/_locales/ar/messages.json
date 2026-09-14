@@ -113,6 +113,9 @@
   "advancedSettings": {
     "message": "الإعدادات المتقدمة ←"
   },
+  "tabScopeHint": {
+    "message": "تُطبَّق هذه التغييرات على علامة التبويب هذه وعلى علامات التبويب التي تفتحها لاحقًا."
+  },
   "starOnGitHub": {
     "message": "امنحنا ★ على "
   },
@@ -163,6 +166,9 @@
   },
   "statusTranslating": {
     "message": "جارٍ إعداد الترجمات المترجمة…"
+  },
+  "statusTranslatingInAnotherTab": {
+    "message": "جارٍ الترجمة في علامة تبويب أخرى…"
   },
   "statusValidating": {
     "message": "جارٍ التحقق من الترجمة المكتملة…"

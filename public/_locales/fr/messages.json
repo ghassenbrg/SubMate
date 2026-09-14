@@ -113,6 +113,9 @@
   "advancedSettings": {
     "message": "Paramètres avancés →"
   },
+  "tabScopeHint": {
+    "message": "Ces changements s’appliquent à cet onglet et aux prochains onglets ouverts."
+  },
   "starOnGitHub": {
     "message": "Donnez-nous une ★ sur "
   },
@@ -163,6 +166,9 @@
   },
   "statusTranslating": {
     "message": "Préparation des sous-titres traduits…"
+  },
+  "statusTranslatingInAnotherTab": {
+    "message": "Traduction en cours dans un autre onglet…"
   },
   "statusValidating": {
     "message": "Vérification de la traduction terminée…"

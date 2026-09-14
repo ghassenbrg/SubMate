@@ -31,6 +31,9 @@ export interface SubMateSettings {
 
 export const SETTINGS_KEY = 'submateSettings';
 
+export const TRANSLATION_ENGINES = ['chrome-local', 'manual', 'cloud-api'] as const;
+export const DISPLAY_MODES = ['bilingual', 'translation-only', 'off'] as const;
+
 export const canonicalLanguage = (value: string): string => {
   const normalized = value.trim().replaceAll('_', '-');
   if (!normalized || normalized.length > 35) throw new TypeError('Invalid language tag');
@@ -50,8 +53,7 @@ export const validateSettings = (value: unknown): SubMateSettings => {
   const source = v.preferredSourceLanguage
     ? canonicalLanguage(String(v.preferredSourceLanguage))
     : undefined;
-  const engines = ['chrome-local', 'manual', 'cloud-api'] as const;
-  const engine = engines.includes(v.translationEngine as (typeof engines)[number])
+  const engine = TRANSLATION_ENGINES.includes(v.translationEngine as (typeof TRANSLATION_ENGINES)[number])
     ? (v.translationEngine as SubMateSettings['translationEngine'])
     : 'chrome-local';
   // The API key deliberately lives outside settings; see cloud/credentials.ts.
@@ -61,8 +63,7 @@ export const validateSettings = (value: unknown): SubMateSettings => {
     ? v.cloudModel.trim()
     : '';
   const cloudBaseUrl = typeof v.cloudBaseUrl === 'string' ? normalizeBaseUrl(v.cloudBaseUrl) ?? '' : '';
-  const modes = ['bilingual', 'translation-only', 'off'] as const;
-  const displayMode = modes.includes(v.displayMode as (typeof modes)[number])
+  const displayMode = DISPLAY_MODES.includes(v.displayMode as (typeof DISPLAY_MODES)[number])
     ? (v.displayMode as SubMateSettings['displayMode'])
     : 'bilingual';
   const scale = Number(v.translatedFontScale);

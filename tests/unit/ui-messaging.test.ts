@@ -41,7 +41,19 @@ describe('supported tab detection', () => {
       active: { id: 1, url: 'chrome-extension://abc/options.html', active: true },
       all: [{ id: 9, url: 'https://www.primevideo.com/detail/B0ABCD1234' }],
     });
-    expect((await supportedTab())?.id).toBe(9);
+    expect((await supportedTab({ anyTab: true }))?.id).toBe(9);
+  });
+
+  it('never borrows another tab for the popup when the active tab is not a player', async () => {
+    // Regression: a popup opened over an unrelated site showed "episode
+    // detected" for a player in some other tab, and its controls changed it.
+    const { sendMessage } = stubTabs({
+      active: { id: 1, url: 'https://example.com/', active: true },
+      all: [{ id: 9, url: 'https://www.netflix.com/watch/1', audible: true }],
+    });
+    expect(await supportedTab()).toBeUndefined();
+    await expect(sendContent({ type: 'CONTENT_GET_STATE' })).resolves.toBeUndefined();
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 
   it('prefers an audible player over an idle one', async () => {
@@ -52,12 +64,12 @@ describe('supported tab detection', () => {
         { id: 5, url: 'https://tver.jp/episodes/abc', audible: true },
       ],
     });
-    expect((await supportedTab())?.id).toBe(5);
+    expect((await supportedTab({ anyTab: true }))?.id).toBe(5);
   });
 
   it('reports nothing when no player tab is open', async () => {
     stubTabs({ active: { id: 1, url: 'chrome-extension://abc/options.html', active: true }, all: [] });
-    expect(await supportedTab()).toBeUndefined();
+    expect(await supportedTab({ anyTab: true })).toBeUndefined();
   });
 
   it('delivers a request to the player tab found that way', async () => {
@@ -66,7 +78,7 @@ describe('supported tab detection', () => {
       all: [{ id: 9, url: 'https://www.primevideo.com/detail/B0ABCD1234' }],
       onSend: () => ({ ok: true, value: { platform: 'prime' } }),
     });
-    const value = await sendContent<{ platform: string }>({ type: 'CONTENT_GET_DEBUG' });
+    const value = await sendContent<{ platform: string }>({ type: 'CONTENT_GET_DEBUG' }, { anyTab: true });
     expect(value).toEqual({ platform: 'prime' });
     expect(sendMessage).toHaveBeenCalledWith(9, { type: 'CONTENT_GET_DEBUG' });
   });
