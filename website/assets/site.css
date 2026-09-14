@@ -44,11 +44,9 @@ h3 { margin: 0 0 8px; font-size: 1.15rem; }
 .section.alt { border-block: 1px solid var(--line); background: #0a1c2d; }
 .section-intro { max-width: 700px; color: var(--muted); margin-bottom: 30px; }
 .product-tour { overflow: hidden; }
-.product-shots { display: grid; grid-template-columns: minmax(280px, .62fr) minmax(0, 1.38fr); align-items: center; gap: 28px; }
+.product-shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 20px; }
 .product-shot { margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: 0 20px 50px rgba(0, 0, 0, .22); }
 .product-shot img { display: block; width: 100%; height: auto; }
-.popup-shot { max-width: 396px; justify-self: center; }
-.settings-shot { align-self: center; }
 .product-shot figcaption { display: grid; gap: 3px; padding: 16px 18px 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; line-height: 1.5; }
 .product-shot figcaption strong { color: var(--ink); font-size: 1rem; }
 .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }

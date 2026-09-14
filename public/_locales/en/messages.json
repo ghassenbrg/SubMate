@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "SubMate"
+    "message": "SubMate: Subtitle Translator"
   },
   "extensionDescription": {
-    "message": "Translate missing streaming subtitles locally and display them in sync."
+    "message": "Translate supported Netflix, TVer, and Prime Video text subtitles in Chrome."
   },
   "tagline": {
     "message": "Translate what streaming doesn't."

@@ -18,7 +18,7 @@ All notable changes to SubMate are documented here. This project follows [Semant
 
 - A popup opened over an unrelated site no longer shows "episode detected" for a player in some other tab, or applies its changes to that tab.
 
-## [0.2.0]
+## [0.1.1]
 
 ### Added
 

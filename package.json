@@ -1,6 +1,6 @@
 {
   "name": "submate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Private, synchronized on-device subtitle translation for Netflix, TVer and Prime Video in Chrome.",
   "private": true,
   "license": "MIT",

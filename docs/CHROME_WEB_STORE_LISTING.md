@@ -70,20 +70,44 @@ release being uploaded. In particular, disclose any handling of website content
 that the dashboard defines to include subtitle text; mark no data category as
 handled unless the current behavior supports that answer.
 
-## Assets to capture before creating the item
+## Ready-to-upload Store assets
 
-Capture real, reviewable product screens from the production build rather than
-mock-ups. Follow the dashboard's current image dimensions and count limits.
+The following files are sized for the current dashboard requirements and are
+safe to upload with the `0.1.1` package:
 
-1. A supported title with the bilingual subtitle overlay visible.
-2. The popup showing source/target language selection and translation mode.
-3. The Options page showing appearance controls.
-4. The Options page showing the opt-in cloud translation privacy warning, with
-   no API key or personal viewing data visible.
-5. A promotional tile or marquee image only if the dashboard requires it.
+| Dashboard field | File | Dimensions |
+| --- | --- | --- |
+| Store icon | `public/icons/icon-128.png` | 128×128 PNG |
+| Screenshot | `docs/chrome-web-store/settings-screenshot-v2.png` | 1280×800 PNG |
+| Small promo tile | `docs/chrome-web-store/small-promo-v1.png` | 440×280 PNG |
 
-Before uploading, remove account names, email addresses, title-specific
-viewing data, API keys, and copyrighted subtitle text from all images.
+The screenshot shows the Options page's language and on-device translation
+controls. The promotional tile is text-free and uses the extension's navy,
+cyan, and blue visual language. A marquee image is optional; do not add one
+unless it is needed for a specific Store feature.
+
+Before adding more screenshots, remove account names, email addresses,
+title-specific viewing data, API keys, and copyrighted subtitle text.
+
+## Dashboard privacy and permission answers
+
+Use the current upload, not this document alone, as the source of truth.
+
+- **Single purpose:** Translate text subtitles on supported Netflix, TVer, and
+  Prime Video pages and display the translation in sync with playback.
+- **`storage` permission:** Store settings, locally cached subtitle sources and
+  translations, and user-provided cloud-provider credentials in Chrome.
+- **Streaming-site host access:** Read text subtitle tracks and render the
+  subtitle overlay on the supported sites only.
+- **Optional provider-host access:** Requested only after a user selects a
+  cloud translation provider or custom endpoint; used to send subtitle text,
+  language information, and limited preceding subtitle context directly to
+  that provider.
+- **Data use:** No SubMate account, backend, analytics, bundled API key,
+  cookies, authorization headers, signed media URLs, video, audio, title name,
+  page URL, or browsing history is transmitted. The dashboard declaration must
+  still disclose subtitle text if its current definition categorizes that as
+  website content.
 
 ## After the first item is created
 

@@ -39,11 +39,12 @@ For a live testing checklist and the expected state for each step, see [Manual t
 
 ## Screenshots
 
-Sanitized UI previews from the local extension harness. They do not include streaming-account, title, or regional catalog information.
+Representative SubMate UI previews showing the in-player translation overlay, popup controls, and settings. Streaming-service imagery is shown only to demonstrate the extension UI; SubMate is not affiliated with those services.
 
 <p align="center">
-  <img src="website/assets/screenshots/popup.jpg" alt="SubMate popup showing Korean to Arabic translation controls" width="300">
-  <img src="website/assets/screenshots/settings.jpg" alt="SubMate settings showing language and on-device translation preferences" width="600">
+  <img src="docs/chrome-web-store/screenshot-1.png" alt="SubMate displaying Japanese and French subtitles over a supported video, with the compact popup open" width="32%">
+  <img src="docs/chrome-web-store/screenshot-2.png" alt="SubMate's expanded popup showing detected playback, subtitle display options, on-device translation, and subtitle import and export controls" width="32%">
+  <img src="docs/chrome-web-store/settings-screenshot-v2.png" alt="SubMate settings showing general controls, language preferences, on-device translation, and appearance options" width="32%">
 </p>
 
 Contributions may include sanitized UI screenshots that follow the [contribution guide](CONTRIBUTING.md).

@@ -1,6 +1,6 @@
 const ENGLISH_MESSAGES = {
-  extensionName: 'SubMate',
-  extensionDescription: 'Translate missing streaming subtitles locally and display them in sync.',
+  extensionName: 'SubMate: Subtitle Translator',
+  extensionDescription: 'Translate supported Netflix, TVer, and Prime Video text subtitles in Chrome.',
   tagline: "Translate what streaming doesn't.",
   onboardingDescription: "Translate subtitles your streaming service doesn't provide.",
   netflixDetected: 'Netflix episode detected',
