@@ -217,6 +217,7 @@ input::placeholder { color: var(--faint); }
   z-index: 20;
   inset: calc(100% + 7px) 0 auto;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   padding: 9px;
   border: 1px solid var(--border-hover);
@@ -224,6 +225,10 @@ input::placeholder { color: var(--faint); }
   background: var(--overlay);
   box-shadow: var(--shadow-lg);
 }
+.language-menu.opens-up { inset: auto 0 calc(100% + 7px); }
+/* Page-level rules (e.g. the options rows) give inputs a fixed width; inside
+   the menu they must fill it, or the field and its focus ring spill past the edge. */
+.language-picker-control .language-menu input:not([type="checkbox"]) { width: 100%; min-width: 0; }
 .language-search { min-height: 36px; padding: 7px 10px; }
 .language-options { display: grid; gap: 2px; max-height: 210px; overflow: auto; padding-inline-end: 2px; }
 .language-option {

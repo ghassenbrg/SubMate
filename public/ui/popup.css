@@ -32,7 +32,11 @@ header:has(.detected) .tagline { display: none; }
 
 /* One workspace split into labelled bands, so every control sits under a
    heading that says what it belongs to and nothing hides behind a disclosure. */
-.playback-workspace { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--surface-solid); box-shadow: var(--shadow-md); }
+/* No overflow clipping: the language menu is positioned inside and must be able
+   to extend past the workspace. Edge children round their own corners instead. */
+.playback-workspace { border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--surface-solid); box-shadow: var(--shadow-md); }
+.playback-workspace > :first-child { border-start-start-radius: inherit; border-start-end-radius: inherit; }
+.playback-workspace > :last-child { border-end-start-radius: inherit; border-end-end-radius: inherit; }
 
 /* Active episode: the one block that reports rather than configures. */
 .episode { padding: 12px 14px 13px; }

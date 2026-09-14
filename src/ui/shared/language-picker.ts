@@ -68,8 +68,15 @@ export function createLanguagePicker({ value, allowAutomatic = false, label, onC
 
   let current = value;
   const labelFor = (language?: string) => language ? languageInputValue(language) : t('automaticLanguage');
+  const onOutsidePointer = (event: PointerEvent) => {
+    // The popup re-renders its DOM, so a detached picker just drops its listener.
+    if (!wrapper.isConnected) { document.removeEventListener('pointerdown', onOutsidePointer, true); return; }
+    if (!wrapper.contains(event.target as Node)) close();
+  };
   const close = () => {
+    document.removeEventListener('pointerdown', onOutsidePointer, true);
     panel.hidden = true;
+    panel.classList.remove('opens-up');
     trigger.setAttribute('aria-expanded', 'false');
     custom.hidden = true;
     search.value = '';
@@ -130,14 +137,23 @@ export function createLanguagePicker({ value, allowAutomatic = false, label, onC
   triggerText.textContent = labelFor(current);
   // The trigger can ellipsise a long language name, so keep the full value on hover.
   trigger.title = labelFor(current);
+  // Open downward by default, but flip above the trigger when the menu would run
+  // past the bottom of the window (e.g. the popup, which is only as tall as its content).
+  const place = () => {
+    panel.classList.remove('opens-up');
+    const below = window.innerHeight - panel.getBoundingClientRect().bottom;
+    if (below >= 0) return;
+    const room = trigger.getBoundingClientRect().top;
+    if (room >= panel.offsetHeight + 7) panel.classList.add('opens-up');
+  };
   trigger.addEventListener('click', () => {
-    const opening = panel.hidden;
-    panel.hidden = !opening;
-    trigger.setAttribute('aria-expanded', String(opening));
-    if (opening) {
-      renderChoices();
-      search.focus();
-    }
+    if (!panel.hidden) { close(); return; }
+    panel.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    renderChoices();
+    place();
+    search.focus();
+    document.addEventListener('pointerdown', onOutsidePointer, true);
   });
   search.addEventListener('input', renderChoices);
   search.addEventListener('keydown', (event) => {

@@ -129,6 +129,19 @@ describe('popup acceptance states', () => {
     await vi.waitFor(() => expect(document.querySelector('#app')?.textContent).toContain('Get started'));
   });
 
+  it('closes the language menu when clicking outside it', async () => {
+    await renderPopup(undefined, { netflixTab: false });
+    const trigger = document.querySelector<HTMLButtonElement>('.language-trigger');
+    const menu = document.querySelector<HTMLElement>('.language-menu');
+    trigger?.click();
+    expect(menu?.hidden).toBe(false);
+    menu?.querySelector('input')?.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(menu?.hidden).toBe(false);
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(menu?.hidden).toBe(true);
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('shows a useful non-Netflix state without a broken episode card', async () => {
     await renderPopup(undefined, { netflixTab: false });
     expect(document.querySelector('.episode')?.textContent).toContain('Open a supported video');
