@@ -459,7 +459,8 @@ describe('independent tabs', () => {
     const a = await startTab(new FakeAdapter(), leases);
     const b = await startTab(new FakeAdapter(), leases);
     await vi.waitFor(() => expect(a.orchestrator.getState().status.state).toBe('ready'));
-    await vi.waitFor(() => expect(b.orchestrator.getState().status.state).toBe('ready'));
+    // Both tabs contend for the same `fr` job, so B waits at least one shared poll.
+    await vi.waitFor(() => expect(b.orchestrator.getState().status.state).toBe('ready'), { timeout: 3_000 });
 
     await b.scope.update({ preferredTargetLanguage: 'ja' }, { asDefault: true });
     await vi.waitFor(() => expect(mocks.overlays[1]?.track?.cues[0]?.translatedText).toBe('ja→ Hallo'));
