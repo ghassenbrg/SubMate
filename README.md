@@ -8,7 +8,7 @@
 
 SubMate is an independent Manifest V3 browser extension that translates streaming text subtitles on-device, caches the result locally, and renders it against the original cue timing.
 
-**Website:** [submate.ghassen.io](https://submate.ghassen.io/) · **Documentation:** [installation](https://ghassenbrg.github.io/SubMate/installation.html), [features](https://ghassenbrg.github.io/SubMate/features.html), [configuration](https://ghassenbrg.github.io/SubMate/configuration.html), [privacy](https://ghassenbrg.github.io/SubMate/privacy.html) · **Releases:** [GitHub Releases](https://github.com/ghassenbrg/SubMate/releases) · **Chrome Web Store:** [listing coming soon](https://chromewebstore.google.com/)
+**Website:** [submate.ghassen.io](https://submate.ghassen.io/) · **Documentation:** [installation](https://ghassenbrg.github.io/SubMate/installation.html), [features](https://ghassenbrg.github.io/SubMate/features.html), [configuration](https://ghassenbrg.github.io/SubMate/configuration.html), [privacy](https://ghassenbrg.github.io/SubMate/privacy.html) · **Releases:** [GitHub Releases](https://github.com/ghassenbrg/SubMate/releases) · **Chrome Web Store:** [Install SubMate](https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje)
 
 It has no SubMate account, no backend, no analytics, and no bundled API key. With the default on-device engine, subtitle text never leaves your browser.
 
@@ -31,9 +31,10 @@ Supported platforms are **Netflix**, **TVer** and **Amazon Prime Video**, each i
 
 ## Getting started
 
-1. Open a supported title with text subtitles: Netflix, a caption-enabled TVer episode, or Prime Video.
-2. Choose a target language in the SubMate popup.
-3. Start translation from the popup or the in-player controls. Chrome downloads language data the first time a pair is used, then SubMate renders synchronized translated subtitles.
+1. [Install SubMate from the Chrome Web Store](https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje).
+2. Open a supported title with text subtitles: Netflix, a caption-enabled TVer episode, or Prime Video.
+3. Choose a target language in the SubMate popup.
+4. Start translation from the popup or the in-player controls. Chrome downloads language data the first time a pair is used, then SubMate renders synchronized translated subtitles.
 
 For a live testing checklist and the expected state for each step, see [Manual testing](docs/MANUAL_TESTING.md).
 
@@ -51,9 +52,15 @@ Contributions may include sanitized UI screenshots that follow the [contribution
 
 ## Install
 
-For the current installation flow, see the [website installation guide](https://ghassenbrg.github.io/SubMate/installation.html).
+### Chrome Web Store (recommended)
+
+[Install SubMate from the Chrome Web Store](https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje). This is the simplest way to install SubMate and receive published updates through Chrome.
+
+For all installation options, see the [website installation guide](https://ghassenbrg.github.io/SubMate/installation.html).
 
 ### Chrome (unpacked build)
+
+For development or manual-release testing:
 
 1. Download and extract the Chrome ZIP from a [GitHub Release](https://github.com/ghassenbrg/SubMate/releases), or build it locally as described below.
 2. Open `chrome://extensions` and enable **Developer mode**.
@@ -140,7 +147,7 @@ website/      Official static documentation website deployed to GitHub Pages
 
 Releases carry matching `package.json` and manifest versions and are tagged `vX.Y.Z`. Pushing that tag runs type checks and tests, builds and validates `dist/chrome/`, creates a ZIP, uploads it to a GitHub Release, and can optionally upload it to the Chrome Web Store.
 
-Read the complete [publishing HOWTO](HOWTO.md) before cutting a release, or use the shorter [publishing guide](docs/PUBLISHING.md) during routine work. The initial Chrome Web Store listing must be created manually; later updates can be automated once the required repository secrets and variables are configured.
+Read the complete [publishing HOWTO](HOWTO.md) before cutting a release, or use the shorter [publishing guide](docs/PUBLISHING.md) during routine work. The public Chrome Web Store listing is [available here](https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje); future updates can be automated once the required repository secrets and variables are configured.
 
 The official documentation site is deployed automatically to [GitHub Pages](https://ghassenbrg.github.io/SubMate/) whenever `website/` changes on `main`. It is ready to move to `submate.ghassen.io` once DNS is configured; see [HOWTO.md](HOWTO.md#5-configure-github-pages-and-the-future-custom-domain).
 
