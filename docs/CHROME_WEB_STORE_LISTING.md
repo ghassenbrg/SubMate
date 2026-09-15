@@ -1,12 +1,15 @@
-# Chrome Web Store listing draft
+# Chrome Web Store listing
 
-Use this draft when creating the first SubMate item in the Chrome Web Store
-Developer Dashboard. It is intentionally ready to copy, but it does not
-replace reviewing the current dashboard fields and policies before submission.
+SubMate is published in the Chrome Web Store.
+
+**Public listing:** https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje  
+**Item ID:** `mlicblenihgiaecmjambacoechbeceje`
+
+Use this document as the maintained reference for the current SubMate listing content and assets. Review the current Chrome Web Store dashboard fields and policies before every submission.
 
 ## Identity
 
-| Field | Draft value |
+| Field | Current value |
 | --- | --- |
 | Name | SubMate: Subtitle Translator |
 | Category | Productivity |
@@ -14,9 +17,10 @@ replace reviewing the current dashboard fields and policies before submission.
 | Support URL | https://github.com/ghassenbrg/SubMate/issues |
 | Privacy-policy URL | https://submate.ghassen.io/privacy.html |
 | Website | https://submate.ghassen.io/ |
+| Public listing | https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje |
+| Item ID | `mlicblenihgiaecmjambacoechbeceje` |
 
-Before saving the listing, add the maintainer's support email in the dashboard.
-Do not use an address that is not monitored for user support or policy notices.
+Keep the maintainer's support email current in the dashboard. Do not use an address that is not monitored for user support or policy notices.
 
 ## Short description
 
@@ -49,7 +53,7 @@ by Netflix, TVer, Amazon, or any cloud translation provider.
 ## Privacy and permission review notes
 
 Review these statements against the dashboard's current questions before each
-submission; do not treat this draft as a substitute for the form.
+submission; do not treat this document as a substitute for the form.
 
 - The extension has no SubMate account, backend, analytics, or bundled key.
 - `storage` stores settings, subtitle sources, translations, and any
@@ -70,10 +74,9 @@ release being uploaded. In particular, disclose any handling of website content
 that the dashboard defines to include subtitle text; mark no data category as
 handled unless the current behavior supports that answer.
 
-## Ready-to-upload Store assets
+## Store assets
 
-The following files are sized for the current dashboard requirements and are
-safe to upload with the `0.1.1` package:
+The following files are prepared for the listing:
 
 | Dashboard field | File | Dimensions |
 | --- | --- | --- |
@@ -109,10 +112,12 @@ Use the current upload, not this document alone, as the source of truth.
   still disclose subtitle text if its current definition categorizes that as
   website content.
 
-## After the first item is created
+## Maintainer notes
 
-Record the Store Item ID and Publisher ID in a password manager or other secure
-maintainer record. Add only the IDs as GitHub repository variables; keep OAuth
-client credentials and the refresh token in the `chrome-web-store` environment
-secrets. Leave `CHROME_WEB_STORE_PUBLISH` unset until the listing, assets,
-privacy answers, and first manual submission are complete.
+Keep the Store Item ID and Publisher ID in a password manager or other secure
+maintainer record. The item ID may also be stored as the non-secret GitHub
+repository variable `CHROME_WEB_STORE_EXTENSION_ID`; OAuth client credentials
+and the refresh token belong only in the `chrome-web-store` environment
+secrets.
+
+After every approved release, verify the public listing opens, shows the intended version, and installs successfully in a separate Chrome profile.
