@@ -6,6 +6,9 @@ clean, reviewed `main` branch. For the complete first-time setup—including
 accounts, OAuth credentials, GitHub secrets, Pages, and the custom domain—read
 the repository [HOWTO](../HOWTO.md) first.
 
+**Public Chrome Web Store listing:**
+https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje
+
 ## Release model
 
 SubMate uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
@@ -89,6 +92,11 @@ whatever happens to be on the default branch.
 
 ## Chrome Web Store setup
 
+SubMate's public Chrome Web Store item is live at:
+https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje
+
+The item ID is `mlicblenihgiaecmjambacoechbeceje`.
+
 The first store submission must be completed in the Chrome Web Store Developer
 Dashboard. Create the item and finish its Store listing and Privacy sections,
 including the required listing assets and disclosures. Chrome requires two-step
@@ -111,7 +119,7 @@ Add these **repository variables** (they are identifiers, not credentials):
 | --- | --- |
 | `CHROME_WEB_STORE_PUBLISH` | `true` to enable the store job; leave unset or any other value to skip it |
 | `CHROME_WEB_STORE_PUBLISHER_ID` | Publisher ID from the Chrome Web Store Developer Dashboard |
-| `CHROME_WEB_STORE_EXTENSION_ID` | The existing Chrome Web Store item ID |
+| `CHROME_WEB_STORE_EXTENSION_ID` | `mlicblenihgiaecmjambacoechbeceje` |
 
 Once configured, the workflow's `chrome-web-store` job exchanges the refresh
 token for a short-lived access token, uploads the generated ZIP through the
@@ -128,7 +136,8 @@ failing merely because a store listing has not been set up yet.
 If automation is disabled or a manual review is preferred:
 
 1. Run `npm run pack:chrome` from the reviewed release commit.
-2. Open the Chrome Web Store Developer Dashboard and select the item.
+2. Open the Chrome Web Store Developer Dashboard and select the SubMate item
+   (`mlicblenihgiaecmjambacoechbeceje`).
 3. Upload `dist/packages/submate-chrome-vX.Y.Z.zip`.
 4. Verify the manifest version, permission disclosures, privacy disclosure,
    screenshots, descriptions, and supported language details.
@@ -155,7 +164,6 @@ Never upload a ZIP assembled by hand or from a dirty working tree.
 
 Before sharing a release publicly, confirm the GitHub Release ZIP is present,
 the repository default branch is public, the README installation instructions
-match the release, and the Chrome Web Store listing is live if you intend to
-link it. Use the exact supported-browser statement from the README; do not
+match the release, and the [Chrome Web Store listing](https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje) shows the intended published version. Use the exact supported-browser statement from the README; do not
 promise language pairs that Chrome's runtime availability check has not
 confirmed.
