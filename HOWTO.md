@@ -5,6 +5,9 @@ keeps the first Chrome Web Store submission manual; after that, GitHub Actions
 can build the verified package, create the GitHub Release, upload it to the
 store, and submit it for review.
 
+**Public Chrome Web Store listing:**
+https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje
+
 ## 1. Create the required accounts
 
 1. Create or use a GitHub account that administers `ghassenbrg/SubMate`.
@@ -44,6 +47,8 @@ Developer Dashboard.
 7. Once the item exists, copy its **Item ID** from the dashboard or the listing
    URL, and copy the **Publisher ID** from **Publisher > Settings**. The Item
    ID is required for subsequent automated uploads.
+
+The current SubMate item ID is `mlicblenihgiaecmjambacoechbeceje`.
 
 ## 3. Configure Chrome Web Store API access
 
@@ -96,7 +101,7 @@ is the authority if the dashboard labels or token flow change.
    | --- | --- |
    | `CHROME_WEB_STORE_PUBLISH` | `true` to turn on store upload; leave unset until the first item is ready |
    | `CHROME_WEB_STORE_PUBLISHER_ID` | Publisher ID from the Developer Dashboard |
-   | `CHROME_WEB_STORE_EXTENSION_ID` | Existing SubMate store item ID |
+   | `CHROME_WEB_STORE_EXTENSION_ID` | `mlicblenihgiaecmjambacoechbeceje` |
 
 4. Keep `CHROME_WEB_STORE_PUBLISH` disabled until the manual listing is fully
    configured. With it disabled, release builds and GitHub Releases still run;
@@ -168,8 +173,7 @@ Release ZIP manually through the dashboard instead.
 
 1. Confirm the GitHub Release contains `submate-chrome-vX.Y.Z.zip`.
 2. Confirm the website's installation and release links are live.
-3. After Store approval, replace the Chrome Web Store placeholder links in the
-   README and website with the final listing URL.
+3. Confirm the public [Chrome Web Store listing](https://chromewebstore.google.com/detail/mlicblenihgiaecmjambacoechbeceje) opens and shows the intended published version.
 4. Install the public store build in a separate Chrome profile and check an
    actual supported title.
 
